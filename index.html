@@ -411,9 +411,7 @@
 
       <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
         <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">GitHub Live Multi-PC Sync Status</h4>
-        <p class="text-[10px] text-gray-500 mb-2">Automated Base64-encoded token active across all devices.</p>
-        <input type="password" id="githubTokenInput" placeholder="github_pat_..." class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded p-2 text-xs mb-2">
-        <button onclick="saveGithubToken()" class="px-3 py-1.5 bg-[#A6192E] text-white text-xs font-bold rounded">Update Token Override</button>
+        <p class="text-[10px] text-emerald-400 font-semibold">✓ Multi-PC sync is active across all devices automatically.</p>
       </div>
 
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
@@ -678,16 +676,6 @@
         }
       } catch (e) {
         updateSyncUI("error", e.message);
-      }
-    }
-
-    function saveGithubToken() {
-      const input = document.getElementById("githubTokenInput");
-      const token = input ? input.value.trim() : "";
-      if (token) {
-        localStorage.setItem("amada_github_token", token);
-        alert("GitHub Token Override Saved!");
-        fetchFromGitHubApi();
       }
     }
 
@@ -1451,9 +1439,6 @@
       const isMasterAdmin = activeObj && activeObj.role === "master_admin";
       const isAdmin = activeObj && (activeObj.role === "admin" || isMasterAdmin);
 
-      const tokenInput = document.getElementById("githubTokenInput");
-      if (tokenInput) tokenInput.value = localStorage.getItem("amada_github_token") || "";
-      
       const masterResetBtn = document.getElementById("btnMasterResetPasswords");
       if (masterResetBtn) masterResetBtn.classList.toggle("hidden", !isMasterAdmin);
 
