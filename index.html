@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amada Tasks & Keep Workspace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --amada-red: #A6192E;
+      --amada-dark: #121212;
+    }
+    body { background-color: var(--amada-dark); color: #E0E0E0; font-family: system-ui, -apple-system, sans-serif; }
+    .amada-bg-red { background-color: var(--amada-red); }
+    .amada-text-red { color: var(--amada-red); }
+    
+    .strikethrough-anim {
+      position: relative;
+      display: inline-block;
+      transition: color 0.3s ease;
+    }
+    .strikethrough-anim::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 100%;
+      height: 2px;
+      background-color: #22c55e;
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 0.35s ease-in-out;
+    }
+    .strikethrough-active { color: #71717a !important; }
+    .strikethrough-active::after { transform: scaleX(1); }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #121212; }
+    ::-webkit-scrollbar-thumb { background: #333333; border-radius: 3px; }
+  </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+  <!-- AUTH / LOGIN OVERLAY -->
+  <div id="authOverlay" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+    <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl p-8 max-w-md w-full shadow-2xl text-center">
+      <div class="w-12 h-12 amada-bg-red rounded-lg flex items-center justify-center mx-auto mb-4 font-bold text-xl text-white">A</div>
+      <h2 class="text-2xl font-bold text-white mb-2">Amada Workspace</h2>
+      <p class="text-sm text-gray-400 mb-6">Enter your @amada.co.uk email to enter workspace.</p>
+      
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div class="text-left">
+          <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase">Email Address</label>
+          <input type="email" id="loginEmail" required placeholder="name@amada.co.uk" class="w-full bg-[#121212] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#A6192E]">
+        </div>
+        <div id="authError" class="text-red-500 text-xs text-left hidden">Access denied. Must end in @amada.co.uk</div>
+        <button type="submit" class="w-full amada-bg-red text-white py-2.5 rounded-lg font-semibold hover:opacity-90 transition">Access Workspace</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOP HEADER -->
+  <header class="h-14 bg-[#181818] border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="w-7 h-7 amada-bg-red rounded flex items-center justify-center font-bold text-white text-sm">A</div>
+      <span class="font-bold text-white text-lg tracking-wide">AMADA <span class="text-gray-400 text-sm font-normal">Tasks & Keep</span></span>
+    </div>
+
+    <div class="flex bg-[#121212] p-1 rounded-lg border border-gray-800">
+      <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-4 py-1 rounded text-xs font-semibold amada-bg-red text-white">Tasks</button>
+      <button id="tabNotes" onclick="switchMainTab('notes')" class="px-4 py-1 rounded text-xs font-semibold text-gray-400 hover:text-white">Keep Notes</button>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <div id="syncStatus" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800 text-emerald-400 text-[11px]">
+        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+        <span>Live Cloud Connected</span>
+      </div>
+      <button onclick="handleLogout()" class="p-1.5 text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800" title="Log out">
+        <i data-lucide="log-out" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <div class="flex-1 flex overflow-hidden">
+    <main class="flex-1 bg-[#121212] overflow-x-auto p-4 flex flex-col">
+      <div id="tasksBoardView" class="flex-1 flex space-x-4 overflow-x-auto pb-2 items-start"></div>
+      <div id="notesBoardView" class="hidden flex-1 overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-white">Keep Notes</h2>
+          <button onclick="openNewNoteModal()" class="amada-bg-red text-white text-xs px-3 py-1.5 rounded-lg">+ Add Note</button>
+        </div>
+        <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- NOTE MODAL -->
+  <div id="noteModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-md w-full p-5 text-gray-200">
+      <h3 class="text-base font-bold text-white mb-3">New Note</h3>
+      <form onsubmit="saveNote(event)" class="space-y-3">
+        <input type="text" id="noteTitle" placeholder="Title" required class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white">
+        <textarea id="noteContent" rows="4" placeholder="Note content..." required class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white"></textarea>
+        <div class="flex justify-end space-x-2">
+          <button type="button" onclick="closeNoteModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 amada-bg-red text-white text-xs font-semibold rounded">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const SYNC_BIN = "https://api.jsonbin.io/v3/b/6628f2441f56778d60cb4f82";
+    let currentUserEmail = localStorage.getItem("amada_user_email") || "";
+    let activeMainTab = "tasks";
+
+    let appState = {
+      lists: [
+        { id: "high", title: "High Priority" },
+        { id: "medium", title: "Medium Priority" },
+        { id: "low", title: "Low Priority" }
+      ],
+      tasks: [],
+      notes: []
+    };
+
+    window.onload = () => {
+      lucide.createIcons();
+      checkAuth();
+      fetchCloudData();
+      setInterval(fetchCloudData, 3000); // Polls every 3 seconds for seamless live updates
+    };
+
+    async function fetchCloudData() {
+      try {
+        const res = await fetch(SYNC_BIN + "/latest", { headers: { "X-Bin-Meta": "false" } });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.lists) {
+            appState = data;
+            renderAll();
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function saveToCloud() {
+      try {
+        await fetch(SYNC_BIN, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(appState)
+        });
+      } catch (e) {}
+    }
+
+    function renderAll() {
+      renderBoard();
+      renderNotes();
+    }
+
+    function checkAuth() {
+      if (currentUserEmail) document.getElementById("authOverlay").classList.add("hidden");
+      else document.getElementById("authOverlay").classList.remove("hidden");
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      if (/^[^\s@]+@amada\.co\.uk$/i.test(email)) {
+        currentUserEmail = email;
+        localStorage.setItem("amada_user_email", email);
+        checkAuth();
+      } else {
+        document.getElementById("authError").classList.remove("hidden");
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem("amada_user_email");
+      location.reload();
+    }
+
+    function switchMainTab(tab) {
+      activeMainTab = tab;
+      document.getElementById("tasksBoardView").classList.toggle("hidden", tab !== 'tasks');
+      document.getElementById("notesBoardView").classList.toggle("hidden", tab !== 'notes');
+    }
+
+    function renderBoard() {
+      const board = document.getElementById("tasksBoardView");
+      board.innerHTML = appState.lists.map(list => {
+        const listTasks = appState.tasks.filter(t => t.sectionId === list.id);
+        return `
+          <div class="w-80 bg-[#1E1E1E] border border-gray-800 rounded-xl p-3 flex flex-col shrink-0">
+            <h3 class="font-bold text-white text-sm mb-2">${list.title}</h3>
+            <input type="text" placeholder="+ Add task" onkeydown="addTask(event, '${list.id}')" class="w-full bg-[#121212] border border-gray-800 rounded px-2.5 py-1 text-xs text-white mb-3">
+            <div class="space-y-2">
+              ${listTasks.map(t => `
+                <div class="bg-[#252525] border border-gray-700/60 rounded p-2 flex items-center space-x-2">
+                  <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask('${t.id}')" class="accent-green-600">
+                  <span class="text-xs strikethrough-anim ${t.completed ? 'strikethrough-active' : 'text-white'}">${t.title}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addTask(e, sectionId) {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        appState.tasks.push({ id: Date.now().toString(), title: e.target.value.trim(), sectionId, completed: false });
+        e.target.value = "";
+        renderBoard();
+        saveToCloud();
+      }
+    }
+
+    function toggleTask(id) {
+      const task = appState.tasks.find(t => t.id === id);
+      if (task) {
+        task.completed = !task.completed;
+        renderBoard();
+        saveToCloud();
+      }
+    }
+
+    function renderNotes() {
+      const grid = document.getElementById("notesGrid");
+      grid.innerHTML = appState.notes.map(n => `
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl p-4">
+          <h4 class="font-bold text-white text-sm mb-1">${n.title}</h4>
+          <p class="text-xs text-gray-300">${n.content}</p>
+        </div>
+      `).join('');
+    }
+
+    function openNewNoteModal() { document.getElementById("noteModal").classList.remove("hidden"); }
+    function closeNoteModal() { document.getElementById("noteModal").classList.add("hidden"); }
+    function saveNote(e) {
+      e.preventDefault();
+      appState.notes.push({
+        id: Date.now().toString(),
+        title: document.getElementById("noteTitle").value,
+        content: document.getElementById("noteContent").value
+      });
+      closeNoteModal();
+      renderNotes();
+      saveToCloud();
+    }
+  </script>
+</body>
+</html>
