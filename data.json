@@ -1,0 +1,13 @@
+{
+  "users": [
+    { "name": "Charlie", "role": "master_admin", "password": "AMADA" },
+    { "name": "Jacob", "role": "admin", "password": "AMADA" }
+  ],
+  "sharedTags": [],
+  "sharedSections": [
+    { "id": "s1", "title": "High Priority" },
+    { "id": "s2", "title": "Medium Priority" }
+  ],
+  "tasks": [],
+  "notes": []
+}
