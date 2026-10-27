@@ -18,6 +18,7 @@
     }
   </script>
   <style>
+    /* Smooth Fluid Green Strikethrough Animation */
     .strikethrough-anim {
       position: relative;
       display: inline-block;
@@ -109,7 +110,7 @@
           <span id="activeCount">Online Users</span>
         </button>
         <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-48 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-3 z-40 text-xs">
-          <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Active Profiles</div>
+          <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Logged In Session</div>
           <div id="activeUsersList" class="space-y-1"></div>
         </div>
       </div>
@@ -153,13 +154,13 @@
         <span id="allTasksCountBadge" class="bg-black/30 px-2 py-0.5 rounded-full text-[10px]">0</span>
       </button>
 
-      <!-- ASSIGNEE FILTERS -->
+      <!-- ASSIGNEE FILTERS (No pencil/trash icons) -->
       <div id="assigneeFilterSection" class="mb-4">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Filter by Assignee</div>
         <div id="assigneesSidebar" class="space-y-1"></div>
       </div>
 
-      <!-- TAGS & FILTERS -->
+      <!-- TAGS & FILTERS (Has Hover Pencil & Trash) -->
       <div class="mb-4">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Tags</span>
@@ -168,7 +169,7 @@
         <div id="tagsSidebar" class="space-y-1 max-h-32 overflow-y-auto"></div>
       </div>
 
-      <!-- SECTIONS -->
+      <!-- SECTIONS (Has Checkbox + Hover Pencil & Trash) -->
       <div class="flex-1 overflow-y-auto">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Task Sections</span>
@@ -213,7 +214,45 @@
 
   <!-- MODALS -->
 
-  <!-- IMAGE ZOOM MODAL -->
+  <!-- TASK DETAIL READ-ONLY / AUDIT VIEW MODAL -->
+  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-6 relative shadow-2xl">
+      <button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      
+      <div class="flex items-center space-x-2 mb-2">
+        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK DETAIL</span>
+        <span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800">Priority</span>
+      </div>
+      <h3 id="detailTitle" class="text-xl font-bold mb-2">Task Title</h3>
+      <div id="detailNotes" class="text-sm text-gray-600 dark:text-gray-300 mb-4 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded border border-gray-300 dark:border-gray-800">Details...</div>
+      
+      <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4">
+        <div><span class="font-bold">Section:</span> <span id="detailSection" class="text-gray-800 dark:text-gray-200">General</span></div>
+        <div><span class="font-bold">Assignees:</span> <span id="detailAssignees" class="text-gray-800 dark:text-gray-200">Anyone</span></div>
+        <div><span class="font-bold">Due Date:</span> <span id="detailDueDate" class="text-gray-800 dark:text-gray-200">No Date</span></div>
+        <div><span class="font-bold">Owner:</span> <span id="detailOwner" class="text-gray-800 dark:text-gray-200">System</span></div>
+      </div>
+
+      <!-- COLLAPSIBLE EDIT HISTORY AUDIT LOG -->
+      <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mb-4">
+        <details class="group">
+          <summary class="cursor-pointer text-xs font-bold text-gray-400 group-open:text-white flex items-center justify-between">
+            <span>View Edit History Log</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition group-open:rotate-180"></i>
+          </summary>
+          <div id="detailHistoryLog" class="mt-2 space-y-1.5 max-h-32 overflow-y-auto text-[11px] text-gray-400 bg-gray-100 dark:bg-[#121212] p-2 rounded border border-gray-300 dark:border-gray-800"></div>
+        </details>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200 dark:border-gray-800">
+        <button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-lg flex items-center space-x-1">
+          <i data-lucide="pencil" class="w-3.5 h-3.5"></i> <span>Edit Task</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMAGE ZOOM PREVIEW MODAL -->
   <div id="imageZoomModal" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 cursor-zoom-out" onclick="closeImageZoomModal()">
     <div class="relative overflow-hidden rounded-xl max-w-4xl max-h-[90vh]" onclick="event.stopPropagation()">
       <img id="zoomedImage" src="" class="object-contain transition-transform duration-200 cursor-crosshair" onmousemove="handleImageZoom(event)" onmouseleave="resetImageZoom(event)">
@@ -264,12 +303,16 @@
     </div>
   </div>
 
-  <!-- TASK MODAL -->
+  <!-- TASK MODAL (FULL EDIT WITH AUDIT HISTORY) -->
   <div id="taskModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-md w-full p-5 shadow-2xl">
-      <h3 class="text-base font-bold mb-3">Create New Task</h3>
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <h3 id="taskModalHeading" class="text-base font-bold mb-3">Create / Edit Task</h3>
       <form onsubmit="saveTask(event)" class="space-y-3">
-        <input type="text" id="taskTitleInput" placeholder="Task Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none">
+        <input type="hidden" id="taskIdInput">
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Task Title</label>
+          <input type="text" id="taskTitleInput" placeholder="Task Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none">
+        </div>
         
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -277,9 +320,29 @@
             <select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs"></select>
           </div>
           <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Priority</label>
+            <select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Tag</label>
             <select id="taskTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs"></select>
           </div>
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Due Date</label>
+            <input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Description / Notes</label>
+          <textarea id="taskNotesInput" rows="3" placeholder="Add additional task details..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-2 text-xs focus:outline-none"></textarea>
         </div>
 
         <div>
@@ -292,20 +355,32 @@
           <label for="taskPrivateInput" class="text-xs text-gray-400">Restrict Edit/Delete to Me Only</label>
         </div>
 
-        <div class="flex justify-end space-x-2 pt-2">
+        <!-- COLLAPSIBLE EDIT HISTORY -->
+        <div class="border-t border-gray-200 dark:border-gray-800 pt-3">
+          <details class="group">
+            <summary class="cursor-pointer text-xs font-bold text-gray-400 group-open:text-white flex items-center justify-between">
+              <span>View History Log</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition group-open:rotate-180"></i>
+            </summary>
+            <div id="taskModalHistoryLog" class="mt-2 space-y-1.5 max-h-28 overflow-y-auto text-[11px] text-gray-400 bg-gray-100 dark:bg-[#121212] p-2 rounded border border-gray-300 dark:border-gray-800"></div>
+          </details>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200 dark:border-gray-800">
           <button type="button" onclick="closeTaskModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
-          <button type="submit" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded">Create Task</button>
+          <button type="submit" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded">Save Task</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- ADD TAG MODAL -->
+  <!-- ADD / EDIT TAG MODAL -->
   <div id="tagModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-sm w-full p-5 shadow-2xl">
-      <h3 class="text-base font-bold mb-3">Create Custom Tag</h3>
+      <h3 id="tagModalTitle" class="text-base font-bold mb-3">Create Custom Tag</h3>
+      <input type="hidden" id="tagIdInput">
       <input type="text" id="tagTitleInput" placeholder="Tag Name (e.g. Urgent)" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-2 text-sm mb-3 focus:outline-none">
-      <label class="block text-xs text-gray-400 mb-1">Custom Color</label>
+      <label class="block text-xs text-gray-400 mb-1">Custom Tag Color</label>
       <input type="color" id="tagColorInput" value="#A6192E" class="w-full h-8 rounded border-none cursor-pointer mb-4">
       <div class="flex justify-end space-x-2">
         <button onclick="closeTagModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
@@ -334,6 +409,15 @@
         <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
 
+      <!-- Password Change Section for Logged-In User -->
+      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Change My Password</h4>
+        <form onsubmit="changeMyPassword(event)" class="space-y-2">
+          <input type="password" id="newPasswordInput" placeholder="New Password" required class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded p-2 text-xs">
+          <button type="submit" class="px-3 py-1.5 bg-[#A6192E] text-white text-xs font-bold rounded">Update Password</button>
+        </form>
+      </div>
+
       <div class="mb-6">
         <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">User Accounts & Permissions</h4>
         <div id="permissionsUserList" class="space-y-2"></div>
@@ -354,8 +438,12 @@
       </div>
 
       <div class="border-t border-gray-700 pt-4 space-y-3">
+        <button id="btnMasterResetPasswords" onclick="resetAllPasswordsToDefault()" class="w-full bg-red-950/60 border border-red-800 text-red-400 py-2 rounded-lg text-xs font-bold hover:bg-red-900 transition hidden">
+          Master Reset All User Passwords to AMADA
+        </button>
+
         <button onclick="resetSettingsToDefault()" class="w-full bg-gray-200 dark:bg-gray-800 text-gray-300 py-2 rounded-lg text-xs font-semibold hover:bg-gray-700 transition">
-          Reset Settings to Default
+          Reset Visual Settings to Default
         </button>
 
         <button onclick="applySettingsGlobally()" class="w-full bg-amber-500 hover:bg-amber-600 text-black py-2.5 rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition shadow">
@@ -369,8 +457,8 @@
   <!-- APPLICATION ENGINE -->
   <script>
     const DEFAULT_USERS = [
-      { name: "Charlie", role: "master_admin" },
-      { name: "Jacob", role: "admin" }
+      { name: "Charlie", role: "master_admin", password: "AMADA" },
+      { name: "Jacob", role: "admin", password: "AMADA" }
     ];
 
     let users = JSON.parse(localStorage.getItem("amada_users")) || DEFAULT_USERS;
@@ -402,18 +490,24 @@
       { id: "t_cnc", title: "Machining", color: "#3b82f6" }
     ];
 
-    let sections = JSON.parse(localStorage.getItem("amada_sections")) || [
+    let sharedSections = JSON.parse(localStorage.getItem("amada_shared_sections")) || [
       { id: "s1", title: "High Priority" },
       { id: "s2", title: "Medium Priority" }
     ];
 
-    let tasks = JSON.parse(localStorage.getItem("amada_tasks")) || [
-      { id: "tk1", title: "Review G112 G-Code", sectionId: "s1", tagId: "t_cnc", assignees: ["Charlie", "Jacob"], completed: false, scope: "shared", owner: "Charlie", restricted: false }
-    ];
+    // Personal Sections Isolated Per User
+    let personalSectionsMap = JSON.parse(localStorage.getItem("amada_personal_sections_map")) || {};
 
-    let notes = JSON.parse(localStorage.getItem("amada_notes")) || [
-      { id: "n1", title: "Mill Specs", content: "Check coolant pressures on machine #2.", tagId: "t_urgent", assignees: ["Jacob"], starred: true, image: null, scope: "shared", owner: "Jacob", restricted: false }
-    ];
+    function getActiveSections() {
+      if (scope === "personal") {
+        if (!personalSectionsMap[activeUser]) personalSectionsMap[activeUser] = [];
+        return personalSectionsMap[activeUser];
+      }
+      return sharedSections;
+    }
+
+    let tasks = JSON.parse(localStorage.getItem("amada_tasks")) || [];
+    let notes = JSON.parse(localStorage.getItem("amada_notes")) || [];
 
     window.onload = () => {
       renderUserProfiles();
@@ -425,7 +519,8 @@
     function saveData() {
       localStorage.setItem("amada_users", JSON.stringify(users));
       localStorage.setItem("amada_tags", JSON.stringify(tags));
-      localStorage.setItem("amada_sections", JSON.stringify(sections));
+      localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
+      localStorage.setItem("amada_personal_sections_map", JSON.stringify(personalSectionsMap));
       localStorage.setItem("amada_tasks", JSON.stringify(tasks));
       localStorage.setItem("amada_notes", JSON.stringify(notes));
       renderAll();
@@ -459,7 +554,7 @@
     }
 
     function applySettingsGlobally() {
-      if (confirm("Apply settings globally as default template for all users?")) {
+      if (confirm("Apply visual settings globally for everyone?")) {
         const prefs = getUserPreferences();
         users.forEach(u => {
           localStorage.setItem(`amada_prefs_${u.name}`, JSON.stringify(prefs));
@@ -468,6 +563,7 @@
       }
     }
 
+    // AUTH & PROFILES
     function renderUserProfiles() {
       const container = document.getElementById("userProfilesList");
       container.innerHTML = users.map(u => `
@@ -493,7 +589,10 @@
 
     function verifyPassword(e) {
       e.preventDefault();
-      if (document.getElementById("loginPassword").value === "AMADA") {
+      const u = users.find(x => x.name === selectedUserForAuth);
+      const targetPassword = (u && u.password) ? u.password : "AMADA";
+
+      if (document.getElementById("loginPassword").value === targetPassword) {
         activeUser = selectedUserForAuth;
         localStorage.setItem("amada_active_user", activeUser);
         document.getElementById("authOverlay").classList.add("hidden");
@@ -528,6 +627,7 @@
       document.getElementById("modeShared").className = scope === 'shared' ? "px-4 py-1 rounded-lg text-xs font-bold bg-[#A6192E] text-white flex items-center space-x-1" : "px-4 py-1 rounded-lg text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center space-x-1";
       document.getElementById("modePersonal").className = scope === 'personal' ? "px-4 py-1 rounded-lg text-xs font-bold bg-[#A6192E] text-white flex items-center space-x-1" : "px-4 py-1 rounded-lg text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center space-x-1";
       document.getElementById("assigneeFilterSection").classList.toggle("hidden", scope === "personal");
+      clearActiveFilter();
       renderAll();
     }
 
@@ -559,10 +659,14 @@
     function renderTagsSidebar() {
       const container = document.getElementById("tagsSidebar");
       container.innerHTML = tags.map(t => `
-        <div onclick="filterByTag('${t.id}')" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs">
-          <div class="flex items-center space-x-2">
+        <div class="group flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs">
+          <div class="flex items-center space-x-2 flex-1 truncate" onclick="filterByTag('${t.id}')">
             <div class="w-3 h-3 rounded-full" style="background-color: ${t.color}"></div>
-            <span>${t.title}</span>
+            <span class="truncate">${t.title}</span>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
+            <button onclick="event.stopPropagation(); openNewTagModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+            <button onclick="event.stopPropagation(); deleteTag('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
           </div>
         </div>
       `).join('');
@@ -571,17 +675,22 @@
     function renderSectionsSidebar() {
       const container = document.getElementById("sectionsSidebar");
       const prefs = getUserPreferences();
+      const currentSections = getActiveSections();
 
-      container.innerHTML = sections.map(s => {
+      container.innerHTML = currentSections.map(s => {
         const isVisible = !prefs.hiddenSections.includes(s.id);
         const count = tasks.filter(t => t.sectionId === s.id && !t.completed && matchesScope(t)).length;
         return `
-          <div class="flex items-center justify-between p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-xs">
+          <div class="group flex items-center justify-between p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-xs">
             <div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="filterBySection('${s.id}')">
               <input type="checkbox" ${isVisible ? 'checked' : ''} onclick="event.stopPropagation(); toggleSectionVisibility('${s.id}')" class="accent-[#A6192E]">
               <span class="truncate">${s.title}</span>
             </div>
-            <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
+            <div class="flex items-center space-x-1">
+              <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
+              <button onclick="event.stopPropagation(); editSectionTitle('${s.id}')" class="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+              <button onclick="event.stopPropagation(); deleteSection('${s.id}')" class="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+            </div>
           </div>
         `;
       }).join('');
@@ -596,6 +705,29 @@
       }
       saveUserPreferences(prefs);
       renderAll();
+    }
+
+    function editSectionTitle(id) {
+      const list = getActiveSections();
+      const section = list.find(s => s.id === id);
+      if (!section) return;
+      const newTitle = prompt("Edit Section Name:", section.title);
+      if (newTitle && newTitle.trim()) {
+        section.title = newTitle.trim();
+        saveData();
+      }
+    }
+
+    function deleteSection(id) {
+      if (confirm("Delete this section and its tasks?")) {
+        if (scope === "personal") {
+          personalSectionsMap[activeUser] = personalSectionsMap[activeUser].filter(s => s.id !== id);
+        } else {
+          sharedSections = sharedSections.filter(s => s.id !== id);
+        }
+        tasks = tasks.filter(t => t.sectionId !== id);
+        saveData();
+      }
     }
 
     function filterBySection(sectionId) {
@@ -633,19 +765,20 @@
       const prefs = getUserPreferences();
       const headerBar = document.getElementById("isolatedFilterHeader");
       const filterTitle = document.getElementById("isolatedFilterTitle");
+      const currentSections = getActiveSections();
 
       if (activeFilterType) {
         headerBar.classList.remove("hidden");
-        if (activeFilterType === "section") filterTitle.innerText = `Section: ${sections.find(s => s.id === activeFilterId)?.title || ''}`;
+        if (activeFilterType === "section") filterTitle.innerText = `Section: ${currentSections.find(s => s.id === activeFilterId)?.title || ''}`;
         if (activeFilterType === "assignee") filterTitle.innerText = `Assigned to: ${activeFilterId}`;
         if (activeFilterType === "tag") filterTitle.innerText = `Tag: ${tags.find(t => t.id === activeFilterId)?.title || ''}`;
       } else {
         headerBar.classList.add("hidden");
       }
 
-      let visibleSections = sections.filter(s => !prefs.hiddenSections.includes(s.id));
+      let visibleSections = currentSections.filter(s => !prefs.hiddenSections.includes(s.id));
       if (activeFilterType === "section") {
-        visibleSections = sections.filter(s => s.id === activeFilterId);
+        visibleSections = currentSections.filter(s => s.id === activeFilterId);
       }
 
       view.innerHTML = visibleSections.map(s => {
@@ -675,16 +808,22 @@
       const prefs = getUserPreferences();
 
       return `
-        <div class="group bg-gray-50 dark:bg-[#252525] border border-gray-200 dark:border-gray-700/60 rounded-lg ${prefs.compact ? 'p-1.5' : 'p-2.5'} flex items-start space-x-2 relative">
-          <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTaskComplete('${t.id}')" class="mt-0.5 accent-green-600 cursor-pointer">
+        <div onclick="openTaskDetailModal('${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-lg ${prefs.compact ? 'p-1.5' : 'p-2.5'} flex items-start space-x-2 relative cursor-pointer shadow-sm transition">
+          <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleTaskComplete('${t.id}')" class="mt-0.5 accent-green-600 cursor-pointer">
           <div class="flex-1 min-w-0">
             <span class="text-xs font-medium strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>
             <div class="flex flex-wrap items-center gap-1 mt-1">
               ${tag ? `<span class="text-[9px] px-1.5 py-0.5 rounded text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
+              ${t.priority ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 font-bold">${t.priority}</span>` : ''}
               ${t.assignees ? t.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">${a}</span>`).join('') : ''}
             </div>
           </div>
-          ${canEdit ? `<button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+          ${canEdit ? `
+            <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
+              <button onclick="event.stopPropagation(); openEditTaskModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+              <button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </div>
+          ` : ''}
         </div>
       `;
     }
@@ -694,8 +833,9 @@
         tasks.push({
           id: Date.now().toString(),
           title: e.target.value.trim(),
-          sectionId, tagId: null, assignees: [activeUser],
-          completed: false, scope, owner: activeUser, restricted: false
+          sectionId, tagId: null, assignees: [activeUser], priority: "Medium", dueDate: "", notes: "",
+          completed: false, scope, owner: activeUser, restricted: false,
+          history: [{ action: "Created task", date: new Date().toLocaleString(), user: activeUser }]
         });
         saveData();
       }
@@ -703,7 +843,12 @@
 
     function toggleTaskComplete(id) {
       const t = tasks.find(x => x.id === id);
-      if (t) { t.completed = !t.completed; saveData(); }
+      if (t) {
+        t.completed = !t.completed;
+        if (!t.history) t.history = [];
+        t.history.push({ action: t.completed ? "Marked completed" : "Restored task", date: new Date().toLocaleString(), user: activeUser });
+        saveData();
+      }
     }
 
     function deleteTask(id) {
@@ -728,14 +873,14 @@
       const tag = tags.find(x => x.id === n.tagId);
       const canEdit = canModifyItem(n);
       return `
-        <div class="group bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex flex-col justify-between relative shadow-sm hover:shadow-md transition">
+        <div onclick="openNoteModal('${n.id}')" class="group bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex flex-col justify-between relative shadow-sm hover:shadow-md transition cursor-pointer">
           <div>
             <div class="flex items-center justify-between mb-2">
               <h4 class="font-bold text-sm">${n.title}</h4>
-              <button onclick="toggleStarNote('${n.id}')" class="text-xs">${n.starred ? '⭐' : '☆'}</button>
+              <button onclick="event.stopPropagation(); toggleStarNote('${n.id}')" class="text-xs">${n.starred ? '⭐' : '☆'}</button>
             </div>
             <p class="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap mb-3">${n.content}</p>
-            ${n.image ? `<img src="${n.image}" onclick="openImageZoomModal('${n.image}')" class="w-full h-32 object-cover rounded-lg cursor-zoom-in mb-3 border border-gray-700">` : ''}
+            ${n.image ? `<img src="${n.image}" onclick="event.stopPropagation(); openImageZoomModal('${n.image}')" class="w-full h-32 object-cover rounded-lg cursor-zoom-in mb-3 border border-gray-700">` : ''}
           </div>
           <div class="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-800">
             <div class="flex items-center space-x-1">
@@ -744,8 +889,8 @@
             </div>
             ${canEdit ? `
               <div class="opacity-0 group-hover:opacity-100 flex space-x-2">
-                <button onclick="openNoteModal('${n.id}')" class="text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                <button onclick="deleteNote('${n.id}')" class="text-gray-400 hover:text-red-400"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
+                <button onclick="event.stopPropagation(); openNoteModal('${n.id}')" class="text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                <button onclick="event.stopPropagation(); deleteNote('${n.id}')" class="text-gray-400 hover:text-red-400"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
               </div>
             ` : ''}
           </div>
@@ -768,6 +913,121 @@
       if (item.restricted) return false;
       const u = users.find(x => x.name === activeUser);
       return u && (u.role === "admin" || u.role === "master_admin");
+    }
+
+    // MODAL HANDLERS
+    function openTaskDetailModal(id) {
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+
+      const currentSections = getActiveSections();
+      document.getElementById("detailTitle").innerText = t.title;
+      document.getElementById("detailNotes").innerText = t.notes || "No description details provided.";
+      document.getElementById("detailPriority").innerText = t.priority || "Medium";
+      document.getElementById("detailSection").innerText = currentSections.find(s => s.id === t.sectionId)?.title || "General";
+      document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone";
+      document.getElementById("detailDueDate").innerText = t.dueDate || "No Date";
+      document.getElementById("detailOwner").innerText = t.owner || "System";
+
+      const logContainer = document.getElementById("detailHistoryLog");
+      logContainer.innerHTML = (t.history && t.history.length) ? t.history.map(h => `
+        <div class="border-b border-gray-200 dark:border-gray-800 pb-1">
+          <span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span>
+          <div class="text-[9px] text-gray-500">${h.date} — ${h.user}</div>
+        </div>
+      `).join('') : '<p class="text-[10px] text-gray-500">No edit history entries.</p>';
+
+      document.getElementById("detailEditBtn").onclick = () => {
+        closeTaskDetailModal();
+        openEditTaskModal(id);
+      };
+
+      document.getElementById("taskDetailModal").classList.remove("hidden");
+    }
+
+    function closeTaskDetailModal() {
+      document.getElementById("taskDetailModal").classList.add("hidden");
+    }
+
+    function openEditTaskModal(id) {
+      const currentSections = getActiveSections();
+      document.getElementById("taskSectionInput").innerHTML = currentSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + tags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+
+      const t = tasks.find(x => x.id === id);
+      if (t) {
+        document.getElementById("taskIdInput").value = t.id;
+        document.getElementById("taskTitleInput").value = t.title;
+        document.getElementById("taskSectionInput").value = t.sectionId;
+        document.getElementById("taskPriorityInput").value = t.priority || "Medium";
+        document.getElementById("taskTagInput").value = t.tagId || "";
+        document.getElementById("taskDueDateInput").value = t.dueDate || "";
+        document.getElementById("taskNotesInput").value = t.notes || "";
+        document.getElementById("taskPrivateInput").checked = t.restricted;
+        renderAssigneesCheckboxes("taskAssigneesContainer", t.assignees || []);
+
+        const logContainer = document.getElementById("taskModalHistoryLog");
+        logContainer.innerHTML = (t.history && t.history.length) ? t.history.map(h => `
+          <div class="border-b border-gray-200 dark:border-gray-800 pb-1">
+            <span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span>
+            <div class="text-[9px] text-gray-500">${h.date} — ${h.user}</div>
+          </div>
+        `).join('') : '<p class="text-[10px] text-gray-500">No edit history entries.</p>';
+      }
+      document.getElementById("taskModalHeading").innerText = "Edit Task Details";
+      document.getElementById("taskModal").classList.remove("hidden");
+    }
+
+    function openNewTaskModal() {
+      const currentSections = getActiveSections();
+      document.getElementById("taskSectionInput").innerHTML = currentSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + tags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      
+      document.getElementById("taskIdInput").value = "";
+      document.getElementById("taskTitleInput").value = "";
+      document.getElementById("taskNotesInput").value = "";
+      document.getElementById("taskDueDateInput").value = "";
+      document.getElementById("taskPriorityInput").value = "Medium";
+      document.getElementById("taskPrivateInput").checked = false;
+      document.getElementById("taskModalHistoryLog").innerHTML = '<p class="text-[10px] text-gray-500">New creation pending.</p>';
+      renderAssigneesCheckboxes("taskAssigneesContainer", [activeUser]);
+      document.getElementById("taskModalHeading").innerText = "Create New Task";
+      document.getElementById("taskModal").classList.remove("hidden");
+    }
+
+    function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); }
+
+    function saveTask(e) {
+      e.preventDefault();
+      const id = document.getElementById("taskIdInput").value;
+      const title = document.getElementById("taskTitleInput").value;
+      const sectionId = document.getElementById("taskSectionInput").value;
+      const priority = document.getElementById("taskPriorityInput").value;
+      const tagId = document.getElementById("taskTagInput").value;
+      const dueDate = document.getElementById("taskDueDateInput").value;
+      const notesText = document.getElementById("taskNotesInput").value;
+      const restricted = document.getElementById("taskPrivateInput").checked;
+      const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
+
+      if (id) {
+        const t = tasks.find(x => x.id === id);
+        if (t) {
+          t.title = title; t.sectionId = sectionId; t.priority = priority; t.tagId = tagId;
+          t.dueDate = dueDate; t.notes = notesText; t.restricted = restricted; t.assignees = assignees;
+          if (!t.history) t.history = [];
+          t.history.push({ action: "Edited task details", date: new Date().toLocaleString(), user: activeUser });
+        }
+      } else {
+        tasks.push({
+          id: Date.now().toString(),
+          title, sectionId, priority, tagId, dueDate, notes: notesText, assignees, restricted,
+          completed: false, scope, owner: activeUser,
+          history: [{ action: "Created task", date: new Date().toLocaleString(), user: activeUser }]
+        });
+      }
+
+      closeTaskModal();
+      saveData();
     }
 
     function renderAssigneesCheckboxes(containerId, selected = []) {
@@ -841,35 +1101,18 @@
       }
     }
 
-    function openNewTaskModal() {
-      document.getElementById("taskSectionInput").innerHTML = sections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + tags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-      renderAssigneesCheckboxes("taskAssigneesContainer", [activeUser]);
-      document.getElementById("taskModal").classList.remove("hidden");
-    }
-
-    function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); }
-
-    function saveTask(e) {
-      e.preventDefault();
-      const title = document.getElementById("taskTitleInput").value;
-      const sectionId = document.getElementById("taskSectionInput").value;
-      const tagId = document.getElementById("taskTagInput").value;
-      const restricted = document.getElementById("taskPrivateInput").checked;
-      const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
-
-      tasks.push({
-        id: Date.now().toString(),
-        title, sectionId, tagId, assignees, restricted,
-        completed: false, scope, owner: activeUser
-      });
-      closeTaskModal();
-      saveData();
-    }
-
     function openNewSectionModal() {
       const name = prompt("Enter section name:");
-      if (name) { sections.push({ id: "s_" + Date.now(), title: name }); saveData(); }
+      if (name && name.trim()) {
+        const newSec = { id: "s_" + Date.now(), title: name.trim() };
+        if (scope === "personal") {
+          if (!personalSectionsMap[activeUser]) personalSectionsMap[activeUser] = [];
+          personalSectionsMap[activeUser].push(newSec);
+        } else {
+          sharedSections.push(newSec);
+        }
+        saveData();
+      }
     }
 
     function openImageZoomModal(src) {
@@ -885,15 +1128,46 @@
     }
     function resetImageZoom(e) { e.target.style.transform = "scale(1)"; }
 
-    function openNewTagModal() { document.getElementById("tagModal").classList.remove("hidden"); }
+    function openNewTagModal(idToEdit = null) {
+      if (idToEdit) {
+        const t = tags.find(x => x.id === idToEdit);
+        if (t) {
+          document.getElementById("tagIdInput").value = t.id;
+          document.getElementById("tagTitleInput").value = t.title;
+          document.getElementById("tagColorInput").value = t.color;
+          document.getElementById("tagModalTitle").innerText = "Edit Custom Tag";
+        }
+      } else {
+        document.getElementById("tagIdInput").value = "";
+        document.getElementById("tagTitleInput").value = "";
+        document.getElementById("tagColorInput").value = "#A6192E";
+        document.getElementById("tagModalTitle").innerText = "Create Custom Tag";
+      }
+      document.getElementById("tagModal").classList.remove("hidden");
+    }
+
     function closeTagModal() { document.getElementById("tagModal").classList.add("hidden"); }
+
     function saveCustomTag() {
+      const id = document.getElementById("tagIdInput").value;
       const title = document.getElementById("tagTitleInput").value.trim();
       const color = document.getElementById("tagColorInput").value;
+
       if (title) {
-        tags.push({ id: "t_" + Date.now(), title, color });
-        document.getElementById("tagTitleInput").value = "";
+        if (id) {
+          const t = tags.find(x => x.id === id);
+          if (t) { t.title = title; t.color = color; }
+        } else {
+          tags.push({ id: "t_" + Date.now(), title, color });
+        }
         closeTagModal();
+        saveData();
+      }
+    }
+
+    function deleteTag(id) {
+      if (confirm("Delete custom tag?")) {
+        tags = tags.filter(t => t.id !== id);
         saveData();
       }
     }
@@ -903,7 +1177,7 @@
     function saveViewerProfile() {
       const name = document.getElementById("newViewerName").value.trim();
       if (name) {
-        users.push({ name, role: "viewer" });
+        users.push({ name, role: "viewer", password: "AMADA" });
         document.getElementById("newViewerName").value = "";
         closeAddViewerModal();
         renderUserProfiles();
@@ -911,29 +1185,49 @@
       }
     }
 
-    // SETTINGS MODAL WITH STRICT MASTER ADMIN / ADMIN DELETION HIERARCHY
+    // SETTINGS MODAL & PASSWORD MANAGEMENT
+    function changeMyPassword(e) {
+      e.preventDefault();
+      const newPwd = document.getElementById("newPasswordInput").value.trim();
+      const u = users.find(x => x.name === activeUser);
+      if (u && newPwd) {
+        u.password = newPwd;
+        document.getElementById("newPasswordInput").value = "";
+        saveData();
+        alert("Your password has been updated!");
+      }
+    }
+
+    function resetAllPasswordsToDefault() {
+      if (confirm("Master Reset: Reset all user passwords back to 'AMADA'?")) {
+        users.forEach(u => u.password = "AMADA");
+        saveData();
+        alert("All passwords reset to AMADA!");
+      }
+    }
+
     function openSettingsModal() {
       const activeObj = users.find(u => u.name === activeUser);
       const isMasterAdmin = activeObj && activeObj.role === "master_admin";
       const isAdmin = activeObj && (activeObj.role === "admin" || isMasterAdmin);
 
+      document.getElementById("btnMasterResetPasswords").classList.toggle("hidden", !isMasterAdmin);
+
       const container = document.getElementById("permissionsUserList");
       container.innerHTML = users.map(u => {
         const isTargetMaster = u.name === "Charlie" || u.role === "master_admin";
         
-        // Can current active user delete target?
         let canDeleteTarget = false;
         if (isMasterAdmin && !isTargetMaster) canDeleteTarget = true;
         if (isAdmin && !isMasterAdmin && !isTargetMaster && u.role !== "admin") canDeleteTarget = true;
 
-        // Can current active user edit role?
         let canEditRole = false;
         if (isMasterAdmin && !isTargetMaster) canEditRole = true;
         if (isAdmin && !isTargetMaster && u.role !== "admin") canEditRole = true;
 
         return `
           <div class="flex items-center justify-between bg-gray-100 dark:bg-[#121212] p-2.5 rounded-lg text-xs">
-            <span class="font-bold">${u.name} ${isTargetMaster ? '(Master Admin)' : `(${u.role})`}</span>
+            <span class="font-bold">${u.name} ${isTargetMaster ? '(Master Admin)' : `(${u.role.replace('_', ' ')})`}</span>
             <div class="flex items-center space-x-2">
               ${isTargetMaster ? '<span class="text-[10px] text-amber-500 font-semibold">Protected Master</span>' : `
                 ${canEditRole ? `
@@ -942,7 +1236,7 @@
                     <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
                     ${isMasterAdmin ? `<option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>` : ''}
                   </select>
-                ` : `<span class="text-[9px] text-gray-500 capitalize">${u.role}</span>`}
+                ` : `<span class="text-[9px] text-gray-500 capitalize">${u.role.replace('_', ' ')}</span>`}
                 ${canDeleteTarget ? `
                   <button onclick="deleteUserProfile('${u.name}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                 ` : ''}
@@ -984,7 +1278,9 @@
     function toggleActiveUsersPopover() {
       const popover = document.getElementById("activeUsersPopover");
       popover.classList.toggle("hidden");
-      document.getElementById("activeUsersList").innerHTML = users.map(u => `<div class="flex items-center space-x-1.5"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div><span>${u.name} (${u.role.replace('_', ' ')})</span></div>`).join('');
+      document.getElementById("activeUsersList").innerHTML = activeUser 
+        ? `<div class="flex items-center space-x-1.5"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div><span class="font-bold">${activeUser} (Current Session)</span></div>`
+        : `<p class="text-gray-500">No active user session.</p>`;
     }
   </script>
 </body>
