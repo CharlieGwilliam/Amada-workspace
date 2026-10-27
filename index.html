@@ -17,6 +17,7 @@
     }
   </script>
   <style>
+    /* Smooth Fluid Green Strikethrough Animation */
     .strikethrough-anim {
       position: relative;
       display: inline-block;
@@ -59,6 +60,7 @@
         </button>
       </div>
 
+      <!-- Password Step -->
       <form id="passwordStep" onsubmit="verifyPassword(event)" class="hidden space-y-4">
         <div class="text-left">
           <button type="button" onclick="resetLoginStep()" class="text-xs text-gray-400 hover:text-white mb-2 flex items-center space-x-1">
@@ -81,6 +83,7 @@
         <span class="font-bold text-lg tracking-wide">AMADA</span>
       </div>
 
+      <!-- WORKSPACE SCOPE (SHARED VS PERSONAL) -->
       <div class="flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-800">
         <button id="modeShared" onclick="setWorkspaceScope('shared')" class="px-4 py-1 rounded-lg text-xs font-bold bg-[#A6192E] text-white flex items-center space-x-1">
           <i data-lucide="users" class="w-3.5 h-3.5"></i> <span>Shared</span>
@@ -91,16 +94,19 @@
       </div>
     </div>
 
+    <!-- VIEW TABS -->
     <div class="flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-800">
       <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white">Tasks Board</button>
       <button id="tabNotes" onclick="switchMainTab('notes')" class="px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400">Keep Notes</button>
     </div>
 
+    <!-- CONTROLS & PROFILE -->
     <div class="flex items-center space-x-3">
+      <!-- Active Viewers Popover & Live Status -->
       <div class="relative">
         <button onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs">
-          <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span id="githubSyncBadge">GitHub Repo Synced</span>
+          <div id="syncPulse" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+          <span id="githubSyncBadge">Live Multi-PC Sync</span>
         </button>
         <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-48 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-3 z-40 text-xs">
           <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Logged In Session</div>
@@ -124,6 +130,8 @@
 
   <!-- MAIN APP CONTAINER -->
   <div class="flex-1 flex overflow-hidden">
+    
+    <!-- LEFT SIDEBAR -->
     <aside class="w-64 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 p-4">
       <div class="flex space-x-2 mb-3">
         <button onclick="openNewTaskModal()" class="flex-1 bg-[#A6192E] hover:opacity-90 text-white rounded-xl py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
@@ -172,6 +180,7 @@
       </div>
     </aside>
 
+    <!-- CONTENT WORKSPACE -->
     <main class="flex-1 bg-gray-100 dark:bg-[#121212] p-4 overflow-x-auto overflow-y-hidden flex flex-col">
       <div id="isolatedFilterHeader" class="hidden mb-4 bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex items-center justify-between shrink-0">
         <div class="flex items-center space-x-3">
@@ -203,6 +212,7 @@
   <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-6 relative shadow-2xl">
       <button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      
       <div class="flex items-center space-x-2 mb-2">
         <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK DETAIL</span>
         <span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800">Priority</span>
@@ -401,9 +411,10 @@
       </div>
 
       <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
-        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">GitHub Repository Live Sync Token</h4>
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">GitHub Live Multi-PC Sync Token</h4>
+        <p class="text-[10px] text-gray-500 mb-2">Enter your GitHub PAT once to sync commits automatically across all PCs.</p>
         <input type="password" id="githubTokenInput" placeholder="github_pat_..." class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded p-2 text-xs mb-2">
-        <button onclick="saveGithubToken()" class="px-3 py-1.5 bg-[#A6192E] text-white text-xs font-bold rounded">Save Token to Connect PCs</button>
+        <button onclick="saveGithubToken()" class="px-3 py-1.5 bg-[#A6192E] text-white text-xs font-bold rounded">Save Token</button>
       </div>
 
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
@@ -450,7 +461,7 @@
     </div>
   </div>
 
-  <!-- SCRIPT ENGINE WITH PURE GITHUB REST API MULTI-PC SYNC -->
+  <!-- APPLICATION ENGINE WITH LIVE RAW CACHE-BUSTING BACKGROUND SYNC -->
   <script>
     const GITHUB_REPO_OWNER = "CharlieGwilliam";
     const GITHUB_REPO_NAME = "amada-tasks";
@@ -472,7 +483,6 @@
     let activeFilterType = null;
     let activeFilterId = null;
     let selectedUserForAuth = "";
-    let currentSha = null;
 
     function getUserPreferences() {
       if (!activeUser) return { hiddenSections: [], compact: false, dark: true };
@@ -521,20 +531,24 @@
       renderUserProfiles();
       checkAuth();
       applyCurrentSettings();
-      fetchFromGitHub();
-      setInterval(fetchFromGitHub, 4000);
+      fetchFromGitHubRaw();
+      setInterval(fetchFromGitHubRaw, 3000); // Polls GitHub Raw CDN every 3 seconds
       renderAll();
     };
 
-    async function fetchFromGitHub() {
+    // Helper: Detect if user is currently typing in an input field/modal to avoid focus loss
+    function isUserTyping() {
+      const activeEl = document.activeElement;
+      return activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT') && activeEl.type !== 'checkbox';
+    }
+
+    // Uncached GET read via GitHub Raw CDN (Zero rate limits + timestamp cache buster)
+    async function fetchFromGitHubRaw() {
       try {
-        const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}`, {
-          headers: githubToken ? { "Authorization": `token ${githubToken}` } : {}
-        });
+        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/main/${GITHUB_FILE_PATH}?t=${Date.now()}`;
+        const res = await fetch(rawUrl);
         if (res.ok) {
-          const json = await res.json();
-          currentSha = json.sha;
-          const content = JSON.parse(atob(json.content));
+          const content = await res.json();
           if (content.users) users = content.users;
           if (content.sharedTags) sharedTags = content.sharedTags;
           if (content.sharedSections) sharedSections = content.sharedSections;
@@ -546,11 +560,15 @@
           localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
           localStorage.setItem("amada_tasks", JSON.stringify(tasks));
           localStorage.setItem("amada_notes", JSON.stringify(notes));
-          renderAll();
+
+          if (!isUserTyping()) {
+            renderAll();
+          }
         }
       } catch (e) {}
     }
 
+    // Save Data & Write Commit to GitHub REST API with fresh SHA lookup
     async function saveData() {
       localStorage.setItem("amada_users", JSON.stringify(users));
       localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
@@ -560,17 +578,34 @@
       localStorage.setItem("amada_tasks", JSON.stringify(tasks));
       localStorage.setItem("amada_notes", JSON.stringify(notes));
 
+      renderAll();
+
       if (githubToken) {
         try {
+          // Get current file SHA dynamically
+          const getRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}?t=${Date.now()}`, {
+            headers: { "Authorization": `token ${githubToken}` }
+          });
+          let sha = null;
+          if (getRes.ok) {
+            const getJson = await getRes.json();
+            sha = getJson.sha;
+          }
+
+          // Safe UTF-8 Base64 encoding
+          const jsonStr = JSON.stringify({ users, sharedTags, sharedSections, tasks, notes });
+          const utf8Bytes = new TextEncoder().encode(jsonStr);
+          let binary = '';
+          utf8Bytes.forEach(b => binary += String.fromCharCode(b));
+          const base64Content = btoa(binary);
+
           const payload = {
             message: `Update workspace by ${activeUser || 'system'}`,
-            content: btoa(unescape(encodeURIComponent(JSON.stringify({
-              users, sharedTags, sharedSections, tasks, notes
-            })))),
-            sha: currentSha
+            content: base64Content,
+            sha: sha
           };
 
-          const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}`, {
+          await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}`, {
             method: "PUT",
             headers: {
               "Authorization": `token ${githubToken}`,
@@ -578,14 +613,8 @@
             },
             body: JSON.stringify(payload)
           });
-          if (res.ok) {
-            const data = await res.json();
-            currentSha = data.content.sha;
-          }
         } catch (e) {}
       }
-
-      renderAll();
     }
 
     function saveGithubToken() {
@@ -593,8 +622,8 @@
       if (token) {
         githubToken = token;
         localStorage.setItem("amada_github_token", token);
-        alert("GitHub Live Sync Token Saved! Your PC will now sync live across devices.");
-        fetchFromGitHub();
+        alert("GitHub Live Token Saved!");
+        fetchFromGitHubRaw();
       }
     }
 
