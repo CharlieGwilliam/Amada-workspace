@@ -96,9 +96,8 @@
 
     <!-- VIEW TABS -->
     <div class="flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-800">
-      <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white">Tasks</button>
+      <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white">Tasks Board</button>
       <button id="tabNotes" onclick="switchMainTab('notes')" class="px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400">Keep Notes</button>
-      <button id="tabFilteredView" onclick="switchMainTab('filtered')" class="px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400 hidden">Isolated Filter</button>
     </div>
 
     <!-- CONTROLS & PROFILE -->
@@ -136,11 +135,25 @@
     
     <!-- LEFT SIDEBAR -->
     <aside class="w-64 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 p-4">
-      <button onclick="openNewTaskModal()" class="w-full bg-[#A6192E] hover:opacity-90 text-white rounded-xl py-2.5 px-4 flex items-center justify-center space-x-2 text-xs font-bold shadow mb-4">
-        <i data-lucide="plus" class="w-4 h-4"></i> <span>Create New Item</span>
+      <div class="flex space-x-2 mb-4">
+        <button onclick="openNewTaskModal()" class="flex-1 bg-[#A6192E] hover:opacity-90 text-white rounded-xl py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
+          <i data-lucide="check-square" class="w-4 h-4"></i> <span>+ Task</span>
+        </button>
+        <button onclick="openNoteModal()" class="flex-1 bg-gray-200 dark:bg-[#252525] hover:bg-gray-300 dark:hover:bg-gray-700 rounded-xl py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
+          <i data-lucide="sticky-note" class="w-4 h-4 text-[#A6192E]"></i> <span>+ Note</span>
+        </button>
+      </div>
+
+      <!-- ALL TASKS RESET BUTTON -->
+      <button onclick="clearActiveFilter()" class="w-full flex items-center justify-between px-3 py-2 mb-4 rounded-xl text-xs font-bold bg-[#A6192E] text-white hover:opacity-90 transition">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="layers" class="w-4 h-4"></i>
+          <span>All Tasks</span>
+        </div>
+        <span id="allTasksCountBadge" class="bg-black/30 px-2 py-0.5 rounded-full text-[10px]">0</span>
       </button>
 
-      <!-- ASSIGNEE FILTERS (ISOLATE SHARED TASKS PER PERSON) -->
+      <!-- ASSIGNEE FILTERS -->
       <div id="assigneeFilterSection" class="mb-4">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Filter by Assignee</div>
         <div id="assigneesSidebar" class="space-y-1"></div>
@@ -167,8 +180,24 @@
 
     <!-- CONTENT WORKSPACE -->
     <main class="flex-1 bg-gray-100 dark:bg-[#121212] p-4 overflow-x-auto overflow-y-hidden flex flex-col">
+      
+      <!-- ISOLATED FILTER HEADER BAR -->
+      <div id="isolatedFilterHeader" class="hidden mb-4 bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+          <button onclick="clearActiveFilter()" class="px-3 py-1 bg-gray-200 dark:bg-[#252525] hover:bg-gray-300 dark:hover:bg-gray-700 text-xs rounded-lg flex items-center space-x-1 font-semibold">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> <span>Show All Tasks</span>
+          </button>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-gray-400 font-bold uppercase">Active Filter:</span>
+            <span id="isolatedFilterTitle" class="text-sm font-bold bg-[#A6192E] text-white px-2.5 py-0.5 rounded-full">Filter Name</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TASKS BOARD VIEW -->
       <div id="tasksView" class="flex space-x-4 items-start h-full flex-1"></div>
 
+      <!-- KEEP NOTES GRID VIEW -->
       <div id="notesView" class="hidden h-full flex-1 overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-bold">Keep Notes</h2>
@@ -179,27 +208,6 @@
         <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </div>
 
-      <!-- ISOLATED FILTER VIEW CONTAINER -->
-      <div id="filteredView" class="hidden h-full flex-1 overflow-y-auto space-y-6">
-        <div class="flex items-center justify-between border-b border-gray-700 pb-3">
-          <div class="flex items-center space-x-2">
-            <span class="text-xs font-bold text-gray-400">ISOLATED FILTER:</span>
-            <span id="filterBadgeTitle" class="px-3 py-1 rounded-full text-xs font-bold bg-[#A6192E] text-white">Filter</span>
-          </div>
-          <button onclick="clearActiveFilter()" class="text-xs text-gray-400 hover:text-white">Clear Filter</button>
-        </div>
-        
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <h3 class="font-bold text-sm mb-3 flex items-center space-x-2"><i data-lucide="check-square" class="w-4 h-4 text-[#A6192E]"></i><span>Tasks</span></h3>
-            <div id="filterTasksContainer" class="space-y-2"></div>
-          </div>
-          <div>
-            <h3 class="font-bold text-sm mb-3 flex items-center space-x-2"><i data-lucide="sticky-note" class="w-4 h-4 text-[#A6192E]"></i><span>Keep Notes</span></h3>
-            <div id="filterNotesContainer" class="grid grid-cols-1 gap-3"></div>
-          </div>
-        </div>
-      </div>
     </main>
   </div>
 
@@ -318,7 +326,7 @@
     </div>
   </div>
 
-  <!-- FULL SETTINGS MODAL (PERSONAL VS GLOBAL SETTINGS) -->
+  <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
@@ -326,13 +334,11 @@
         <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
 
-      <!-- User Account Management -->
       <div class="mb-6">
         <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">User Accounts & Permissions</h4>
         <div id="permissionsUserList" class="space-y-2"></div>
       </div>
 
-      <!-- Visual Settings (Personal by Default) -->
       <div class="mb-6 space-y-3">
         <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Visual & Interface Settings (Personal)</h4>
         
@@ -347,7 +353,6 @@
         </div>
       </div>
 
-      <!-- Global Actions -->
       <div class="border-t border-gray-700 pt-4 space-y-3">
         <button onclick="resetSettingsToDefault()" class="w-full bg-gray-200 dark:bg-gray-800 text-gray-300 py-2 rounded-lg text-xs font-semibold hover:bg-gray-700 transition">
           Reset Settings to Default
@@ -363,28 +368,34 @@
 
   <!-- APPLICATION ENGINE -->
   <script>
-    // PRE-SET DEFAULT PROFILES
     const DEFAULT_USERS = [
-      { name: "Charlie", role: "admin" },
+      { name: "Charlie", role: "master_admin" },
       { name: "Jacob", role: "admin" }
     ];
 
-    let users = JSON.parse(localStorage.getItem("amada_users"));
-    if (!users || !Array.isArray(users) || users.length === 0) {
-      users = DEFAULT_USERS;
-      localStorage.setItem("amada_users", JSON.stringify(users));
-    }
+    let users = JSON.parse(localStorage.getItem("amada_users")) || DEFAULT_USERS;
+    
+    // Ensure Charlie is always Master Admin
+    const charlie = users.find(u => u.name === "Charlie");
+    if (charlie) charlie.role = "master_admin";
 
     let activeUser = localStorage.getItem("amada_active_user") || "";
     let scope = localStorage.getItem("amada_scope") || "shared";
-    let activeFilterType = null; // 'tag' or 'assignee'
+    let activeFilterType = null;
     let activeFilterId = null;
     let selectedUserForAuth = "";
 
-    let settings = JSON.parse(localStorage.getItem("amada_settings")) || {
-      compact: false,
-      dark: true
-    };
+    function getUserPreferences() {
+      if (!activeUser) return { hiddenSections: [], compact: false, dark: true };
+      const key = `amada_prefs_${activeUser}`;
+      return JSON.parse(localStorage.getItem(key)) || { hiddenSections: [], compact: false, dark: true };
+    }
+
+    function saveUserPreferences(prefs) {
+      if (!activeUser) return;
+      const key = `amada_prefs_${activeUser}`;
+      localStorage.setItem(key, JSON.stringify(prefs));
+    }
 
     let tags = JSON.parse(localStorage.getItem("amada_tags")) || [
       { id: "t_urgent", title: "Urgent", color: "#ef4444" },
@@ -405,9 +416,9 @@
     ];
 
     window.onload = () => {
-      applyCurrentSettings();
       renderUserProfiles();
       checkAuth();
+      applyCurrentSettings();
       renderAll();
     };
 
@@ -417,49 +428,53 @@
       localStorage.setItem("amada_sections", JSON.stringify(sections));
       localStorage.setItem("amada_tasks", JSON.stringify(tasks));
       localStorage.setItem("amada_notes", JSON.stringify(notes));
-      localStorage.setItem("amada_settings", JSON.stringify(settings));
       renderAll();
     }
 
-    // SETTINGS ENGINE
     function applyCurrentSettings() {
-      document.documentElement.classList.toggle("dark", settings.dark);
-      document.getElementById("settingCompact").checked = settings.compact;
-      document.getElementById("settingDarkMode").checked = settings.dark;
+      const prefs = getUserPreferences();
+      document.documentElement.classList.toggle("dark", prefs.dark);
+      document.getElementById("settingCompact").checked = prefs.compact;
+      document.getElementById("settingDarkMode").checked = prefs.dark;
     }
 
     function toggleSettingCompact(val) {
-      settings.compact = val;
-      saveData();
+      const prefs = getUserPreferences();
+      prefs.compact = val;
+      saveUserPreferences(prefs);
+      renderAll();
     }
 
     function toggleDarkMode() {
-      settings.dark = !settings.dark;
-      document.documentElement.classList.toggle("dark", settings.dark);
-      saveData();
+      const prefs = getUserPreferences();
+      prefs.dark = !prefs.dark;
+      document.documentElement.classList.toggle("dark", prefs.dark);
+      saveUserPreferences(prefs);
     }
 
     function resetSettingsToDefault() {
-      settings = { compact: false, dark: true };
+      saveUserPreferences({ hiddenSections: [], compact: false, dark: true });
       applyCurrentSettings();
-      saveData();
+      renderAll();
     }
 
     function applySettingsGlobally() {
-      if (confirm("Warning: Pushing these settings globally will set visual defaults for all users! Continue?")) {
-        localStorage.setItem("amada_settings_global", JSON.stringify(settings));
-        alert("Settings applied globally!");
+      if (confirm("Apply settings globally as default template for all users?")) {
+        const prefs = getUserPreferences();
+        users.forEach(u => {
+          localStorage.setItem(`amada_prefs_${u.name}`, JSON.stringify(prefs));
+        });
+        alert("Global preferences applied!");
       }
     }
 
-    // AUTH & PROFILES
     function renderUserProfiles() {
       const container = document.getElementById("userProfilesList");
       container.innerHTML = users.map(u => `
         <button onclick="selectUserForLogin('${u.name}')" class="p-3 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-xl flex flex-col items-center space-y-1 transition">
           <div class="w-8 h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div>
           <span class="text-xs font-semibold">${u.name}</span>
-          <span class="text-[9px] text-gray-400 capitalize">${u.role}</span>
+          <span class="text-[9px] text-gray-400 capitalize">${u.role.replace('_', ' ')}</span>
         </button>
       `).join('');
     }
@@ -484,6 +499,7 @@
         document.getElementById("authOverlay").classList.add("hidden");
         document.getElementById("loginPassword").value = "";
         checkAuth();
+        applyCurrentSettings();
         renderAll();
       } else {
         document.getElementById("authError").classList.remove("hidden");
@@ -515,14 +531,16 @@
       renderAll();
     }
 
-    // MAIN RENDER ENGINE
     function renderAll() {
       renderAssigneesSidebar();
       renderTagsSidebar();
       renderSectionsSidebar();
       renderTasksBoard();
       renderNotesGrid();
-      renderIsolatedFilterView();
+      
+      const totalUncompleted = tasks.filter(t => !t.completed && matchesScope(t)).length;
+      document.getElementById("allTasksCountBadge").innerText = totalUncompleted;
+
       lucide.createIcons();
     }
 
@@ -552,52 +570,57 @@
 
     function renderSectionsSidebar() {
       const container = document.getElementById("sectionsSidebar");
-      container.innerHTML = sections.map(s => `
-        <div class="text-xs p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 flex justify-between items-center">
-          <span>${s.title}</span>
-          <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${tasks.filter(t => t.sectionId === s.id && !t.completed && matchesScope(t)).length}</span>
-        </div>
-      `).join('');
+      const prefs = getUserPreferences();
+
+      container.innerHTML = sections.map(s => {
+        const isVisible = !prefs.hiddenSections.includes(s.id);
+        const count = tasks.filter(t => t.sectionId === s.id && !t.completed && matchesScope(t)).length;
+        return `
+          <div class="flex items-center justify-between p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-xs">
+            <div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="filterBySection('${s.id}')">
+              <input type="checkbox" ${isVisible ? 'checked' : ''} onclick="event.stopPropagation(); toggleSectionVisibility('${s.id}')" class="accent-[#A6192E]">
+              <span class="truncate">${s.title}</span>
+            </div>
+            <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleSectionVisibility(sectionId) {
+      const prefs = getUserPreferences();
+      if (prefs.hiddenSections.includes(sectionId)) {
+        prefs.hiddenSections = prefs.hiddenSections.filter(id => id !== sectionId);
+      } else {
+        prefs.hiddenSections.push(sectionId);
+      }
+      saveUserPreferences(prefs);
+      renderAll();
+    }
+
+    function filterBySection(sectionId) {
+      activeFilterType = "section";
+      activeFilterId = sectionId;
+      renderAll();
     }
 
     function filterByAssignee(userName) {
       activeFilterType = "assignee";
       activeFilterId = userName;
-      switchMainTab("filtered");
-      renderIsolatedFilterView();
+      renderAll();
     }
 
     function filterByTag(tagId) {
       activeFilterType = "tag";
       activeFilterId = tagId;
-      switchMainTab("filtered");
-      renderIsolatedFilterView();
+      renderAll();
     }
 
     function clearActiveFilter() {
       activeFilterType = null;
       activeFilterId = null;
-      switchMainTab("tasks");
-    }
-
-    function renderIsolatedFilterView() {
-      if (!activeFilterType || !activeFilterId) return;
-
-      if (activeFilterType === "assignee") {
-        document.getElementById("filterBadgeTitle").innerText = `Assigned to: ${activeFilterId}`;
-        const fTasks = tasks.filter(t => t.assignees && t.assignees.includes(activeFilterId) && matchesScope(t));
-        const fNotes = notes.filter(n => n.assignees && n.assignees.includes(activeFilterId) && matchesScope(n));
-        document.getElementById("filterTasksContainer").innerHTML = fTasks.map(t => renderTaskCardHtml(t)).join('') || `<p class="text-xs text-gray-400">No tasks assigned.</p>`;
-        document.getElementById("filterNotesContainer").innerHTML = fNotes.map(n => renderNoteCardHtml(n)).join('') || `<p class="text-xs text-gray-400">No keep notes assigned.</p>`;
-      } else {
-        const tag = tags.find(t => t.id === activeFilterId);
-        if (!tag) return;
-        document.getElementById("filterBadgeTitle").innerText = `Tag: ${tag.title}`;
-        const fTasks = tasks.filter(t => t.tagId === activeFilterId && matchesScope(t));
-        const fNotes = notes.filter(n => n.tagId === activeFilterId && matchesScope(n));
-        document.getElementById("filterTasksContainer").innerHTML = fTasks.map(t => renderTaskCardHtml(t)).join('') || `<p class="text-xs text-gray-400">No tasks for this tag.</p>`;
-        document.getElementById("filterNotesContainer").innerHTML = fNotes.map(n => renderNoteCardHtml(n)).join('') || `<p class="text-xs text-gray-400">No notes for this tag.</p>`;
-      }
+      switchMainTab('tasks');
+      renderAll();
     }
 
     function matchesScope(item) {
@@ -605,11 +628,35 @@
       return item.scope === "shared";
     }
 
-    // TASKS BOARD
     function renderTasksBoard() {
       const view = document.getElementById("tasksView");
-      view.innerHTML = sections.map(s => {
-        const listTasks = tasks.filter(t => t.sectionId === s.id && matchesScope(t));
+      const prefs = getUserPreferences();
+      const headerBar = document.getElementById("isolatedFilterHeader");
+      const filterTitle = document.getElementById("isolatedFilterTitle");
+
+      if (activeFilterType) {
+        headerBar.classList.remove("hidden");
+        if (activeFilterType === "section") filterTitle.innerText = `Section: ${sections.find(s => s.id === activeFilterId)?.title || ''}`;
+        if (activeFilterType === "assignee") filterTitle.innerText = `Assigned to: ${activeFilterId}`;
+        if (activeFilterType === "tag") filterTitle.innerText = `Tag: ${tags.find(t => t.id === activeFilterId)?.title || ''}`;
+      } else {
+        headerBar.classList.add("hidden");
+      }
+
+      let visibleSections = sections.filter(s => !prefs.hiddenSections.includes(s.id));
+      if (activeFilterType === "section") {
+        visibleSections = sections.filter(s => s.id === activeFilterId);
+      }
+
+      view.innerHTML = visibleSections.map(s => {
+        let listTasks = tasks.filter(t => t.sectionId === s.id && matchesScope(t));
+        
+        if (activeFilterType === "assignee") {
+          listTasks = listTasks.filter(t => t.assignees && t.assignees.includes(activeFilterId));
+        } else if (activeFilterType === "tag") {
+          listTasks = listTasks.filter(t => t.tagId === activeFilterId);
+        }
+
         return `
           <div class="w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex flex-col shrink-0">
             <h3 class="font-bold text-sm mb-2">${s.title}</h3>
@@ -625,10 +672,10 @@
     function renderTaskCardHtml(t) {
       const tag = tags.find(x => x.id === t.tagId);
       const canEdit = canModifyItem(t);
-      const isCompact = settings.compact;
+      const prefs = getUserPreferences();
 
       return `
-        <div class="group bg-gray-50 dark:bg-[#252525] border border-gray-200 dark:border-gray-700/60 rounded-lg ${isCompact ? 'p-1.5' : 'p-2.5'} flex items-start space-x-2 relative">
+        <div class="group bg-gray-50 dark:bg-[#252525] border border-gray-200 dark:border-gray-700/60 rounded-lg ${prefs.compact ? 'p-1.5' : 'p-2.5'} flex items-start space-x-2 relative">
           <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTaskComplete('${t.id}')" class="mt-0.5 accent-green-600 cursor-pointer">
           <div class="flex-1 min-w-0">
             <span class="text-xs font-medium strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>
@@ -647,11 +694,8 @@
         tasks.push({
           id: Date.now().toString(),
           title: e.target.value.trim(),
-          sectionId,
-          tagId: null,
-          assignees: [activeUser],
-          completed: false,
-          scope, owner: activeUser, restricted: false
+          sectionId, tagId: null, assignees: [activeUser],
+          completed: false, scope, owner: activeUser, restricted: false
         });
         saveData();
       }
@@ -667,10 +711,16 @@
       saveData();
     }
 
-    // KEEP NOTES GRID
     function renderNotesGrid() {
       const grid = document.getElementById("notesGrid");
-      const filteredNotes = notes.filter(n => matchesScope(n));
+      let filteredNotes = notes.filter(n => matchesScope(n));
+      
+      if (activeFilterType === "assignee") {
+        filteredNotes = filteredNotes.filter(n => n.assignees && n.assignees.includes(activeFilterId));
+      } else if (activeFilterType === "tag") {
+        filteredNotes = filteredNotes.filter(n => n.tagId === activeFilterId);
+      }
+
       grid.innerHTML = filteredNotes.map(n => renderNoteCardHtml(n)).join('');
     }
 
@@ -717,10 +767,9 @@
       if (item.owner === activeUser) return true;
       if (item.restricted) return false;
       const u = users.find(x => x.name === activeUser);
-      return u && u.role === "admin";
+      return u && (u.role === "admin" || u.role === "master_admin");
     }
 
-    // MODAL HANDLERS & ASSIGNEES MULTI-SELECT
     function renderAssigneesCheckboxes(containerId, selected = []) {
       const c = document.getElementById(containerId);
       c.innerHTML = users.map(u => `
@@ -823,7 +872,6 @@
       if (name) { sections.push({ id: "s_" + Date.now(), title: name }); saveData(); }
     }
 
-    // IMAGE MOUSE ZOOM
     function openImageZoomModal(src) {
       document.getElementById("zoomedImage").src = src;
       document.getElementById("imageZoomModal").classList.remove("hidden");
@@ -837,7 +885,6 @@
     }
     function resetImageZoom(e) { e.target.style.transform = "scale(1)"; }
 
-    // TAG MODAL
     function openNewTagModal() { document.getElementById("tagModal").classList.remove("hidden"); }
     function closeTagModal() { document.getElementById("tagModal").classList.add("hidden"); }
     function saveCustomTag() {
@@ -851,7 +898,6 @@
       }
     }
 
-    // SETTINGS MODAL & USER DELETION
     function openAddViewerModal() { document.getElementById("addViewerModal").classList.remove("hidden"); }
     function closeAddViewerModal() { document.getElementById("addViewerModal").classList.add("hidden"); }
     function saveViewerProfile() {
@@ -865,20 +911,41 @@
       }
     }
 
+    // SETTINGS MODAL WITH STRICT MASTER ADMIN / ADMIN DELETION HIERARCHY
     function openSettingsModal() {
+      const activeObj = users.find(u => u.name === activeUser);
+      const isMasterAdmin = activeObj && activeObj.role === "master_admin";
+      const isAdmin = activeObj && (activeObj.role === "admin" || isMasterAdmin);
+
       const container = document.getElementById("permissionsUserList");
       container.innerHTML = users.map(u => {
-        const isCoreAdmin = u.name === "Charlie" || u.name === "Jacob";
+        const isTargetMaster = u.name === "Charlie" || u.role === "master_admin";
+        
+        // Can current active user delete target?
+        let canDeleteTarget = false;
+        if (isMasterAdmin && !isTargetMaster) canDeleteTarget = true;
+        if (isAdmin && !isMasterAdmin && !isTargetMaster && u.role !== "admin") canDeleteTarget = true;
+
+        // Can current active user edit role?
+        let canEditRole = false;
+        if (isMasterAdmin && !isTargetMaster) canEditRole = true;
+        if (isAdmin && !isTargetMaster && u.role !== "admin") canEditRole = true;
+
         return `
           <div class="flex items-center justify-between bg-gray-100 dark:bg-[#121212] p-2.5 rounded-lg text-xs">
-            <span class="font-bold">${u.name} ${isCoreAdmin ? '(Admin)' : ''}</span>
+            <span class="font-bold">${u.name} ${isTargetMaster ? '(Master Admin)' : `(${u.role})`}</span>
             <div class="flex items-center space-x-2">
-              ${isCoreAdmin ? '<span class="text-[10px] text-gray-500">Core Account</span>' : `
-                <select onchange="changeUserRole('${u.name}', this.value)" class="bg-gray-200 dark:bg-[#252525] border border-gray-700 rounded p-1 text-xs">
-                  <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Viewer</option>
-                  <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
-                </select>
-                <button onclick="deleteUserProfile('${u.name}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              ${isTargetMaster ? '<span class="text-[10px] text-amber-500 font-semibold">Protected Master</span>' : `
+                ${canEditRole ? `
+                  <select onchange="changeUserRole('${u.name}', this.value)" class="bg-gray-200 dark:bg-[#252525] border border-gray-700 rounded p-1 text-xs">
+                    <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Viewer</option>
+                    <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
+                    ${isMasterAdmin ? `<option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>` : ''}
+                  </select>
+                ` : `<span class="text-[9px] text-gray-500 capitalize">${u.role}</span>`}
+                ${canDeleteTarget ? `
+                  <button onclick="deleteUserProfile('${u.name}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                ` : ''}
               `}
             </div>
           </div>
@@ -891,10 +958,14 @@
 
     function changeUserRole(name, role) {
       const u = users.find(x => x.name === name);
-      if (u) { u.role = role; saveData(); }
+      if (u && u.name !== "Charlie") { u.role = role; saveData(); }
     }
 
     function deleteUserProfile(name) {
+      if (name === "Charlie") {
+        alert("Action Denied: The Master Admin profile cannot be deleted.");
+        return;
+      }
       if (confirm(`Delete user profile '${name}'?`)) {
         users = users.filter(x => x.name !== name);
         renderUserProfiles();
@@ -903,20 +974,17 @@
       }
     }
 
-    // TABS
     function switchMainTab(tab) {
       document.getElementById("tasksView").classList.toggle("hidden", tab !== 'tasks');
       document.getElementById("notesView").classList.toggle("hidden", tab !== 'notes');
-      document.getElementById("filteredView").classList.toggle("hidden", tab !== 'filtered');
       document.getElementById("tabTasks").className = tab === 'tasks' ? "px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white" : "px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400";
       document.getElementById("tabNotes").className = tab === 'notes' ? "px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white" : "px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400";
-      document.getElementById("tabFilteredView").className = tab === 'filtered' ? "px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white" : "px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400";
     }
 
     function toggleActiveUsersPopover() {
       const popover = document.getElementById("activeUsersPopover");
       popover.classList.toggle("hidden");
-      document.getElementById("activeUsersList").innerHTML = users.map(u => `<div class="flex items-center space-x-1.5"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div><span>${u.name}</span></div>`).join('');
+      document.getElementById("activeUsersList").innerHTML = users.map(u => `<div class="flex items-center space-x-1.5"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div><span>${u.name} (${u.role.replace('_', ' ')})</span></div>`).join('');
     }
   </script>
 </body>
