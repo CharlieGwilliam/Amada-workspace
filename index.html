@@ -107,12 +107,12 @@
       <div class="relative">
         <button id="syncBadgeBtn" onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs transition">
           <div id="syncPulse" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span id="githubSyncBadge">Auto-Synced</span>
+          <span id="githubSyncBadge">Live Syncing</span>
         </button>
         <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-56 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-3 z-40 text-xs">
           <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Logged In Session</div>
           <div id="activeUsersList" class="space-y-1 mb-2"></div>
-          <div id="syncStatusDetail" class="text-[10px] text-gray-500 border-t border-gray-200 dark:border-gray-800 pt-2">Checking GitHub API...</div>
+          <div id="syncStatusDetail" class="text-[10px] text-gray-500 border-t border-gray-200 dark:border-gray-800 pt-2">Connecting to GitHub...</div>
         </div>
       </div>
 
@@ -411,7 +411,7 @@
 
       <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
         <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">GitHub Live Multi-PC Sync Status</h4>
-        <p class="text-[10px] text-emerald-400 font-semibold">✓ Multi-PC sync is active across all devices automatically.</p>
+        <p class="text-[10px] text-emerald-400 font-semibold">✓ Multi-PC sync active across all devices.</p>
       </div>
 
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
@@ -463,24 +463,15 @@
     const GITHUB_REPO_NAME = "amada-tasks";
     const GITHUB_FILE_PATH = "data.json";
 
-    // OBFUSCATED TOKEN KEY (BYPASSES GITHUB SECRET SCANNING)
-    const OBFUSCATED_TOKEN_PARTS = [
-      "Z2l0aHViX3BhdF8xMUJPVVVINlkwcWVsbVFy",
-      "S0lIcVNSX3JyTmVrUHRKR2lzaG5jWjBOVFhW",
-      "MUJzclQ4VHlUTGRSSmN3UWpZWGFZQXJIV1Q2",
-      "NUpKR2lXOTVGZkta"
-    ];
+    // --- PASTE YOUR FRESH ACTIVE GITHUB FINE-GRAINED TOKEN HERE ---
+    const GITHUB_PAT = "github_pat_YOUR_FRESH_TOKEN_HERE";
 
     function getActiveToken() {
       const customOverride = localStorage.getItem("amada_github_token");
       if (customOverride && customOverride.trim()) {
         return customOverride.trim();
       }
-      try {
-        return atob(OBFUSCATED_TOKEN_PARTS.join(''));
-      } catch (e) {
-        return "";
-      }
+      return GITHUB_PAT.trim();
     }
 
     const DEFAULT_USERS = [
@@ -567,9 +558,9 @@
         pulse.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
         if (detail) detail.innerText = `Connected via GitHub REST API (${new Date().toLocaleTimeString()})`;
       } else if (status === "read_only") {
-        badge.innerText = "Read-Only (No Token)";
+        badge.innerText = "Read-Only Mode";
         pulse.className = "w-2 h-2 rounded-full bg-amber-500";
-        if (detail) detail.innerText = "Viewing live GitHub data. Configure token to enable write permissions.";
+        if (detail) detail.innerText = "Viewing GitHub contents. Update GITHUB_PAT in code to write edits.";
       } else {
         badge.innerText = "Sync Error / Conflict";
         pulse.className = "w-2 h-2 rounded-full bg-red-500";
@@ -580,7 +571,7 @@
     async function fetchFromGitHubApi() {
       try {
         const token = getActiveToken();
-        const headers = token ? { "Authorization": `token ${token}` } : {};
+        const headers = (token && token.indexOf("github_pat") === 0) ? { "Authorization": `token ${token}` } : {};
         const url = `https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}?ref=main&t=${Date.now()}`;
         const res = await fetch(url, { headers });
         
@@ -605,13 +596,13 @@
           localStorage.setItem("amada_tasks", JSON.stringify(tasks));
           localStorage.setItem("amada_notes", JSON.stringify(notes));
 
-          updateSyncUI(token ? "ok" : "read_only");
+          updateSyncUI((token && token.indexOf("github_pat") === 0) ? "ok" : "read_only");
           renderUserProfiles();
           if (!isUserTyping()) {
             renderAll();
           }
         } else {
-          updateSyncUI("error", "Failed to fetch repository contents");
+          updateSyncUI("error", "Failed to fetch repository data");
         }
       } catch (e) {
         updateSyncUI("error", e.message);
@@ -631,7 +622,7 @@
 
       const token = getActiveToken();
 
-      if (!token) {
+      if (!token || token.indexOf("github_pat") !== 0) {
         updateSyncUI("read_only");
         return;
       }
