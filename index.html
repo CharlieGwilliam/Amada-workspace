@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Amada Workspace</title>
-  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
@@ -18,7 +17,6 @@
     }
   </script>
   <style>
-    /* Smooth Fluid Green Strikethrough Animation */
     .strikethrough-anim {
       position: relative;
       display: inline-block;
@@ -61,7 +59,6 @@
         </button>
       </div>
 
-      <!-- Password Step -->
       <form id="passwordStep" onsubmit="verifyPassword(event)" class="hidden space-y-4">
         <div class="text-left">
           <button type="button" onclick="resetLoginStep()" class="text-xs text-gray-400 hover:text-white mb-2 flex items-center space-x-1">
@@ -84,7 +81,6 @@
         <span class="font-bold text-lg tracking-wide">AMADA</span>
       </div>
 
-      <!-- WORKSPACE SCOPE (SHARED VS PERSONAL) -->
       <div class="flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-800">
         <button id="modeShared" onclick="setWorkspaceScope('shared')" class="px-4 py-1 rounded-lg text-xs font-bold bg-[#A6192E] text-white flex items-center space-x-1">
           <i data-lucide="users" class="w-3.5 h-3.5"></i> <span>Shared</span>
@@ -95,19 +91,16 @@
       </div>
     </div>
 
-    <!-- VIEW TABS -->
     <div class="flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-800">
       <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white">Tasks Board</button>
       <button id="tabNotes" onclick="switchMainTab('notes')" class="px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400">Keep Notes</button>
     </div>
 
-    <!-- CONTROLS & PROFILE -->
     <div class="flex items-center space-x-3">
-      <!-- Active Viewers Popover -->
       <div class="relative">
         <button onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs">
           <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span id="activeCount">Online Users</span>
+          <span id="githubSyncBadge">GitHub Repo Synced</span>
         </button>
         <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-48 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-3 z-40 text-xs">
           <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Logged In Session</div>
@@ -115,13 +108,11 @@
         </div>
       </div>
 
-      <!-- Theme Switcher -->
       <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-[#A6192E]" title="Toggle Theme">
         <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
         <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
       </button>
 
-      <!-- Settings Cog -->
       <button id="settingsCogBtn" onclick="openSettingsModal()" class="p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-white" title="Settings">
         <i data-lucide="settings" class="w-4 h-4"></i>
       </button>
@@ -133,10 +124,8 @@
 
   <!-- MAIN APP CONTAINER -->
   <div class="flex-1 flex overflow-hidden">
-    
-    <!-- LEFT SIDEBAR -->
     <aside class="w-64 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 p-4">
-      <div class="flex space-x-2 mb-4">
+      <div class="flex space-x-2 mb-3">
         <button onclick="openNewTaskModal()" class="flex-1 bg-[#A6192E] hover:opacity-90 text-white rounded-xl py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
           <i data-lucide="check-square" class="w-4 h-4"></i> <span>+ Task</span>
         </button>
@@ -145,8 +134,7 @@
         </button>
       </div>
 
-      <!-- ALL TASKS RESET BUTTON -->
-      <button onclick="clearActiveFilter()" class="w-full flex items-center justify-between px-3 py-2 mb-4 rounded-xl text-xs font-bold bg-[#A6192E] text-white hover:opacity-90 transition">
+      <button onclick="clearActiveFilter()" class="w-full flex items-center justify-between px-3 py-2 mb-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white hover:opacity-90 transition">
         <div class="flex items-center space-x-2">
           <i data-lucide="layers" class="w-4 h-4"></i>
           <span>All Tasks</span>
@@ -154,13 +142,19 @@
         <span id="allTasksCountBadge" class="bg-black/30 px-2 py-0.5 rounded-full text-[10px]">0</span>
       </button>
 
-      <!-- ASSIGNEE FILTERS (No pencil/trash icons) -->
+      <button onclick="filterByStarred()" class="w-full flex items-center justify-between px-3 py-2 mb-4 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30 hover:bg-amber-500/30 transition">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="star" class="w-4 h-4 text-amber-400"></i>
+          <span>Starred Items</span>
+        </div>
+        <span id="starredCountBadge" class="bg-amber-500/30 px-2 py-0.5 rounded-full text-[10px] text-amber-300">0</span>
+      </button>
+
       <div id="assigneeFilterSection" class="mb-4">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Filter by Assignee</div>
         <div id="assigneesSidebar" class="space-y-1"></div>
       </div>
 
-      <!-- TAGS & FILTERS (Has Hover Pencil & Trash) -->
       <div class="mb-4">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Tags</span>
@@ -169,7 +163,6 @@
         <div id="tagsSidebar" class="space-y-1 max-h-32 overflow-y-auto"></div>
       </div>
 
-      <!-- SECTIONS (Has Checkbox + Hover Pencil & Trash) -->
       <div class="flex-1 overflow-y-auto">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Task Sections</span>
@@ -179,10 +172,7 @@
       </div>
     </aside>
 
-    <!-- CONTENT WORKSPACE -->
     <main class="flex-1 bg-gray-100 dark:bg-[#121212] p-4 overflow-x-auto overflow-y-hidden flex flex-col">
-      
-      <!-- ISOLATED FILTER HEADER BAR -->
       <div id="isolatedFilterHeader" class="hidden mb-4 bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex items-center justify-between shrink-0">
         <div class="flex items-center space-x-3">
           <button onclick="clearActiveFilter()" class="px-3 py-1 bg-gray-200 dark:bg-[#252525] hover:bg-gray-300 dark:hover:bg-gray-700 text-xs rounded-lg flex items-center space-x-1 font-semibold">
@@ -195,10 +185,8 @@
         </div>
       </div>
 
-      <!-- TASKS BOARD VIEW -->
       <div id="tasksView" class="flex space-x-4 items-start h-full flex-1"></div>
 
-      <!-- KEEP NOTES GRID VIEW -->
       <div id="notesView" class="hidden h-full flex-1 overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-bold">Keep Notes</h2>
@@ -208,24 +196,24 @@
         </div>
         <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </div>
-
     </main>
   </div>
 
   <!-- MODALS -->
-
-  <!-- TASK DETAIL READ-ONLY / AUDIT VIEW MODAL -->
   <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-6 relative shadow-2xl">
       <button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-      
       <div class="flex items-center space-x-2 mb-2">
         <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK DETAIL</span>
         <span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800">Priority</span>
       </div>
       <h3 id="detailTitle" class="text-xl font-bold mb-2">Task Title</h3>
-      <div id="detailNotes" class="text-sm text-gray-600 dark:text-gray-300 mb-4 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded border border-gray-300 dark:border-gray-800">Details...</div>
+      <div id="detailNotes" class="text-sm text-gray-600 dark:text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded border border-gray-300 dark:border-gray-800">Details...</div>
       
+      <div id="detailImageContainer" class="hidden mb-4">
+        <img id="detailImage" src="" onclick="openImageZoomModal(this.src)" class="w-full h-40 object-cover rounded-lg cursor-zoom-in border border-gray-700">
+      </div>
+
       <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4">
         <div><span class="font-bold">Section:</span> <span id="detailSection" class="text-gray-800 dark:text-gray-200">General</span></div>
         <div><span class="font-bold">Assignees:</span> <span id="detailAssignees" class="text-gray-800 dark:text-gray-200">Anyone</span></div>
@@ -233,7 +221,6 @@
         <div><span class="font-bold">Owner:</span> <span id="detailOwner" class="text-gray-800 dark:text-gray-200">System</span></div>
       </div>
 
-      <!-- COLLAPSIBLE EDIT HISTORY AUDIT LOG -->
       <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mb-4">
         <details class="group">
           <summary class="cursor-pointer text-xs font-bold text-gray-400 group-open:text-white flex items-center justify-between">
@@ -252,7 +239,6 @@
     </div>
   </div>
 
-  <!-- IMAGE ZOOM PREVIEW MODAL -->
   <div id="imageZoomModal" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 cursor-zoom-out" onclick="closeImageZoomModal()">
     <div class="relative overflow-hidden rounded-xl max-w-4xl max-h-[90vh]" onclick="event.stopPropagation()">
       <img id="zoomedImage" src="" class="object-contain transition-transform duration-200 cursor-crosshair" onmousemove="handleImageZoom(event)" onmouseleave="resetImageZoom(event)">
@@ -260,7 +246,6 @@
     </div>
   </div>
 
-  <!-- KEEP NOTE MODAL -->
   <div id="noteModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-md w-full p-5 shadow-2xl">
       <h3 id="noteModalTitle" class="text-base font-bold mb-3">Add Keep Note</h3>
@@ -303,7 +288,6 @@
     </div>
   </div>
 
-  <!-- TASK MODAL (FULL EDIT WITH AUDIT HISTORY) -->
   <div id="taskModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
       <h3 id="taskModalHeading" class="text-base font-bold mb-3">Create / Edit Task</h3>
@@ -350,12 +334,22 @@
           <div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2 bg-gray-100 dark:bg-[#121212] rounded border border-gray-300 dark:border-gray-700 max-h-24 overflow-y-auto text-xs"></div>
         </div>
 
-        <div class="flex items-center space-x-2 pt-1">
-          <input type="checkbox" id="taskPrivateInput" class="accent-[#A6192E]">
-          <label for="taskPrivateInput" class="text-xs text-gray-400">Restrict Edit/Delete to Me Only</label>
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File / Image</label>
+          <input type="file" id="taskFileInput" accept="image/*" class="text-xs text-gray-400">
         </div>
 
-        <!-- COLLAPSIBLE EDIT HISTORY -->
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center space-x-2">
+            <input type="checkbox" id="taskStarInput" class="accent-[#A6192E]">
+            <label for="taskStarInput" class="text-xs font-semibold">Star Task ⭐</label>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input type="checkbox" id="taskPrivateInput" class="accent-[#A6192E]">
+            <label for="taskPrivateInput" class="text-xs text-gray-400">Restrict Edit/Delete to Me Only</label>
+          </div>
+        </div>
+
         <div class="border-t border-gray-200 dark:border-gray-800 pt-3">
           <details class="group">
             <summary class="cursor-pointer text-xs font-bold text-gray-400 group-open:text-white flex items-center justify-between">
@@ -374,7 +368,6 @@
     </div>
   </div>
 
-  <!-- ADD / EDIT TAG MODAL -->
   <div id="tagModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-sm w-full p-5 shadow-2xl">
       <h3 id="tagModalTitle" class="text-base font-bold mb-3">Create Custom Tag</h3>
@@ -389,7 +382,6 @@
     </div>
   </div>
 
-  <!-- ADD VIEWER PROFILE MODAL -->
   <div id="addViewerModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-sm w-full p-5 text-center">
       <h3 class="text-base font-bold mb-2">Add Viewer Profile</h3>
@@ -401,7 +393,6 @@
     </div>
   </div>
 
-  <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
@@ -409,7 +400,12 @@
         <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
 
-      <!-- Password Change Section for Logged-In User -->
+      <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">GitHub Repository Live Sync Token</h4>
+        <input type="password" id="githubTokenInput" placeholder="github_pat_..." class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded p-2 text-xs mb-2">
+        <button onclick="saveGithubToken()" class="px-3 py-1.5 bg-[#A6192E] text-white text-xs font-bold rounded">Save Token to Connect PCs</button>
+      </div>
+
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
         <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Change My Password</h4>
         <form onsubmit="changeMyPassword(event)" class="space-y-2">
@@ -454,16 +450,20 @@
     </div>
   </div>
 
-  <!-- APPLICATION ENGINE -->
+  <!-- SCRIPT ENGINE WITH PURE GITHUB REST API MULTI-PC SYNC -->
   <script>
+    const GITHUB_REPO_OWNER = "CharlieGwilliam";
+    const GITHUB_REPO_NAME = "amada-tasks";
+    const GITHUB_FILE_PATH = "data.json";
+
+    let githubToken = localStorage.getItem("amada_github_token") || "";
+
     const DEFAULT_USERS = [
       { name: "Charlie", role: "master_admin", password: "AMADA" },
       { name: "Jacob", role: "admin", password: "AMADA" }
     ];
 
     let users = JSON.parse(localStorage.getItem("amada_users")) || DEFAULT_USERS;
-    
-    // Ensure Charlie is always Master Admin
     const charlie = users.find(u => u.name === "Charlie");
     if (charlie) charlie.role = "master_admin";
 
@@ -472,6 +472,7 @@
     let activeFilterType = null;
     let activeFilterId = null;
     let selectedUserForAuth = "";
+    let currentSha = null;
 
     function getUserPreferences() {
       if (!activeUser) return { hiddenSections: [], compact: false, dark: true };
@@ -485,17 +486,24 @@
       localStorage.setItem(key, JSON.stringify(prefs));
     }
 
-    let tags = JSON.parse(localStorage.getItem("amada_tags")) || [
+    let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) || [
       { id: "t_urgent", title: "Urgent", color: "#ef4444" },
       { id: "t_cnc", title: "Machining", color: "#3b82f6" }
     ];
+    let personalTagsMap = JSON.parse(localStorage.getItem("amada_personal_tags_map")) || {};
+
+    function getActiveTags() {
+      if (scope === "personal") {
+        if (!personalTagsMap[activeUser]) personalTagsMap[activeUser] = [];
+        return personalTagsMap[activeUser];
+      }
+      return sharedTags;
+    }
 
     let sharedSections = JSON.parse(localStorage.getItem("amada_shared_sections")) || [
       { id: "s1", title: "High Priority" },
       { id: "s2", title: "Medium Priority" }
     ];
-
-    // Personal Sections Isolated Per User
     let personalSectionsMap = JSON.parse(localStorage.getItem("amada_personal_sections_map")) || {};
 
     function getActiveSections() {
@@ -513,17 +521,81 @@
       renderUserProfiles();
       checkAuth();
       applyCurrentSettings();
+      fetchFromGitHub();
+      setInterval(fetchFromGitHub, 4000);
       renderAll();
     };
 
-    function saveData() {
+    async function fetchFromGitHub() {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}`, {
+          headers: githubToken ? { "Authorization": `token ${githubToken}` } : {}
+        });
+        if (res.ok) {
+          const json = await res.json();
+          currentSha = json.sha;
+          const content = JSON.parse(atob(json.content));
+          if (content.users) users = content.users;
+          if (content.sharedTags) sharedTags = content.sharedTags;
+          if (content.sharedSections) sharedSections = content.sharedSections;
+          if (content.tasks) tasks = content.tasks;
+          if (content.notes) notes = content.notes;
+          
+          localStorage.setItem("amada_users", JSON.stringify(users));
+          localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
+          localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
+          localStorage.setItem("amada_tasks", JSON.stringify(tasks));
+          localStorage.setItem("amada_notes", JSON.stringify(notes));
+          renderAll();
+        }
+      } catch (e) {}
+    }
+
+    async function saveData() {
       localStorage.setItem("amada_users", JSON.stringify(users));
-      localStorage.setItem("amada_tags", JSON.stringify(tags));
+      localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
+      localStorage.setItem("amada_personal_tags_map", JSON.stringify(personalTagsMap));
       localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
       localStorage.setItem("amada_personal_sections_map", JSON.stringify(personalSectionsMap));
       localStorage.setItem("amada_tasks", JSON.stringify(tasks));
       localStorage.setItem("amada_notes", JSON.stringify(notes));
+
+      if (githubToken) {
+        try {
+          const payload = {
+            message: `Update workspace by ${activeUser || 'system'}`,
+            content: btoa(unescape(encodeURIComponent(JSON.stringify({
+              users, sharedTags, sharedSections, tasks, notes
+            })))),
+            sha: currentSha
+          };
+
+          const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}`, {
+            method: "PUT",
+            headers: {
+              "Authorization": `token ${githubToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            currentSha = data.content.sha;
+          }
+        } catch (e) {}
+      }
+
       renderAll();
+    }
+
+    function saveGithubToken() {
+      const token = document.getElementById("githubTokenInput").value.trim();
+      if (token) {
+        githubToken = token;
+        localStorage.setItem("amada_github_token", token);
+        alert("GitHub Live Sync Token Saved! Your PC will now sync live across devices.");
+        fetchFromGitHub();
+      }
     }
 
     function applyCurrentSettings() {
@@ -563,7 +635,6 @@
       }
     }
 
-    // AUTH & PROFILES
     function renderUserProfiles() {
       const container = document.getElementById("userProfilesList");
       container.innerHTML = users.map(u => `
@@ -641,6 +712,9 @@
       const totalUncompleted = tasks.filter(t => !t.completed && matchesScope(t)).length;
       document.getElementById("allTasksCountBadge").innerText = totalUncompleted;
 
+      const totalStarred = tasks.filter(t => t.starred && matchesScope(t)).length + notes.filter(n => n.starred && matchesScope(n)).length;
+      document.getElementById("starredCountBadge").innerText = totalStarred;
+
       lucide.createIcons();
     }
 
@@ -658,7 +732,9 @@
 
     function renderTagsSidebar() {
       const container = document.getElementById("tagsSidebar");
-      container.innerHTML = tags.map(t => `
+      const currentTags = getActiveTags();
+
+      container.innerHTML = currentTags.map(t => `
         <div class="group flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs">
           <div class="flex items-center space-x-2 flex-1 truncate" onclick="filterByTag('${t.id}')">
             <div class="w-3 h-3 rounded-full" style="background-color: ${t.color}"></div>
@@ -748,6 +824,12 @@
       renderAll();
     }
 
+    function filterByStarred() {
+      activeFilterType = "starred";
+      activeFilterId = "starred";
+      renderAll();
+    }
+
     function clearActiveFilter() {
       activeFilterType = null;
       activeFilterId = null;
@@ -766,12 +848,14 @@
       const headerBar = document.getElementById("isolatedFilterHeader");
       const filterTitle = document.getElementById("isolatedFilterTitle");
       const currentSections = getActiveSections();
+      const currentTags = getActiveTags();
 
       if (activeFilterType) {
         headerBar.classList.remove("hidden");
         if (activeFilterType === "section") filterTitle.innerText = `Section: ${currentSections.find(s => s.id === activeFilterId)?.title || ''}`;
         if (activeFilterType === "assignee") filterTitle.innerText = `Assigned to: ${activeFilterId}`;
-        if (activeFilterType === "tag") filterTitle.innerText = `Tag: ${tags.find(t => t.id === activeFilterId)?.title || ''}`;
+        if (activeFilterType === "tag") filterTitle.innerText = `Tag: ${currentTags.find(t => t.id === activeFilterId)?.title || ''}`;
+        if (activeFilterType === "starred") filterTitle.innerText = `Starred Items ⭐`;
       } else {
         headerBar.classList.add("hidden");
       }
@@ -788,6 +872,8 @@
           listTasks = listTasks.filter(t => t.assignees && t.assignees.includes(activeFilterId));
         } else if (activeFilterType === "tag") {
           listTasks = listTasks.filter(t => t.tagId === activeFilterId);
+        } else if (activeFilterType === "starred") {
+          listTasks = listTasks.filter(t => t.starred);
         }
 
         return `
@@ -803,27 +889,36 @@
     }
 
     function renderTaskCardHtml(t) {
-      const tag = tags.find(x => x.id === t.tagId);
+      const currentTags = getActiveTags();
+      const tag = currentTags.find(x => x.id === t.tagId);
       const canEdit = canModifyItem(t);
       const prefs = getUserPreferences();
 
       return `
-        <div onclick="openTaskDetailModal('${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-lg ${prefs.compact ? 'p-1.5' : 'p-2.5'} flex items-start space-x-2 relative cursor-pointer shadow-sm transition">
-          <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleTaskComplete('${t.id}')" class="mt-0.5 accent-green-600 cursor-pointer">
-          <div class="flex-1 min-w-0">
-            <span class="text-xs font-medium strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>
-            <div class="flex flex-wrap items-center gap-1 mt-1">
+        <div onclick="openTaskDetailModal('${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-lg ${prefs.compact ? 'p-1.5' : 'p-2.5'} flex flex-col space-y-1.5 relative cursor-pointer shadow-sm transition">
+          <div class="flex items-start space-x-2">
+            <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleTaskComplete('${t.id}')" class="mt-0.5 accent-green-600 cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-medium strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>
+            </div>
+            <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs">${t.starred ? '⭐' : '☆'}</button>
+          </div>
+          
+          ${t.image ? `<img src="${t.image}" onclick="event.stopPropagation(); openImageZoomModal('${t.image}')" class="w-full h-24 object-cover rounded-lg cursor-zoom-in my-1 border border-gray-700">` : ''}
+
+          <div class="flex flex-wrap items-center justify-between gap-1 pt-1 border-t border-gray-200/50 dark:border-gray-700/50">
+            <div class="flex flex-wrap items-center gap-1">
               ${tag ? `<span class="text-[9px] px-1.5 py-0.5 rounded text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
               ${t.priority ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 font-bold">${t.priority}</span>` : ''}
               ${t.assignees ? t.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">${a}</span>`).join('') : ''}
             </div>
+            ${canEdit ? `
+              <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
+                <button onclick="event.stopPropagation(); openEditTaskModal('${t.id}')" class="p-0.5 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                <button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="p-0.5 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
+            ` : ''}
           </div>
-          ${canEdit ? `
-            <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
-              <button onclick="event.stopPropagation(); openEditTaskModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-              <button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-            </div>
-          ` : ''}
         </div>
       `;
     }
@@ -834,7 +929,7 @@
           id: Date.now().toString(),
           title: e.target.value.trim(),
           sectionId, tagId: null, assignees: [activeUser], priority: "Medium", dueDate: "", notes: "",
-          completed: false, scope, owner: activeUser, restricted: false,
+          starred: false, image: null, completed: false, scope, owner: activeUser, restricted: false,
           history: [{ action: "Created task", date: new Date().toLocaleString(), user: activeUser }]
         });
         saveData();
@@ -847,6 +942,14 @@
         t.completed = !t.completed;
         if (!t.history) t.history = [];
         t.history.push({ action: t.completed ? "Marked completed" : "Restored task", date: new Date().toLocaleString(), user: activeUser });
+        saveData();
+      }
+    }
+
+    function toggleStarTask(id) {
+      const t = tasks.find(x => x.id === id);
+      if (t) {
+        t.starred = !t.starred;
         saveData();
       }
     }
@@ -864,13 +967,16 @@
         filteredNotes = filteredNotes.filter(n => n.assignees && n.assignees.includes(activeFilterId));
       } else if (activeFilterType === "tag") {
         filteredNotes = filteredNotes.filter(n => n.tagId === activeFilterId);
+      } else if (activeFilterType === "starred") {
+        filteredNotes = filteredNotes.filter(n => n.starred);
       }
 
       grid.innerHTML = filteredNotes.map(n => renderNoteCardHtml(n)).join('');
     }
 
     function renderNoteCardHtml(n) {
-      const tag = tags.find(x => x.id === n.tagId);
+      const currentTags = getActiveTags();
+      const tag = currentTags.find(x => x.id === n.tagId);
       const canEdit = canModifyItem(n);
       return `
         <div onclick="openNoteModal('${n.id}')" class="group bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex flex-col justify-between relative shadow-sm hover:shadow-md transition cursor-pointer">
@@ -915,7 +1021,6 @@
       return u && (u.role === "admin" || u.role === "master_admin");
     }
 
-    // MODAL HANDLERS
     function openTaskDetailModal(id) {
       const t = tasks.find(x => x.id === id);
       if (!t) return;
@@ -928,6 +1033,15 @@
       document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone";
       document.getElementById("detailDueDate").innerText = t.dueDate || "No Date";
       document.getElementById("detailOwner").innerText = t.owner || "System";
+
+      const imgContainer = document.getElementById("detailImageContainer");
+      const imgEl = document.getElementById("detailImage");
+      if (t.image) {
+        imgEl.src = t.image;
+        imgContainer.classList.remove("hidden");
+      } else {
+        imgContainer.classList.add("hidden");
+      }
 
       const logContainer = document.getElementById("detailHistoryLog");
       logContainer.innerHTML = (t.history && t.history.length) ? t.history.map(h => `
@@ -951,8 +1065,9 @@
 
     function openEditTaskModal(id) {
       const currentSections = getActiveSections();
+      const currentTags = getActiveTags();
       document.getElementById("taskSectionInput").innerHTML = currentSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + tags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + currentTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
 
       const t = tasks.find(x => x.id === id);
       if (t) {
@@ -963,6 +1078,7 @@
         document.getElementById("taskTagInput").value = t.tagId || "";
         document.getElementById("taskDueDateInput").value = t.dueDate || "";
         document.getElementById("taskNotesInput").value = t.notes || "";
+        document.getElementById("taskStarInput").checked = t.starred || false;
         document.getElementById("taskPrivateInput").checked = t.restricted;
         renderAssigneesCheckboxes("taskAssigneesContainer", t.assignees || []);
 
@@ -980,14 +1096,16 @@
 
     function openNewTaskModal() {
       const currentSections = getActiveSections();
+      const currentTags = getActiveTags();
       document.getElementById("taskSectionInput").innerHTML = currentSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + tags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + currentTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
       
       document.getElementById("taskIdInput").value = "";
       document.getElementById("taskTitleInput").value = "";
       document.getElementById("taskNotesInput").value = "";
       document.getElementById("taskDueDateInput").value = "";
       document.getElementById("taskPriorityInput").value = "Medium";
+      document.getElementById("taskStarInput").checked = false;
       document.getElementById("taskPrivateInput").checked = false;
       document.getElementById("taskModalHistoryLog").innerHTML = '<p class="text-[10px] text-gray-500">New creation pending.</p>';
       renderAssigneesCheckboxes("taskAssigneesContainer", [activeUser]);
@@ -1006,28 +1124,40 @@
       const tagId = document.getElementById("taskTagInput").value;
       const dueDate = document.getElementById("taskDueDateInput").value;
       const notesText = document.getElementById("taskNotesInput").value;
+      const starred = document.getElementById("taskStarInput").checked;
       const restricted = document.getElementById("taskPrivateInput").checked;
       const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
+      const fileInput = document.getElementById("taskFileInput");
 
-      if (id) {
-        const t = tasks.find(x => x.id === id);
-        if (t) {
-          t.title = title; t.sectionId = sectionId; t.priority = priority; t.tagId = tagId;
-          t.dueDate = dueDate; t.notes = notesText; t.restricted = restricted; t.assignees = assignees;
-          if (!t.history) t.history = [];
-          t.history.push({ action: "Edited task details", date: new Date().toLocaleString(), user: activeUser });
+      const processTaskSave = (imgBase64 = null) => {
+        if (id) {
+          const t = tasks.find(x => x.id === id);
+          if (t) {
+            t.title = title; t.sectionId = sectionId; t.priority = priority; t.tagId = tagId;
+            t.dueDate = dueDate; t.notes = notesText; t.starred = starred; t.restricted = restricted; t.assignees = assignees;
+            if (imgBase64) t.image = imgBase64;
+            if (!t.history) t.history = [];
+            t.history.push({ action: "Edited task details", date: new Date().toLocaleString(), user: activeUser });
+          }
+        } else {
+          tasks.push({
+            id: Date.now().toString(),
+            title, sectionId, priority, tagId, dueDate, notes: notesText, assignees, starred, restricted,
+            image: imgBase64, completed: false, scope, owner: activeUser,
+            history: [{ action: "Created task", date: new Date().toLocaleString(), user: activeUser }]
+          });
         }
-      } else {
-        tasks.push({
-          id: Date.now().toString(),
-          title, sectionId, priority, tagId, dueDate, notes: notesText, assignees, restricted,
-          completed: false, scope, owner: activeUser,
-          history: [{ action: "Created task", date: new Date().toLocaleString(), user: activeUser }]
-        });
-      }
+        closeTaskModal();
+        saveData();
+      };
 
-      closeTaskModal();
-      saveData();
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (evt) => processTaskSave(evt.target.result);
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        processTaskSave();
+      }
     }
 
     function renderAssigneesCheckboxes(containerId, selected = []) {
@@ -1041,7 +1171,8 @@
     }
 
     function openNoteModal(id = null) {
-      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + tags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      const currentTags = getActiveTags();
+      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + currentTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
       
       if (id) {
         const n = notes.find(x => x.id === id);
@@ -1129,8 +1260,9 @@
     function resetImageZoom(e) { e.target.style.transform = "scale(1)"; }
 
     function openNewTagModal(idToEdit = null) {
+      const currentTags = getActiveTags();
       if (idToEdit) {
-        const t = tags.find(x => x.id === idToEdit);
+        const t = currentTags.find(x => x.id === idToEdit);
         if (t) {
           document.getElementById("tagIdInput").value = t.id;
           document.getElementById("tagTitleInput").value = t.title;
@@ -1152,13 +1284,14 @@
       const id = document.getElementById("tagIdInput").value;
       const title = document.getElementById("tagTitleInput").value.trim();
       const color = document.getElementById("tagColorInput").value;
+      const currentTags = getActiveTags();
 
       if (title) {
         if (id) {
-          const t = tags.find(x => x.id === id);
+          const t = currentTags.find(x => x.id === id);
           if (t) { t.title = title; t.color = color; }
         } else {
-          tags.push({ id: "t_" + Date.now(), title, color });
+          currentTags.push({ id: "t_" + Date.now(), title, color });
         }
         closeTagModal();
         saveData();
@@ -1167,7 +1300,11 @@
 
     function deleteTag(id) {
       if (confirm("Delete custom tag?")) {
-        tags = tags.filter(t => t.id !== id);
+        if (scope === "personal") {
+          personalTagsMap[activeUser] = personalTagsMap[activeUser].filter(t => t.id !== id);
+        } else {
+          sharedTags = sharedTags.filter(t => t.id !== id);
+        }
         saveData();
       }
     }
@@ -1185,7 +1322,6 @@
       }
     }
 
-    // SETTINGS MODAL & PASSWORD MANAGEMENT
     function changeMyPassword(e) {
       e.preventDefault();
       const newPwd = document.getElementById("newPasswordInput").value.trim();
@@ -1211,6 +1347,7 @@
       const isMasterAdmin = activeObj && activeObj.role === "master_admin";
       const isAdmin = activeObj && (activeObj.role === "admin" || isMasterAdmin);
 
+      document.getElementById("githubTokenInput").value = githubToken;
       document.getElementById("btnMasterResetPasswords").classList.toggle("hidden", !isMasterAdmin);
 
       const container = document.getElementById("permissionsUserList");
@@ -1223,7 +1360,7 @@
 
         let canEditRole = false;
         if (isMasterAdmin && !isTargetMaster) canEditRole = true;
-        if (isAdmin && !isTargetMaster && u.role !== "admin") canEditRole = true;
+        if (isAdmin && !isMasterAdmin && u.role !== "admin") canEditRole = true;
 
         return `
           <div class="flex items-center justify-between bg-gray-100 dark:bg-[#121212] p-2.5 rounded-lg text-xs">
