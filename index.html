@@ -17,7 +17,6 @@
     }
   </script>
   <style>
-    /* Smooth Fluid Green Strikethrough Animation */
     .strikethrough-anim {
       position: relative;
       display: inline-block;
@@ -102,15 +101,16 @@
 
     <!-- CONTROLS & PROFILE -->
     <div class="flex items-center space-x-3">
-      <!-- Active Viewers Popover & Live Status -->
+      <!-- Active Viewers Popover & Sync Status -->
       <div class="relative">
-        <button onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs">
+        <button id="syncBadgeBtn" onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs transition">
           <div id="syncPulse" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
           <span id="githubSyncBadge">Live Multi-PC Sync</span>
         </button>
-        <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-48 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-3 z-40 text-xs">
+        <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-56 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-3 z-40 text-xs">
           <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Logged In Session</div>
-          <div id="activeUsersList" class="space-y-1"></div>
+          <div id="activeUsersList" class="space-y-1 mb-2"></div>
+          <div id="syncStatusDetail" class="text-[10px] text-gray-500 border-t border-gray-200 dark:border-gray-800 pt-2">Checking GitHub API...</div>
         </div>
       </div>
 
@@ -412,7 +412,7 @@
 
       <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
         <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">GitHub Live Multi-PC Sync Token</h4>
-        <p class="text-[10px] text-gray-500 mb-2">Enter your GitHub PAT once to sync commits automatically across all PCs.</p>
+        <p class="text-[10px] text-gray-500 mb-2">Save token on each PC to allow live background writes across devices.</p>
         <input type="password" id="githubTokenInput" placeholder="github_pat_..." class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded p-2 text-xs mb-2">
         <button onclick="saveGithubToken()" class="px-3 py-1.5 bg-[#A6192E] text-white text-xs font-bold rounded">Save Token</button>
       </div>
@@ -461,7 +461,7 @@
     </div>
   </div>
 
-  <!-- APPLICATION ENGINE WITH LIVE RAW CACHE-BUSTING BACKGROUND SYNC -->
+  <!-- SCRIPT ENGINE WITH DIRECT GITHUB REST API POLLING & AUTO-RETRY COMMITS -->
   <script>
     const GITHUB_REPO_OWNER = "CharlieGwilliam";
     const GITHUB_REPO_NAME = "amada-tasks";
@@ -531,24 +531,53 @@
       renderUserProfiles();
       checkAuth();
       applyCurrentSettings();
-      fetchFromGitHubRaw();
-      setInterval(fetchFromGitHubRaw, 3000); // Polls GitHub Raw CDN every 3 seconds
+      fetchFromGitHubApi();
+      setInterval(fetchFromGitHubApi, 3000); // Direct REST API Polling
       renderAll();
     };
 
-    // Helper: Detect if user is currently typing in an input field/modal to avoid focus loss
     function isUserTyping() {
-      const activeEl = document.activeElement;
-      return activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT') && activeEl.type !== 'checkbox';
+      const el = document.activeElement;
+      return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') && el.type !== 'checkbox';
     }
 
-    // Uncached GET read via GitHub Raw CDN (Zero rate limits + timestamp cache buster)
-    async function fetchFromGitHubRaw() {
+    function updateSyncUI(status, text) {
+      const badge = document.getElementById("githubSyncBadge");
+      const pulse = document.getElementById("syncPulse");
+      const detail = document.getElementById("syncStatusDetail");
+
+      if (status === "ok") {
+        badge.innerText = "Multi-PC Live Synced";
+        pulse.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        if (detail) detail.innerText = `Connected via GitHub REST API (${new Date().toLocaleTimeString()})`;
+      } else if (status === "read_only") {
+        badge.innerText = "Read-Only (No Token)";
+        pulse.className = "w-2 h-2 rounded-full bg-amber-500";
+        if (detail) detail.innerText = "Viewing live GitHub data. Enter Token in ⚙️ to enable write permissions.";
+      } else {
+        badge.innerText = "Sync Error / Conflict";
+        pulse.className = "w-2 h-2 rounded-full bg-red-500";
+        if (detail) detail.innerText = text || "Error syncing with GitHub.";
+      }
+    }
+
+    // Direct REST API read with timestamp cache-buster
+    async function fetchFromGitHubApi() {
       try {
-        const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/main/${GITHUB_FILE_PATH}?t=${Date.now()}`;
-        const res = await fetch(rawUrl);
+        const headers = githubToken ? { "Authorization": `token ${githubToken}` } : {};
+        const url = `https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}?ref=main&t=${Date.now()}`;
+        const res = await fetch(url, { headers });
+        
         if (res.ok) {
-          const content = await res.json();
+          const json = await res.json();
+          // Safe Base64 decode
+          const binaryStr = atob(json.content.replace(/\s/g, ''));
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+          }
+          const content = JSON.parse(new TextDecoder().decode(bytes));
+
           if (content.users) users = content.users;
           if (content.sharedTags) sharedTags = content.sharedTags;
           if (content.sharedSections) sharedSections = content.sharedSections;
@@ -561,14 +590,20 @@
           localStorage.setItem("amada_tasks", JSON.stringify(tasks));
           localStorage.setItem("amada_notes", JSON.stringify(notes));
 
+          updateSyncUI(githubToken ? "ok" : "read_only");
+          renderUserProfiles();
           if (!isUserTyping()) {
             renderAll();
           }
+        } else {
+          updateSyncUI("error", "Failed to fetch repository contents");
         }
-      } catch (e) {}
+      } catch (e) {
+        updateSyncUI("error", e.message);
+      }
     }
 
-    // Save Data & Write Commit to GitHub REST API with fresh SHA lookup
+    // Save Data & Write Commit to GitHub REST API with fresh SHA pre-fetch
     async function saveData() {
       localStorage.setItem("amada_users", JSON.stringify(users));
       localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
@@ -580,40 +615,53 @@
 
       renderAll();
 
-      if (githubToken) {
-        try {
-          // Get current file SHA dynamically
-          const getRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}?t=${Date.now()}`, {
-            headers: { "Authorization": `token ${githubToken}` }
-          });
-          let sha = null;
-          if (getRes.ok) {
-            const getJson = await getRes.json();
-            sha = getJson.sha;
-          }
+      if (!githubToken) {
+        updateSyncUI("read_only");
+        return;
+      }
 
-          // Safe UTF-8 Base64 encoding
-          const jsonStr = JSON.stringify({ users, sharedTags, sharedSections, tasks, notes });
-          const utf8Bytes = new TextEncoder().encode(jsonStr);
-          let binary = '';
-          utf8Bytes.forEach(b => binary += String.fromCharCode(b));
-          const base64Content = btoa(binary);
+      try {
+        // Fetch current file SHA dynamically
+        const getRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}?t=${Date.now()}`, {
+          headers: { "Authorization": `token ${githubToken}` }
+        });
+        
+        let sha = null;
+        if (getRes.ok) {
+          const getJson = await getRes.json();
+          sha = getJson.sha;
+        }
 
-          const payload = {
-            message: `Update workspace by ${activeUser || 'system'}`,
-            content: base64Content,
-            sha: sha
-          };
+        // Base64 UTF-8 encoding
+        const jsonStr = JSON.stringify({ users, sharedTags, sharedSections, tasks, notes });
+        const utf8Bytes = new TextEncoder().encode(jsonStr);
+        let binary = '';
+        utf8Bytes.forEach(b => binary += String.fromCharCode(b));
+        const base64Content = btoa(binary);
 
-          await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}`, {
-            method: "PUT",
-            headers: {
-              "Authorization": `token ${githubToken}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-          });
-        } catch (e) {}
+        const payload = {
+          message: `Update workspace by ${activeUser || 'system'}`,
+          content: base64Content,
+          sha: sha
+        };
+
+        const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}`, {
+          method: "PUT",
+          headers: {
+            "Authorization": `token ${githubToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (putRes.ok) {
+          updateSyncUI("ok");
+        } else {
+          const errData = await putRes.json();
+          updateSyncUI("error", errData.message || "Write rejected");
+        }
+      } catch (e) {
+        updateSyncUI("error", e.message);
       }
     }
 
@@ -622,8 +670,8 @@
       if (token) {
         githubToken = token;
         localStorage.setItem("amada_github_token", token);
-        alert("GitHub Live Token Saved!");
-        fetchFromGitHubRaw();
+        alert("GitHub Live Token Saved! PC write permissions activated.");
+        fetchFromGitHubApi();
       }
     }
 
