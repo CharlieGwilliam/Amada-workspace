@@ -4,21 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Amada Tasks & Keep Workspace</title>
+  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root {
       --amada-red: #A6192E;
+      --amada-red-hover: #821222;
       --amada-dark: #121212;
+      --amada-card: #1E1E1E;
+      --amada-card-hover: #282828;
     }
-    body { background-color: var(--amada-dark); color: #E0E0E0; font-family: system-ui, -apple-system, sans-serif; }
+    body {
+      background-color: var(--amada-dark);
+      color: #E0E0E0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
     .amada-bg-red { background-color: var(--amada-red); }
+    .amada-bg-red:hover { background-color: var(--amada-red-hover); }
+    .amada-border-red { border-color: var(--amada-red); }
     .amada-text-red { color: var(--amada-red); }
     
+    /* Fluid Green Strikethrough Animation */
     .strikethrough-anim {
       position: relative;
       display: inline-block;
-      transition: color 0.3s ease;
+      transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .strikethrough-anim::after {
       content: '';
@@ -30,14 +41,20 @@
       background-color: #22c55e;
       transform: scaleX(0);
       transform-origin: left center;
-      transition: transform 0.35s ease-in-out;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .strikethrough-active { color: #71717a !important; }
-    .strikethrough-active::after { transform: scaleX(1); }
+    .strikethrough-active {
+      color: #71717a !important;
+    }
+    .strikethrough-active::after {
+      transform: scaleX(1);
+    }
 
+    /* Custom Scrollbars */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #121212; }
     ::-webkit-scrollbar-thumb { background: #333333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--amada-red); }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -47,7 +64,7 @@
     <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl p-8 max-w-md w-full shadow-2xl text-center">
       <div class="w-12 h-12 amada-bg-red rounded-lg flex items-center justify-center mx-auto mb-4 font-bold text-xl text-white">A</div>
       <h2 class="text-2xl font-bold text-white mb-2">Amada Workspace</h2>
-      <p class="text-sm text-gray-400 mb-6">Enter your @amada.co.uk email to enter workspace.</p>
+      <p class="text-sm text-gray-400 mb-6">Enter your @amada.co.uk email to sign into the workspace.</p>
       
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
         <div class="text-left">
@@ -63,117 +80,333 @@
   <!-- TOP HEADER -->
   <header class="h-14 bg-[#181818] border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
     <div class="flex items-center space-x-3">
-      <div class="w-7 h-7 amada-bg-red rounded flex items-center justify-center font-bold text-white text-sm">A</div>
-      <span class="font-bold text-white text-lg tracking-wide">AMADA <span class="text-gray-400 text-sm font-normal">Tasks & Keep</span></span>
+      <button onclick="toggleSidebar()" class="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+      <div class="flex items-center space-x-2">
+        <div class="w-7 h-7 amada-bg-red rounded flex items-center justify-center font-bold text-white text-sm">A</div>
+        <span class="font-bold text-white text-lg tracking-wide">AMADA <span class="text-gray-400 text-sm font-normal">Tasks & Keep</span></span>
+      </div>
     </div>
 
+    <!-- View Switcher -->
     <div class="flex bg-[#121212] p-1 rounded-lg border border-gray-800">
-      <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-4 py-1 rounded text-xs font-semibold amada-bg-red text-white">Tasks</button>
-      <button id="tabNotes" onclick="switchMainTab('notes')" class="px-4 py-1 rounded text-xs font-semibold text-gray-400 hover:text-white">Keep Notes</button>
+      <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-4 py-1 rounded text-xs font-semibold amada-bg-red text-white flex items-center space-x-1.5">
+        <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
+        <span>Tasks</span>
+      </button>
+      <button id="tabNotes" onclick="switchMainTab('notes')" class="px-4 py-1 rounded text-xs font-semibold text-gray-400 hover:text-white flex items-center space-x-1.5">
+        <i data-lucide="sticky-note" class="w-3.5 h-3.5"></i>
+        <span>Keep Notes</span>
+      </button>
     </div>
 
+    <!-- Sync Indicator & User Profile -->
     <div class="flex items-center space-x-3">
       <div id="syncStatus" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800 text-emerald-400 text-[11px]">
         <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-        <span>Live Cloud Connected</span>
+        <span>Active Saved Engine</span>
       </div>
-      <button onclick="handleLogout()" class="p-1.5 text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800" title="Log out">
-        <i data-lucide="log-out" class="w-4 h-4"></i>
-      </button>
+      <div class="flex items-center space-x-2">
+        <div id="userBadge" class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-white border border-gray-600">?</div>
+        <button onclick="handleLogout()" class="p-1.5 text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800" title="Log out">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
+  <!-- MAIN APP LAYOUT -->
   <div class="flex-1 flex overflow-hidden">
-    <main class="flex-1 bg-[#121212] overflow-x-auto p-4 flex flex-col">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside id="sidebar" class="w-64 bg-[#181818] border-r border-gray-800 flex flex-col shrink-0 transition-all duration-200">
+      <div class="p-4">
+        <div class="relative">
+          <button onclick="toggleCreateMenu()" class="w-full bg-[#252525] hover:bg-[#303030] text-white border border-gray-700 rounded-full py-2.5 px-4 flex items-center space-x-3 shadow-md transition">
+            <i data-lucide="plus" class="w-5 h-5 amada-text-red"></i>
+            <span class="font-medium text-sm">Create</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 ml-auto"></i>
+          </button>
+          
+          <div id="createMenu" class="hidden absolute top-12 left-0 w-full bg-[#222222] border border-gray-700 rounded-lg shadow-xl py-1 z-30">
+            <button onclick="openNewTaskModal(); toggleCreateMenu();" class="w-full text-left px-4 py-2 text-xs text-gray-300 hover:bg-[#2A2A2A] hover:text-white flex items-center space-x-2">
+              <i data-lucide="check-square" class="w-4 h-4 text-gray-400"></i>
+              <span>New Task</span>
+            </button>
+            <button onclick="openNewListModal(); toggleCreateMenu();" class="w-full text-left px-4 py-2 text-xs text-gray-300 hover:bg-[#2A2A2A] hover:text-white flex items-center space-x-2">
+              <i data-lucide="folder-plus" class="w-4 h-4 text-gray-400"></i>
+              <span>New Task Section</span>
+            </button>
+            <button onclick="openNewNoteModal(); toggleCreateMenu();" class="w-full text-left px-4 py-2 text-xs text-gray-300 hover:bg-[#2A2A2A] hover:text-white flex items-center space-x-2">
+              <i data-lucide="file-plus" class="w-4 h-4 text-gray-400"></i>
+              <span>New Keep Note</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-2 space-y-1">
+        <button onclick="showAllListsView()" id="btnAllTasks" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-white amada-bg-red">
+          <div class="flex items-center space-x-2.5">
+            <i data-lucide="layers" class="w-4 h-4"></i>
+            <span>All Task Sections</span>
+          </div>
+          <span id="totalTaskBadge" class="bg-black/30 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
+        </button>
+      </div>
+
+      <div class="mt-4 px-2 flex-1 overflow-y-auto">
+        <div class="flex items-center justify-between px-2 mb-2">
+          <button onclick="toggleListsCollapse()" class="flex items-center space-x-1 text-xs font-semibold text-gray-400 hover:text-white">
+            <i id="listsChevron" data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+            <span>Lists (Check to Show)</span>
+          </button>
+          <button onclick="openNewListModal()" class="text-gray-500 hover:text-white p-1" title="Add Section">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <div id="listsContainer" class="space-y-0.5"></div>
+      </div>
+    </aside>
+
+    <!-- BOARD / CONTENT -->
+    <main class="flex-1 bg-[#121212] overflow-x-auto overflow-y-hidden p-4 flex flex-col">
+      <div id="isolatedHeader" class="hidden mb-4 bg-[#181818] border border-gray-800 rounded-xl p-3 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+          <button onclick="showAllListsView()" class="px-3 py-1.5 bg-[#252525] hover:bg-[#303030] text-gray-300 hover:text-white rounded-lg text-xs flex items-center space-x-1.5">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>Back to All Lists</span>
+          </button>
+          <h2 id="isolatedTitle" class="text-lg font-bold text-white">Category Title</h2>
+        </div>
+        <span id="isolatedBadge" class="text-xs text-gray-400 bg-[#121212] px-2.5 py-1 rounded-full border border-gray-800">0 tasks</span>
+      </div>
+
       <div id="tasksBoardView" class="flex-1 flex space-x-4 overflow-x-auto pb-2 items-start"></div>
+
       <div id="notesBoardView" class="hidden flex-1 overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold text-white">Keep Notes</h2>
-          <button onclick="openNewNoteModal()" class="amada-bg-red text-white text-xs px-3 py-1.5 rounded-lg">+ Add Note</button>
+          <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+            <i data-lucide="sticky-note" class="w-5 h-5 amada-text-red"></i>
+            <span>Keep Notes</span>
+          </h2>
+          <button onclick="openNewNoteModal()" class="amada-bg-red text-white text-xs px-3 py-1.5 rounded-lg flex items-center space-x-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add Note</span>
+          </button>
         </div>
         <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </div>
     </main>
   </div>
 
-  <!-- NOTE MODAL -->
-  <div id="noteModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-    <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-md w-full p-5 text-gray-200">
-      <h3 class="text-base font-bold text-white mb-3">New Note</h3>
-      <form onsubmit="saveNote(event)" class="space-y-3">
-        <input type="text" id="noteTitle" placeholder="Title" required class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white">
-        <textarea id="noteContent" rows="4" placeholder="Note content..." required class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white"></textarea>
-        <div class="flex justify-end space-x-2">
-          <button type="button" onclick="closeNoteModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
-          <button type="submit" class="px-4 py-1.5 amada-bg-red text-white text-xs font-semibold rounded">Save</button>
+  <!-- MODALS -->
+  <div id="detailModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-lg w-full p-6 text-gray-200 relative shadow-2xl">
+      <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <div class="flex items-center space-x-2 mb-2">
+        <span id="detailTypeBadge" class="text-[10px] uppercase font-bold px-2 py-0.5 rounded amada-bg-red text-white">TASK</span>
+        <span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-800 text-gray-300">Priority</span>
+      </div>
+      <h3 id="detailTitle" class="text-xl font-bold text-white mb-2">Item Title</h3>
+      <div id="detailContent" class="text-sm text-gray-300 mb-4 whitespace-pre-wrap bg-[#121212] p-3 rounded border border-gray-800">Details...</div>
+      
+      <div class="grid grid-cols-2 gap-2 text-xs text-gray-400 mb-4">
+        <div><span class="text-gray-500">Section:</span> <span id="detailSection" class="text-white">General</span></div>
+        <div><span class="text-gray-500">Assignee:</span> <span id="detailAssignee" class="text-white">Anyone</span></div>
+        <div><span class="text-gray-500">Due Date:</span> <span id="detailDueDate" class="text-white">No Date</span></div>
+        <div><span class="text-gray-500">Updated:</span> <span id="detailUpdated" class="text-white">Just now</span></div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2 border-t border-gray-800">
+        <button id="detailEditBtn" class="px-4 py-2 amada-bg-red text-white text-xs font-semibold rounded-lg flex items-center space-x-1">
+          <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+          <span>Edit Item</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editTaskModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-lg w-full p-6 text-gray-200 relative shadow-2xl overflow-y-auto max-h-[90vh]">
+      <button onclick="closeEditTaskModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <h3 id="modalTaskHeading" class="text-lg font-bold text-white mb-4">Edit Task</h3>
+
+      <div id="lastModifiedBadge" class="mb-4 bg-[#121212] border border-gray-800 p-2.5 rounded text-xs text-gray-400 flex items-center space-x-2">
+        <i data-lucide="clock" class="w-4 h-4 amada-text-red"></i>
+        <div>
+          <span class="text-gray-500">Last Modified:</span>
+          <span id="lastModifiedText" class="text-gray-200 font-medium">Never</span>
+        </div>
+      </div>
+
+      <form id="taskForm" onsubmit="saveTask(event)" class="space-y-3">
+        <input type="hidden" id="taskId">
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1">Task Title</label>
+          <input type="text" id="taskTitle" required class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white focus:outline-none focus:border-[#A6192E]">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 mb-1">Section</label>
+            <select id="taskSection" class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white focus:outline-none"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 mb-1">Priority</label>
+            <select id="taskPriority" class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white focus:outline-none">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 mb-1">Assignee</label>
+            <select id="taskAssignee" class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white focus:outline-none">
+              <option value="Me">Me</option>
+              <option value="Jacob">Jacob</option>
+              <option value="Both">Both</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 mb-1">Due Date</label>
+            <input type="date" id="taskDueDate" class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1">Notes / Description</label>
+          <textarea id="taskNotes" rows="3" class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white focus:outline-none"></textarea>
+        </div>
+
+        <div class="border-t border-gray-800 pt-3 mt-4">
+          <details class="group">
+            <summary class="cursor-pointer text-xs font-semibold text-gray-400 group-open:text-white flex items-center justify-between">
+              <span>View Edit History Log</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition group-open:rotate-180"></i>
+            </summary>
+            <div id="historyLogList" class="mt-2 space-y-1.5 max-h-32 overflow-y-auto text-[11px] text-gray-400 bg-[#121212] p-2 rounded border border-gray-800"></div>
+          </details>
+        </div>
+
+        <div class="flex justify-between items-center pt-3 border-t border-gray-800">
+          <button type="button" id="btnDeleteTask" onclick="deleteCurrentTask()" class="text-xs text-red-400 hover:text-red-300 hidden">Delete Task</button>
+          <div class="flex space-x-2 ml-auto">
+            <button type="button" onclick="closeEditTaskModal()" class="px-3 py-1.5 text-xs text-gray-400 hover:text-white">Cancel</button>
+            <button type="submit" class="px-4 py-1.5 amada-bg-red text-white text-xs font-semibold rounded">Save Task</button>
+          </div>
         </div>
       </form>
     </div>
   </div>
 
+  <div id="newListModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-sm w-full p-5 text-gray-200">
+      <h3 class="text-base font-bold text-white mb-3">Add New Task Section</h3>
+      <input type="text" id="newListTitle" placeholder="Section Name (e.g. Purchasing)" class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white mb-4 focus:outline-none">
+      <div class="flex justify-end space-x-2">
+        <button onclick="closeNewListModal()" class="px-3 py-1.5 text-xs text-gray-400 hover:text-white">Cancel</button>
+        <button onclick="saveNewList()" class="px-4 py-1.5 amada-bg-red text-white text-xs font-semibold rounded">Create Section</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="noteModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-md w-full p-5 text-gray-200">
+      <h3 id="noteModalHeading" class="text-base font-bold text-white mb-3">New Keep Note</h3>
+      <form onsubmit="saveNote(event)" class="space-y-3">
+        <input type="hidden" id="noteId">
+        <input type="text" id="noteTitle" placeholder="Title" required class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white focus:outline-none">
+        <textarea id="noteContent" rows="4" placeholder="Take a note..." required class="w-full bg-[#121212] border border-gray-700 rounded p-2 text-sm text-white focus:outline-none"></textarea>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeNoteModal()" class="px-3 py-1.5 text-xs text-gray-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 amada-bg-red text-white text-xs font-semibold rounded">Save Note</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- APPLICATION ENGINE -->
   <script>
-    const SYNC_BIN = "https://api.jsonbin.io/v3/b/6628f2441f56778d60cb4f82";
+    const syncChannel = new BroadcastChannel('amada_workspace_sync');
     let currentUserEmail = localStorage.getItem("amada_user_email") || "";
     let activeMainTab = "tasks";
+    let selectedIsolatedList = null;
+    let listsCollapsed = false;
 
-    let appState = {
+    let defaultState = {
       lists: [
-        { id: "high", title: "High Priority" },
-        { id: "medium", title: "Medium Priority" },
-        { id: "low", title: "Low Priority" }
+        { id: "high", title: "High Priority", visible: true },
+        { id: "medium", title: "Medium Priority", visible: true },
+        { id: "low", title: "Low Priority", visible: true },
+        { id: "someday", title: "Someday", visible: true }
       ],
-      tasks: [],
-      notes: []
+      tasks: [
+        { id: "1", title: "Finish making tasks app", sectionId: "high", priority: "High", assignee: "Me", completed: false, notes: "Finalize Amada UI design", history: [] }
+      ],
+      notes: [
+        { id: "n1", title: "CNC Machine Specs", content: "Check G112 circle simulation settings on machine 4.", updatedAt: new Date().toISOString() }
+      ]
     };
+
+    let appState = JSON.parse(localStorage.getItem("amada_app_state")) || defaultState;
 
     window.onload = () => {
       lucide.createIcons();
       checkAuth();
-      fetchCloudData();
-      setInterval(fetchCloudData, 3000); // Polls every 3 seconds for seamless live updates
+      renderAllViews();
     };
 
-    async function fetchCloudData() {
-      try {
-        const res = await fetch(SYNC_BIN + "/latest", { headers: { "X-Bin-Meta": "false" } });
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.lists) {
-            appState = data;
-            renderAll();
-          }
-        }
-      } catch (e) {}
+    syncChannel.onmessage = (event) => {
+      if (event.data) {
+        appState = event.data;
+        localStorage.setItem("amada_app_state", JSON.stringify(appState));
+        renderAllViews();
+      }
+    };
+
+    function saveState() {
+      localStorage.setItem("amada_app_state", JSON.stringify(appState));
+      syncChannel.postMessage(appState);
+      renderAllViews();
     }
 
-    async function saveToCloud() {
-      try {
-        await fetch(SYNC_BIN, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(appState)
-        });
-      } catch (e) {}
-    }
-
-    function renderAll() {
-      renderBoard();
-      renderNotes();
+    function renderAllViews() {
+      renderListsSidebar();
+      renderTasksBoard();
+      renderNotesGrid();
     }
 
     function checkAuth() {
-      if (currentUserEmail) document.getElementById("authOverlay").classList.add("hidden");
-      else document.getElementById("authOverlay").classList.remove("hidden");
+      if (currentUserEmail) {
+        document.getElementById("authOverlay").classList.add("hidden");
+        updateUserUI();
+      } else {
+        document.getElementById("authOverlay").classList.remove("hidden");
+      }
     }
 
     function handleLogin(e) {
       e.preventDefault();
-      const email = document.getElementById("loginEmail").value.trim();
-      if (/^[^\s@]+@amada\.co\.uk$/i.test(email)) {
-        currentUserEmail = email;
-        localStorage.setItem("amada_user_email", email);
-        checkAuth();
+      const emailInput = document.getElementById("loginEmail").value.trim();
+      const domainRegex = /^[^\s@]+@amada\.co\.uk$/i;
+      
+      if (domainRegex.test(emailInput)) {
+        currentUserEmail = emailInput;
+        localStorage.setItem("amada_user_email", emailInput);
+        document.getElementById("authError").classList.add("hidden");
+        document.getElementById("authOverlay").classList.add("hidden");
+        updateUserUI();
       } else {
         document.getElementById("authError").classList.remove("hidden");
       }
@@ -181,76 +414,404 @@
 
     function handleLogout() {
       localStorage.removeItem("amada_user_email");
+      currentUserEmail = "";
       location.reload();
+    }
+
+    function updateUserUI() {
+      const username = currentUserEmail.split("@")[0].replace(".", " ");
+      const initial = username.charAt(0).toUpperCase();
+      document.getElementById("userBadge").innerText = initial;
+      document.getElementById("userBadge").title = currentUserEmail;
     }
 
     function switchMainTab(tab) {
       activeMainTab = tab;
-      document.getElementById("tasksBoardView").classList.toggle("hidden", tab !== 'tasks');
-      document.getElementById("notesBoardView").classList.toggle("hidden", tab !== 'notes');
+      const btnTasks = document.getElementById("tabTasks");
+      const btnNotes = document.getElementById("tabNotes");
+      const boardTasks = document.getElementById("tasksBoardView");
+      const boardNotes = document.getElementById("notesBoardView");
+
+      if (tab === "tasks") {
+        btnTasks.className = "px-4 py-1 rounded text-xs font-semibold amada-bg-red text-white flex items-center space-x-1.5";
+        btnNotes.className = "px-4 py-1 rounded text-xs font-semibold text-gray-400 hover:text-white flex items-center space-x-1.5";
+        boardTasks.classList.remove("hidden");
+        boardNotes.classList.add("hidden");
+      } else {
+        btnNotes.className = "px-4 py-1 rounded text-xs font-semibold amada-bg-red text-white flex items-center space-x-1.5";
+        btnTasks.className = "px-4 py-1 rounded text-xs font-semibold text-gray-400 hover:text-white flex items-center space-x-1.5";
+        boardNotes.classList.remove("hidden");
+        boardTasks.classList.add("hidden");
+      }
     }
 
-    function renderBoard() {
-      const board = document.getElementById("tasksBoardView");
-      board.innerHTML = appState.lists.map(list => {
-        const listTasks = appState.tasks.filter(t => t.sectionId === list.id);
-        return `
-          <div class="w-80 bg-[#1E1E1E] border border-gray-800 rounded-xl p-3 flex flex-col shrink-0">
-            <h3 class="font-bold text-white text-sm mb-2">${list.title}</h3>
-            <input type="text" placeholder="+ Add task" onkeydown="addTask(event, '${list.id}')" class="w-full bg-[#121212] border border-gray-800 rounded px-2.5 py-1 text-xs text-white mb-3">
-            <div class="space-y-2">
-              ${listTasks.map(t => `
-                <div class="bg-[#252525] border border-gray-700/60 rounded p-2 flex items-center space-x-2">
-                  <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask('${t.id}')" class="accent-green-600">
-                  <span class="text-xs strikethrough-anim ${t.completed ? 'strikethrough-active' : 'text-white'}">${t.title}</span>
-                </div>
-              `).join('')}
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.classList.toggle("w-64");
+      sidebar.classList.toggle("w-0");
+      sidebar.classList.toggle("overflow-hidden");
+    }
+
+    function toggleListsCollapse() {
+      listsCollapsed = !listsCollapsed;
+      document.getElementById("listsContainer").classList.toggle("hidden", listsCollapsed);
+      document.getElementById("listsChevron").style.transform = listsCollapsed ? "rotate(-90deg)" : "rotate(0deg)";
+    }
+
+    function renderListsSidebar() {
+      const container = document.getElementById("listsContainer");
+      container.innerHTML = "";
+
+      appState.lists.forEach(list => {
+        const count = appState.tasks.filter(t => t.sectionId === list.id && !t.completed).length;
+        const isSelected = selectedIsolatedList === list.id;
+
+        const itemHtml = `
+          <div class="group flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-gray-800 ${isSelected ? 'bg-gray-800 text-white font-bold' : 'text-gray-300'} text-xs">
+            <div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="isolateCategory('${list.id}')">
+              <input type="checkbox" ${list.visible ? 'checked' : ''} onclick="event.stopPropagation(); toggleListVisibility('${list.id}')" class="rounded accent-[#A6192E] bg-gray-900 border-gray-700">
+              <span class="truncate">${list.title}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="bg-[#121212] text-gray-400 text-[10px] px-1.5 py-0.5 rounded-full">${count}</span>
+              <button onclick="deleteListSection('${list.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-400">
+                <i data-lucide="trash-2" class="w-3 h-3"></i>
+              </button>
             </div>
           </div>
         `;
-      }).join('');
+        container.insertAdjacentHTML("beforeend", itemHtml);
+      });
+
+      document.getElementById("totalTaskBadge").innerText = appState.tasks.filter(t => !t.completed).length;
+      lucide.createIcons();
     }
 
-    function addTask(e, sectionId) {
-      if (e.key === 'Enter' && e.target.value.trim()) {
-        appState.tasks.push({ id: Date.now().toString(), title: e.target.value.trim(), sectionId, completed: false });
-        e.target.value = "";
-        renderBoard();
-        saveToCloud();
+    function toggleListVisibility(listId) {
+      const list = appState.lists.find(l => l.id === listId);
+      if (list) {
+        list.visible = !list.visible;
+        saveState();
       }
     }
 
-    function toggleTask(id) {
-      const task = appState.tasks.find(t => t.id === id);
+    function isolateCategory(listId) {
+      selectedIsolatedList = listId;
+      const list = appState.lists.find(l => l.id === listId);
+      if (list) {
+        document.getElementById("isolatedHeader").classList.remove("hidden");
+        document.getElementById("isolatedTitle").innerText = list.title;
+        renderListsSidebar();
+        renderTasksBoard();
+      }
+    }
+
+    function showAllListsView() {
+      selectedIsolatedList = null;
+      document.getElementById("isolatedHeader").classList.add("hidden");
+      renderListsSidebar();
+      renderTasksBoard();
+    }
+
+    function renderTasksBoard() {
+      const board = document.getElementById("tasksBoardView");
+      board.innerHTML = "";
+
+      const activeLists = selectedIsolatedList 
+        ? appState.lists.filter(l => l.id === selectedIsolatedList)
+        : appState.lists.filter(l => l.visible);
+
+      activeLists.forEach(list => {
+        const listTasks = appState.tasks.filter(t => t.sectionId === list.id && !t.completed);
+        const completedTasks = appState.tasks.filter(t => t.sectionId === list.id && t.completed);
+
+        const columnHtml = `
+          <div class="w-80 bg-[#1E1E1E] border border-gray-800 rounded-xl flex flex-col shrink-0 max-h-full" 
+               ondragover="allowDrop(event)" ondrop="dropTask(event, '${list.id}')">
+            
+            <div class="p-3 border-b border-gray-800 flex items-center justify-between">
+              <h3 class="font-bold text-white text-sm truncate">${list.title}</h3>
+              <span class="text-xs text-gray-400">${listTasks.length}</span>
+            </div>
+
+            <div class="p-2 border-b border-gray-800/50">
+              <input type="text" placeholder="+ Add a task" onkeydown="handleQuickTask(event, '${list.id}')" 
+                     class="w-full bg-[#121212] border border-gray-800 rounded px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#A6192E]">
+            </div>
+
+            <div class="p-2 flex-1 overflow-y-auto space-y-2">
+              ${listTasks.map(task => renderTaskCard(task)).join('')}
+
+              ${completedTasks.length > 0 ? `
+                <details class="mt-4 border-t border-gray-800 pt-2">
+                  <summary class="cursor-pointer text-xs font-semibold text-gray-500 hover:text-gray-300">
+                    Completed (${completedTasks.length})
+                  </summary>
+                  <div class="mt-2 space-y-1.5">
+                    ${completedTasks.map(task => renderTaskCard(task)).join('')}
+                  </div>
+                </details>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        board.insertAdjacentHTML("beforeend", columnHtml);
+      });
+
+      if (selectedIsolatedList) {
+        const count = appState.tasks.filter(t => t.sectionId === selectedIsolatedList && !t.completed).length;
+        document.getElementById("isolatedBadge").innerText = `${count} tasks`;
+      }
+
+      lucide.createIcons();
+    }
+
+    function renderTaskCard(task) {
+      const priorityColor = task.priority === 'High' ? 'text-red-400 bg-red-950/40 border-red-900' :
+                            task.priority === 'Medium' ? 'text-amber-400 bg-amber-950/40 border-amber-900' :
+                            'text-blue-400 bg-blue-950/40 border-blue-900';
+
+      return `
+        <div id="task-${task.id}" draggable="true" ondragstart="dragTask(event, '${task.id}')"
+             onclick="openDetailModal('task', '${task.id}')"
+             class="bg-[#252525] hover:bg-[#2A2A2A] border border-gray-700/60 rounded-lg p-2.5 cursor-pointer shadow-sm group transition">
+          
+          <div class="flex items-start space-x-2.5">
+            <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                   onclick="event.stopPropagation(); toggleTaskComplete('${task.id}')" 
+                   class="mt-0.5 rounded-full w-4 h-4 accent-green-600 cursor-pointer">
+
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-medium strikethrough-anim ${task.completed ? 'strikethrough-active' : 'text-white'}">
+                ${task.title}
+              </span>
+              
+              <div class="flex items-center space-x-2 mt-1.5">
+                <span class="text-[9px] px-1.5 py-0.5 rounded border ${priorityColor}">${task.priority}</span>
+                <span class="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded">${task.assignee}</span>
+                ${task.dueDate ? `<span class="text-[10px] text-red-400">${task.dueDate}</span>` : ''}
+              </div>
+            </div>
+
+            <button onclick="event.stopPropagation(); openEditTaskModal('${task.id}')" 
+                    class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-white rounded">
+              <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleQuickTask(e, sectionId) {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        const newTask = {
+          id: Date.now().toString(),
+          title: e.target.value.trim(),
+          sectionId: sectionId,
+          priority: "Medium",
+          assignee: "Me",
+          completed: false,
+          history: [{ action: "Created task", date: new Date().toLocaleString(), user: currentUserEmail }]
+        };
+        appState.tasks.push(newTask);
+        e.target.value = "";
+        saveState();
+      }
+    }
+
+    function toggleTaskComplete(taskId) {
+      const task = appState.tasks.find(t => t.id === taskId);
       if (task) {
         task.completed = !task.completed;
-        renderBoard();
-        saveToCloud();
+        task.history.push({
+          action: task.completed ? "Marked completed" : "Restored task",
+          date: new Date().toLocaleString(),
+          user: currentUserEmail
+        });
+        saveState();
       }
     }
 
-    function renderNotes() {
+    function allowDrop(e) { e.preventDefault(); }
+    function dragTask(e, taskId) { e.dataTransfer.setData("taskId", taskId); }
+    function dropTask(e, targetSectionId) {
+      e.preventDefault();
+      const taskId = e.dataTransfer.getData("taskId");
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (task && task.sectionId !== targetSectionId) {
+        task.sectionId = targetSectionId;
+        task.history.push({
+          action: `Moved to: ${appState.lists.find(l => l.id === targetSectionId)?.title}`,
+          date: new Date().toLocaleString(),
+          user: currentUserEmail
+        });
+        saveState();
+      }
+    }
+
+    function openDetailModal(type, id) {
+      const item = appState.tasks.find(t => t.id === id);
+      if (!item) return;
+
+      document.getElementById("detailTitle").innerText = item.title;
+      document.getElementById("detailContent").innerText = item.notes || "No notes provided.";
+      document.getElementById("detailSection").innerText = appState.lists.find(l => l.id === item.sectionId)?.title || "General";
+      document.getElementById("detailAssignee").innerText = item.assignee;
+      document.getElementById("detailPriority").innerText = item.priority;
+      document.getElementById("detailDueDate").innerText = item.dueDate || "None";
+      
+      const lastHist = item.history[item.history.length - 1];
+      document.getElementById("detailUpdated").innerText = lastHist ? `${lastHist.date} (${lastHist.user})` : "Just now";
+
+      document.getElementById("detailEditBtn").onclick = () => {
+        closeDetailModal();
+        openEditTaskModal(id);
+      };
+
+      document.getElementById("detailModal").classList.remove("hidden");
+    }
+
+    function closeDetailModal() { document.getElementById("detailModal").classList.add("hidden"); }
+
+    function openEditTaskModal(taskId = null) {
+      const selectSection = document.getElementById("taskSection");
+      selectSection.innerHTML = appState.lists.map(l => `<option value="${l.id}">${l.title}</option>`).join('');
+
+      if (taskId) {
+        const task = appState.tasks.find(t => t.id === taskId);
+        document.getElementById("taskId").value = task.id;
+        document.getElementById("taskTitle").value = task.title;
+        document.getElementById("taskSection").value = task.sectionId;
+        document.getElementById("taskPriority").value = task.priority;
+        document.getElementById("taskAssignee").value = task.assignee;
+        document.getElementById("taskDueDate").value = task.dueDate || "";
+        document.getElementById("taskNotes").value = task.notes || "";
+
+        const lastHist = task.history[task.history.length - 1];
+        document.getElementById("lastModifiedText").innerText = lastHist ? `${lastHist.date} by ${lastHist.user}` : "Never";
+
+        const logContainer = document.getElementById("historyLogList");
+        logContainer.innerHTML = task.history.map(h => `
+          <div class="border-b border-gray-800 pb-1">
+            <span class="text-white font-medium">${h.action}</span>
+            <div class="text-[9px] text-gray-500">${h.date} — ${h.user}</div>
+          </div>
+        `).join('') || "No history entries.";
+
+        document.getElementById("btnDeleteTask").classList.remove("hidden");
+      } else {
+        document.getElementById("taskId").value = "";
+        document.getElementById("taskTitle").value = "";
+        document.getElementById("taskNotes").value = "";
+        document.getElementById("lastModifiedText").innerText = "New Task Creation";
+        document.getElementById("historyLogList").innerHTML = "Task creation pending.";
+        document.getElementById("btnDeleteTask").classList.add("hidden");
+      }
+
+      document.getElementById("editTaskModal").classList.remove("hidden");
+    }
+
+    function closeEditTaskModal() { document.getElementById("editTaskModal").classList.add("hidden"); }
+
+    function saveTask(e) {
+      e.preventDefault();
+      const id = document.getElementById("taskId").value;
+      const title = document.getElementById("taskTitle").value;
+      const sectionId = document.getElementById("taskSection").value;
+      const priority = document.getElementById("taskPriority").value;
+      const assignee = document.getElementById("taskAssignee").value;
+      const dueDate = document.getElementById("taskDueDate").value;
+      const notes = document.getElementById("taskNotes").value;
+
+      if (id) {
+        const task = appState.tasks.find(t => t.id === id);
+        task.title = title;
+        task.sectionId = sectionId;
+        task.priority = priority;
+        task.assignee = assignee;
+        task.dueDate = dueDate;
+        task.notes = notes;
+        task.history.push({ action: "Edited details", date: new Date().toLocaleString(), user: currentUserEmail });
+      } else {
+        appState.tasks.push({
+          id: Date.now().toString(),
+          title, sectionId, priority, assignee, dueDate, notes,
+          completed: false,
+          history: [{ action: "Created task", date: new Date().toLocaleString(), user: currentUserEmail }]
+        });
+      }
+
+      closeEditTaskModal();
+      saveState();
+    }
+
+    function deleteCurrentTask() {
+      const id = document.getElementById("taskId").value;
+      appState.tasks = appState.tasks.filter(t => t.id !== id);
+      closeEditTaskModal();
+      saveState();
+    }
+
+    function openNewListModal() { document.getElementById("newListModal").classList.remove("hidden"); }
+    function closeNewListModal() { document.getElementById("newListModal").classList.add("hidden"); }
+    function saveNewList() {
+      const title = document.getElementById("newListTitle").value.trim();
+      if (title) {
+        appState.lists.push({ id: Date.now().toString(), title, visible: true });
+        document.getElementById("newListTitle").value = "";
+        closeNewListModal();
+        saveState();
+      }
+    }
+
+    function deleteListSection(listId) {
+      if (confirm("Delete section?")) {
+        appState.lists = appState.lists.filter(l => l.id !== listId);
+        appState.tasks = appState.tasks.filter(t => t.sectionId !== listId);
+        saveState();
+      }
+    }
+
+    function renderNotesGrid() {
       const grid = document.getElementById("notesGrid");
       grid.innerHTML = appState.notes.map(n => `
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl p-4">
-          <h4 class="font-bold text-white text-sm mb-1">${n.title}</h4>
-          <p class="text-xs text-gray-300">${n.content}</p>
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <h4 class="font-bold text-white text-sm mb-2">${n.title}</h4>
+            <p class="text-xs text-gray-300 whitespace-pre-wrap">${n.content}</p>
+          </div>
+          <div class="mt-4 pt-2 border-t border-gray-800 flex items-center justify-between text-[10px] text-gray-500">
+            <span>${new Date(n.updatedAt).toLocaleDateString()}</span>
+            <button onclick="deleteNote('${n.id}')" class="text-gray-500 hover:text-red-400">
+              <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
         </div>
       `).join('');
+      lucide.createIcons();
     }
 
     function openNewNoteModal() { document.getElementById("noteModal").classList.remove("hidden"); }
     function closeNoteModal() { document.getElementById("noteModal").classList.add("hidden"); }
     function saveNote(e) {
       e.preventDefault();
-      appState.notes.push({
-        id: Date.now().toString(),
-        title: document.getElementById("noteTitle").value,
-        content: document.getElementById("noteContent").value
-      });
+      const title = document.getElementById("noteTitle").value;
+      const content = document.getElementById("noteContent").value;
+
+      appState.notes.push({ id: Date.now().toString(), title, content, updatedAt: new Date().toISOString() });
+      document.getElementById("noteTitle").value = "";
+      document.getElementById("noteContent").value = "";
       closeNoteModal();
-      renderNotes();
-      saveToCloud();
+      saveState();
+    }
+
+    function deleteNote(noteId) {
+      appState.notes = appState.notes.filter(n => n.id !== noteId);
+      saveState();
+    }
+
+    function toggleCreateMenu() {
+      document.getElementById("createMenu").classList.toggle("hidden");
     }
   </script>
 </body>
