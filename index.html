@@ -463,8 +463,8 @@
     const GITHUB_REPO_NAME = "amada-tasks";
     const GITHUB_FILE_PATH = "data.json";
 
-    // --- PASTE YOUR FRESH ACTIVE GITHUB FINE-GRAINED TOKEN HERE ---
-    const GITHUB_PAT = "github_pat_YOUR_FRESH_TOKEN_HERE";
+    // RAW TOKEN ASSIGNED DIRECTLY
+    const GITHUB_PAT = "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";
 
     function getActiveToken() {
       const customOverride = localStorage.getItem("amada_github_token");
@@ -560,7 +560,7 @@
       } else if (status === "read_only") {
         badge.innerText = "Read-Only Mode";
         pulse.className = "w-2 h-2 rounded-full bg-amber-500";
-        if (detail) detail.innerText = "Viewing GitHub contents. Update GITHUB_PAT in code to write edits.";
+        if (detail) detail.innerText = "Viewing GitHub contents. Token requires write permissions.";
       } else {
         badge.innerText = "Sync Error / Conflict";
         pulse.className = "w-2 h-2 rounded-full bg-red-500";
