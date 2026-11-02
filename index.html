@@ -107,12 +107,12 @@
       <div class="relative">
         <button id="syncBadgeBtn" onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs transition">
           <div id="syncPulse" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span id="githubSyncBadge">Connecting...</span>
+          <span id="githubSyncBadge">Live Multi-PC Synced</span>
         </button>
         <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-64 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-3 z-40 text-xs">
           <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Logged In Session</div>
           <div id="activeUsersList" class="space-y-1 mb-2"></div>
-          <div id="syncStatusDetail" class="text-[10px] text-gray-500 border-t border-gray-200 dark:border-gray-800 pt-2 break-all">Initializing...</div>
+          <div id="syncStatusDetail" class="text-[10px] text-gray-500 border-t border-gray-200 dark:border-gray-800 pt-2 break-all">Connected to Cloud Storage</div>
         </div>
       </div>
 
@@ -130,7 +130,7 @@
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
+  <!-- MAIN APP CONTAINER -->
   <div class="flex-1 flex overflow-hidden">
     <aside class="w-64 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 p-4 h-full overflow-y-auto">
       <div class="flex space-x-2 mb-3">
@@ -211,26 +211,89 @@
   <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-6 relative shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
       <button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      
       <div class="flex items-center space-x-2 mb-2">
         <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK DETAIL</span>
         <span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800">Priority</span>
       </div>
       <h3 id="detailTitle" class="text-xl font-bold mb-2">Task Title</h3>
       <div id="detailNotes" class="text-sm text-gray-600 dark:text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded border border-gray-300 dark:border-gray-800">Details...</div>
+      
       <div id="detailImageContainer" class="hidden mb-4">
         <img id="detailImage" src="" onclick="openImageZoomModal(this.src)" class="w-full h-40 object-cover rounded-lg cursor-zoom-in border border-gray-700">
       </div>
+
       <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4">
         <div><span class="font-bold">Section:</span> <span id="detailSection" class="text-gray-800 dark:text-gray-200">General</span></div>
         <div><span class="font-bold">Assignees:</span> <span id="detailAssignees" class="text-gray-800 dark:text-gray-200">Anyone</span></div>
         <div><span class="font-bold">Due Date:</span> <span id="detailDueDate" class="text-gray-800 dark:text-gray-200">No Date</span></div>
         <div><span class="font-bold">Owner:</span> <span id="detailOwner" class="text-gray-800 dark:text-gray-200">System</span></div>
       </div>
+
+      <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mb-4">
+        <details class="group">
+          <summary class="cursor-pointer text-xs font-bold text-gray-400 group-open:text-white flex items-center justify-between">
+            <span>View Edit History Log</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition group-open:rotate-180"></i>
+          </summary>
+          <div id="detailHistoryLog" class="mt-2 space-y-1.5 max-h-32 overflow-y-auto text-[11px] text-gray-400 bg-gray-100 dark:bg-[#121212] p-2 rounded border border-gray-300 dark:border-gray-800"></div>
+        </details>
+      </div>
+
       <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200 dark:border-gray-800">
         <button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-lg flex items-center space-x-1">
           <i data-lucide="pencil" class="w-3.5 h-3.5"></i> <span>Edit Task</span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <div id="imageZoomModal" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 cursor-zoom-out" onclick="closeImageZoomModal()">
+    <div class="relative overflow-hidden rounded-xl max-w-4xl max-h-[90vh]" onclick="event.stopPropagation()">
+      <img id="zoomedImage" src="" class="object-contain transition-transform duration-200 cursor-crosshair" onmousemove="handleImageZoom(event)" onmouseleave="resetImageZoom(event)">
+      <button onclick="closeImageZoomModal()" class="absolute top-4 right-4 bg-black/60 text-white p-2 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+  </div>
+
+  <div id="noteModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-md w-full p-5 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+      <h3 id="noteModalTitle" class="text-base font-bold mb-3">Add Keep Note</h3>
+      <form onsubmit="saveNote(event)" class="space-y-3">
+        <input type="hidden" id="noteId">
+        <input type="text" id="noteTitleInput" placeholder="Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none">
+        <textarea id="noteContentInput" rows="4" placeholder="Take a note..." required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none"></textarea>
+        
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Tag</label>
+            <select id="noteTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs"></select>
+          </div>
+          <div class="flex items-center space-x-2 pt-4">
+            <input type="checkbox" id="noteStarInput" class="accent-[#A6192E]">
+            <label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assign Users</label>
+          <div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2 bg-gray-100 dark:bg-[#121212] rounded border border-gray-300 dark:border-gray-700 max-h-24 overflow-y-auto text-xs"></div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach Image</label>
+          <input type="file" id="noteFileInput" accept="image/*" class="text-xs text-gray-400">
+        </div>
+
+        <div class="flex items-center space-x-2 pt-1">
+          <input type="checkbox" id="notePrivateInput" class="accent-[#A6192E]">
+          <label for="notePrivateInput" class="text-xs text-gray-400">Restrict Edit/Delete to Me Only</label>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-2 border-t border-gray-800">
+          <button type="button" onclick="closeNoteModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded">Save Note</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -243,6 +306,7 @@
           <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Task Title</label>
           <input type="text" id="taskTitleInput" placeholder="Task Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none">
         </div>
+        
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Section</label>
@@ -257,284 +321,18 @@
             </select>
           </div>
         </div>
-        <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200 dark:border-gray-800">
-          <button type="button" onclick="closeTaskModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
-          <button type="submit" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded">Save Task</button>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Tag</label>
+            <select id="taskTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs"></select>
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Due Date</label>
+            <input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs">
+          </div>
         </div>
-      </form>
-    </div>
-  </div>
 
-  <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-xl max-w-lg w-full p-6 my-auto max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-        <h3 class="text-base font-bold flex items-center space-x-2"><i data-lucide="settings" class="w-5 h-5 text-[#A6192E]"></i><span>Workspace Settings</span></h3>
-        <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-      </div>
-      <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
-        <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">Cloud Sync Status</h4>
-        <p id="settingsSyncText" class="text-xs text-emerald-400 font-semibold">Active</p>
-      </div>
-      <button onclick="closeSettingsModal()" class="w-full bg-gray-200 dark:bg-gray-800 text-gray-300 py-2 rounded-lg text-xs font-semibold">Close</button>
-    </div>
-  </div>
-
-  <script>
-    // PRE-CONFIGURED WITH YOUR KEYS
-    const JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS";
-    const JSONBIN_BIN_ID = "6ae0b445ffd5d160538fff26";
-
-    const DEFAULT_USERS = [
-      { name: "Charlie", role: "master_admin", password: "AMADA" },
-      { name: "Jacob", role: "admin", password: "AMADA" }
-    ];
-
-    let users = JSON.parse(localStorage.getItem("amada_users")) || DEFAULT_USERS;
-    let activeUser = localStorage.getItem("amada_active_user") || "";
-    let scope = localStorage.getItem("amada_scope") || "shared";
-    let activeFilterType = null;
-    let activeFilterId = null;
-    let selectedUserForAuth = "";
-
-    let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) || [];
-    let sharedSections = JSON.parse(localStorage.getItem("amada_shared_sections")) || [
-      { id: "s1", title: "High Priority" },
-      { id: "s2", title: "Medium Priority" }
-    ];
-    let tasks = JSON.parse(localStorage.getItem("amada_tasks")) || [];
-    let notes = JSON.parse(localStorage.getItem("amada_notes")) || [];
-
-    window.onload = () => {
-      renderUserProfiles();
-      checkAuth();
-      fetchFromRemoteBin();
-      setInterval(fetchFromRemoteBin, 4000);
-      renderAll();
-    };
-
-    function updateSyncUI(status, text) {
-      const badge = document.getElementById("githubSyncBadge");
-      const pulse = document.getElementById("syncPulse");
-      const detail = document.getElementById("syncStatusDetail");
-      const settingsText = document.getElementById("settingsSyncText");
-
-      if (status === "ok") {
-        badge.innerText = "Auto-Synced";
-        pulse.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-        if (detail) detail.innerText = `Connected live (${new Date().toLocaleTimeString()})`;
-        if (settingsText) settingsText.innerText = "✓ Syncing normally with cloud";
-      } else {
-        badge.innerText = "Sync Alert";
-        pulse.className = "w-2 h-2 rounded-full bg-red-500";
-        if (detail) detail.innerText = text || "Error syncing";
-        if (settingsText) settingsText.innerText = text || "Sync Error";
-      }
-    }
-
-    async function fetchFromRemoteBin() {
-      try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-          method: "GET",
-          headers: {
-            "X-Master-Key": JSONBIN_KEY
-          }
-        });
-
-        if (res.ok) {
-          const json = await res.json();
-          const content = json.record || {};
-          if (content.users) users = content.users;
-          if (content.sharedSections) sharedSections = content.sharedSections;
-          if (content.tasks) tasks = content.tasks;
-          if (content.notes) notes = content.notes;
-
-          localStorage.setItem("amada_users", JSON.stringify(users));
-          localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
-          localStorage.setItem("amada_tasks", JSON.stringify(tasks));
-          localStorage.setItem("amada_notes", JSON.stringify(notes));
-
-          updateSyncUI("ok");
-          renderAll();
-        } else {
-          updateSyncUI("error", `Server returned code: ${res.status}`);
-        }
-      } catch (e) {
-        updateSyncUI("error", e.message);
-      }
-    }
-
-    async function saveData() {
-      renderAll();
-      try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": JSONBIN_KEY
-          },
-          body: JSON.stringify({ users, sharedTags, sharedSections, tasks, notes })
-        });
-
-        if (res.ok) {
-          updateSyncUI("ok");
-        } else {
-          updateSyncUI("error", `Save rejected: ${res.status}`);
-        }
-      } catch (e) {
-        updateSyncUI("error", e.message);
-      }
-    }
-
-    function renderUserProfiles() {
-      const container = document.getElementById("userProfilesList");
-      if (!container) return;
-      container.innerHTML = users.map(u => `
-        <button onclick="selectUserForLogin('${u.name}')" class="p-3 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-xl flex flex-col items-center space-y-1 transition">
-          <div class="w-8 h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div>
-          <span class="text-xs font-semibold">${u.name}</span>
-        </button>
-      `).join('');
-    }
-
-    function selectUserForLogin(name) {
-      selectedUserForAuth = name;
-      document.getElementById("loginUserLabel").innerText = `Password for ${name}`;
-      document.getElementById("userSelectionStep").classList.add("hidden");
-      document.getElementById("passwordStep").classList.remove("hidden");
-    }
-
-    function resetLoginStep() {
-      document.getElementById("userSelectionStep").classList.remove("hidden");
-      document.getElementById("passwordStep").classList.add("hidden");
-    }
-
-    function verifyPassword(e) {
-      e.preventDefault();
-      const u = users.find(x => x.name === selectedUserForAuth);
-      const targetPassword = (u && u.password) ? u.password : "AMADA";
-
-      if (document.getElementById("loginPassword").value === targetPassword) {
-        activeUser = selectedUserForAuth;
-        localStorage.setItem("amada_active_user", activeUser);
-        document.getElementById("authOverlay").classList.add("hidden");
-        document.getElementById("loginPassword").value = "";
-        checkAuth();
-        renderAll();
-      } else {
-        document.getElementById("authError").classList.remove("hidden");
-      }
-    }
-
-    function checkAuth() {
-      if (activeUser) {
-        document.getElementById("authOverlay").classList.add("hidden");
-        document.getElementById("userBadge").innerText = activeUser.charAt(0);
-      } else {
-        document.getElementById("authOverlay").classList.remove("hidden");
-      }
-    }
-
-    function handleLogout() {
-      localStorage.removeItem("amada_active_user");
-      activeUser = "";
-      location.reload();
-    }
-
-    function setWorkspaceScope(newScope) {
-      scope = newScope;
-      renderAll();
-    }
-
-    function renderAll() {
-      renderSectionsSidebar();
-      renderTasksBoard();
-      lucide.createIcons();
-    }
-
-    function renderSectionsSidebar() {
-      const container = document.getElementById("sectionsSidebar");
-      if (!container) return;
-      container.innerHTML = sharedSections.map(s => {
-        const count = tasks.filter(t => t.sectionId === s.id && !t.completed).length;
-        return `
-          <div class="flex items-center justify-between p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-xs cursor-pointer">
-            <span class="truncate">${s.title}</span>
-            <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderTasksBoard() {
-      const view = document.getElementById("tasksView");
-      if (!view) return;
-      view.innerHTML = sharedSections.map(s => {
-        const listTasks = tasks.filter(t => t.sectionId === s.id);
-        return `
-          <div class="w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex flex-col shrink-0 max-h-full">
-            <h3 class="font-bold text-sm mb-2">${s.title}</h3>
-            <input type="text" placeholder="+ Add task" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded px-2.5 py-1.5 text-xs mb-3 focus:outline-none">
-            <div class="space-y-2 overflow-y-auto flex-1">
-              ${listTasks.map(t => `
-                <div class="bg-gray-50 dark:bg-[#252525] p-2.5 rounded-lg border border-gray-200 dark:border-gray-700/60 flex items-center justify-between">
-                  <div class="flex items-center space-x-2">
-                    <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTaskComplete('${t.id}')" class="accent-green-600">
-                    <span class="text-xs ${t.completed ? 'line-through text-gray-400' : ''}">${t.title}</span>
-                  </div>
-                  <button onclick="deleteTask('${t.id}')" class="text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function handleQuickTask(e, sectionId) {
-      if (e.key === 'Enter' && e.target.value.trim()) {
-        tasks.push({
-          id: Date.now().toString(),
-          title: e.target.value.trim(),
-          sectionId: sectionId,
-          completed: false,
-          owner: activeUser
-        });
-        e.target.value = "";
-        saveData();
-      }
-    }
-
-    function toggleTaskComplete(id) {
-      const t = tasks.find(x => x.id === id);
-      if (t) {
-        t.completed = !t.completed;
-        saveData();
-      }
-    }
-
-    function deleteTask(id) {
-      tasks = tasks.filter(x => x.id !== id);
-      saveData();
-    }
-
-    function openSettingsModal() { document.getElementById("settingsModal").classList.remove("hidden"); }
-    function closeSettingsModal() { document.getElementById("settingsModal").classList.add("hidden"); }
-    function toggleActiveUsersPopover() { document.getElementById("activeUsersPopover").classList.toggle("hidden"); }
-    function toggleDarkMode() { document.documentElement.classList.toggle("dark"); }
-    function clearActiveFilter() { renderAll(); }
-    function filterByStarred() {}
-    function switchMainTab(tab) {}
-    function openNewTaskModal() {
-      const title = prompt("Task title:");
-      if (title && title.trim()) {
-        tasks.push({ id: Date.now().toString(), title: title.trim(), sectionId: "s1", completed: false, owner: activeUser });
-        saveData();
-      }
-    }
-    function openNoteModal() {}
-    function openNewTagModal() {}
-    function openNewSectionModal() {}
-    function openAddViewerModal() {}
-  </script>
-</body>
-</html>
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Description / Notes</label>
+          <textarea id="taskNotesInput" rows="3" placeholder="Add additional task details..." class="w-full bg-gray-
