@@ -47,7 +47,11 @@
       transform: scaleX(1); 
     }
 
-    /* Dragging Visual Effects */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      filter: invert(0.8);
+    }
+
     .dragging-column {
       opacity: 0.45;
       transform: scale(0.98);
@@ -105,7 +109,7 @@
       </div>
     </div>
 
-    <!-- HIGH-VISIBILITY TOP TABS -->
+    <!-- TABS -->
     <nav class="flex items-center space-x-1.5 md:space-x-3 bg-gray-200/80 dark:bg-[#121212] p-1.5 rounded-2xl border border-gray-300 dark:border-gray-800 shadow-inner">
       <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-3.5 md:px-5 py-2 rounded-xl text-xs md:text-sm font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all">
         <i data-lucide="check-square" class="w-4 h-4"></i>
@@ -255,27 +259,121 @@
         <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"></div>
       </div>
 
-      <!-- VIEW 3: ORDER TRACKER VIEW -->
+      <!-- VIEW 3: ORDER TRACKER VIEW WITH SEARCH & VERIFICATION -->
       <div id="ordersView" class="hidden h-full flex-1 overflow-y-auto pb-6">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 bg-white dark:bg-[#181818] p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-          <div>
-            <h2 class="text-base md:text-lg font-bold flex items-center space-x-2">
-              <i data-lucide="package" class="w-5 h-5 text-[#A6192E]"></i>
-              <span>Shared Order Tracker</span>
-            </h2>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Track purchase orders, delivery statuses, partial receipts, and completion.</p>
+        <div class="flex flex-col gap-3 mb-4 bg-white dark:bg-[#181818] p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <h2 class="text-base md:text-lg font-bold flex items-center space-x-2">
+                <i data-lucide="package" class="w-5 h-5 text-[#A6192E]"></i>
+                <span>Shared Order Tracker</span>
+              </h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Track purchase orders, deliveries, VBOP entries, stock additions, and completions.</p>
+            </div>
+            <button onclick="openNewOrderModal()" class="w-full sm:w-auto bg-[#A6192E] hover:opacity-90 text-white text-xs md:text-sm px-4 py-2.5 rounded-xl font-bold flex items-center justify-center space-x-2 shadow">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> <span>+ Add Order</span>
+            </button>
           </div>
-          <button onclick="openNewOrderModal()" class="w-full sm:w-auto bg-[#A6192E] hover:opacity-90 text-white text-xs md:text-sm px-4 py-2.5 rounded-xl font-bold flex items-center justify-center space-x-2 shadow">
-            <i data-lucide="plus-circle" class="w-4 h-4"></i> <span>+ Add Order</span>
-          </button>
+
+          <!-- ORDER SEARCH BAR -->
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-gray-400"></i>
+            <input type="text" id="orderSearchInput" oninput="renderOrders()" placeholder="Search orders by PO#, item description, supplier, order type..." class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700/80 rounded-xl pl-10 pr-4 py-2 text-xs md:text-sm focus:outline-none focus:border-[#A6192E]">
+          </div>
         </div>
 
-        <div id="ordersListContainer" class="space-y-4"></div>
+        <!-- ACTIVE ORDERS LIST -->
+        <div class="space-y-4">
+          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center space-x-2">
+            <span>Active Orders</span>
+            <span id="activeOrdersBadge" class="bg-gray-200 dark:bg-gray-800 text-gray-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+          </div>
+          <div id="ordersListContainer" class="space-y-4"></div>
+        </div>
+
+        <!-- COMPLETED ORDERS DROPDOWN ACCORDION -->
+        <div class="mt-8 border-t border-gray-200 dark:border-gray-800 pt-4">
+          <div class="flex items-center justify-between bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-2xl px-4 py-3 cursor-pointer shadow-sm hover:border-gray-700 transition" onclick="toggleCompletedOrdersDropdown()">
+            <div class="flex items-center space-x-2.5">
+              <i id="completedOrdersChevron" data-lucide="chevron-right" class="w-4 h-4 text-emerald-500 transition-transform duration-200"></i>
+              <span class="text-xs md:text-sm font-bold flex items-center space-x-2">
+                <span>Completed Orders Archive</span>
+                <span id="completedOrdersBadge" class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2.5 py-0.5 rounded-full font-bold">0</span>
+              </span>
+            </div>
+            <button onclick="event.stopPropagation(); clearAllCompletedOrders();" class="text-xs text-gray-400 hover:text-red-400 flex items-center space-x-1.5 py-1 px-3 rounded-lg hover:bg-red-500/10 transition" title="Clear completed orders">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline font-semibold">Clear Completed Orders</span>
+            </button>
+          </div>
+
+          <div id="completedOrdersContainer" class="hidden mt-3 space-y-4">
+            <div id="completedOrdersList" class="space-y-4"></div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
 
-  <!-- ORDER MODAL (WITH NOTES SECTION) -->
+  <!-- ORDER COMPLETION VERIFICATION MODAL -->
+  <div id="orderCompleteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
+        <h3 class="text-base font-bold flex items-center space-x-2 text-emerald-500">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          <span>Verify Order Completion</span>
+        </h3>
+        <button onclick="closeOrderCompleteModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <p class="text-gray-300">Review all stages before marking <strong id="verifyModalPo" class="text-white">PO</strong> as complete:</p>
+
+        <div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-xl border border-gray-200 dark:border-gray-800">
+          <label class="flex items-center space-x-2.5 cursor-pointer">
+            <input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]">
+            <span class="font-bold">1. Order Placed / Created</span>
+          </label>
+          <label class="flex items-center space-x-2.5 cursor-pointer">
+            <input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600">
+            <span class="font-bold">2. Order PO added on VBOP (if applicable)</span>
+          </label>
+          <label class="flex items-center space-x-2.5 cursor-pointer">
+            <input type="checkbox" id="verifyStageReceived" onchange="toggleVerifyReceivedMissing(this.checked)" class="w-4 h-4 accent-emerald-600">
+            <span class="font-bold">3. Items All Received</span>
+          </label>
+          <label class="flex items-center space-x-2.5 cursor-pointer">
+            <input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500">
+            <span class="font-bold">4. Items Added to Stock</span>
+          </label>
+          <label class="flex items-center space-x-2.5 cursor-pointer">
+            <input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600">
+            <span class="font-bold">5. Emailed & Confirmed Finished</span>
+          </label>
+        </div>
+
+        <!-- Missing items checklist section -->
+        <div id="verifyMissingItemsSection" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+          <div class="font-bold text-amber-400 text-xs flex items-center space-x-1.5">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+            <span>Missing / Unreceived Items Tracker:</span>
+          </div>
+          <p class="text-[11px] text-gray-400">Select any missing items below to automatically append to the order notes:</p>
+          <div id="verifyMissingItemsList" class="space-y-1 max-h-28 overflow-y-auto"></div>
+          <textarea id="verifyMissingNotes" rows="2" placeholder="Add specific note regarding missing items..." class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
+          <button type="button" onclick="closeOrderCompleteModal()" class="px-4 py-2 text-xs text-gray-400 hover:text-white">Cancel</button>
+          <button type="button" onclick="confirmOrderCompletion()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow transition">
+            Confirm & Complete Order
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER MODAL (FREEFORM ITEMS & UNLOCKED DATE) -->
   <div id="orderModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
@@ -292,34 +390,31 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Purchase Order # (PO)</label>
-            <input type="text" id="orderPoInput" placeholder="e.g. PO-9842" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs focus:outline-none focus:border-[#A6192E]">
+            <input type="text" id="orderPoInput" placeholder="e.g. PO-9842" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#A6192E]">
           </div>
           <div>
             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Date Ordered</label>
-            <input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs">
+            <input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2.5 text-xs text-gray-800 dark:text-gray-100 cursor-pointer focus:outline-none focus:border-[#A6192E]">
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Type of Order</label>
-            <input type="text" id="orderTypeInput" placeholder="e.g. Tooling, Steel, Consumable" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs focus:outline-none">
+            <input type="text" id="orderTypeInput" placeholder="e.g. Tooling, Steel, Consumable" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2.5 text-xs focus:outline-none">
           </div>
           <div>
             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Ordered By (Person/Entity)</label>
-            <input type="text" id="orderPlacedByInput" placeholder="e.g. Charlie, Supplier, Dave" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs focus:outline-none">
+            <input type="text" id="orderPlacedByInput" placeholder="e.g. Charlie, Supplier, Dave" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2.5 text-xs focus:outline-none">
           </div>
         </div>
 
         <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Contents (Items & Sizes)</label>
-          <div id="orderItemsInputsContainer" class="space-y-2 mb-2"></div>
-          <button type="button" onclick="addOrderItemRow()" class="text-xs text-[#A6192E] font-bold flex items-center space-x-1 hover:underline">
-            <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span>Add Item Line</span>
-          </button>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Contents (Items, Sizes & Quantities)</label>
+          <p class="text-[10px] text-gray-500 mb-1.5">Type freely (separate by new line or comma). Formatted into an interactive checklist automatically.</p>
+          <textarea id="orderFreeformItemsInput" rows="3" placeholder="e.g. 10x M8 Bolts (40mm)&#10;2x Sheet Metal 100x200mm&#10;5x Carbide Drills 6mm" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
         </div>
 
-        <!-- NEW ORDER NOTES SECTION -->
         <div>
           <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Notes & Remarks</label>
           <textarea id="orderNotesInput" rows="2" placeholder="Tracking numbers, supplier contacts, urgent delivery instructions..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
@@ -406,7 +501,7 @@
           </div>
           <div>
             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Due Date</label>
-            <input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs">
+            <input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-800 dark:text-gray-100 cursor-pointer">
           </div>
         </div>
 
@@ -585,6 +680,8 @@
     let selectedUserForAuth = "";
     let presenceMap = {};
     let isCompletedOpen = false;
+    let isCompletedOrdersOpen = false;
+    let activeVerifyingOrderId = null;
 
     let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) || [
       { id: "t_urgent", title: "Urgent", color: "#ef4444" },
@@ -598,7 +695,6 @@
     let notes = JSON.parse(localStorage.getItem("amada_notes")) || [];
     let orders = JSON.parse(localStorage.getItem("amada_orders")) || [];
 
-    // Personal Drag & Drop Ordering (Only saved locally for activeUser)
     function getPersonalOrderedSections() {
       if (!activeUser) return sharedSections;
       const key = `amada_order_${activeUser}`;
@@ -610,7 +706,6 @@
         const found = sharedSections.find(s => s.id === id);
         if (found) ordered.push(found);
       });
-      // Append any newly added sections not yet in saved order
       sharedSections.forEach(s => {
         if (!ordered.some(o => o.id === s.id)) ordered.push(s);
       });
@@ -668,6 +763,20 @@
         chevron.classList.add("rotate-90");
       } else {
         container.classList.add("hidden");
+        chevron.classList.remove("rotate-90");
+      }
+    }
+
+    function toggleCompletedOrdersDropdown() {
+      isCompletedOrdersOpen = !isCompletedOrdersOpen;
+      const container = document.getElementById("completedOrdersContainer");
+      const chevron = document.getElementById("completedOrdersChevron");
+      if (isCompletedOrdersOpen) {
+        container.classList.remove("hidden");
+        chevron.classList.add("rotate-90");
+      } else {
+        container.classList.add("hidden");
+        chevron.classList.remove("rotate-90");
       }
     }
 
@@ -910,7 +1019,7 @@
       `).join('');
     }
 
-    /* --- SIDEBAR CATEGORIES (WITH PERSONAL DRAG-AND-DROP) --- */
+    /* --- SIDEBAR CATEGORIES (PERSONAL DRAG AND DROP) --- */
     function renderSectionsSidebar() {
       const container = document.getElementById("sectionsSidebar");
       if (!container) return;
@@ -1034,7 +1143,7 @@
       }
     }
 
-    /* --- TASK BOARD COLUMNS (WITH PERSONAL DRAG-AND-DROP REORDERING) --- */
+    /* --- TASK BOARD COLUMNS (PERSONAL DRAG AND DROP) --- */
     function renderTasksBoard() {
       const view = document.getElementById("tasksView");
       if (!view) return;
@@ -1591,16 +1700,20 @@
       }
     }
 
-    /* --- ORDER TRACKER LOGIC (WITH NOTES) --- */
+    /* --- ORDER TRACKER LOGIC --- */
     function openNewOrderModal() {
       document.getElementById("orderIdInput").value = "";
       document.getElementById("orderPoInput").value = "";
-      document.getElementById("orderDateInput").value = new Date().toISOString().split('T')[0];
+      
+      const todayStr = new Date().toISOString().split('T')[0];
+      const dateEl = document.getElementById("orderDateInput");
+      dateEl.value = todayStr;
+      
       document.getElementById("orderTypeInput").value = "";
       document.getElementById("orderPlacedByInput").value = activeUser || "";
+      document.getElementById("orderFreeformItemsInput").value = "";
       document.getElementById("orderNotesInput").value = "";
-      document.getElementById("orderItemsInputsContainer").innerHTML = "";
-      addOrderItemRow();
+      
       document.getElementById("orderModalHeading").innerHTML = `
         <i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i>
         <span>Create New Purchase Order</span>
@@ -1613,21 +1726,6 @@
       document.getElementById("orderModal").classList.add("hidden");
     }
 
-    function addOrderItemRow(desc = "", size = "") {
-      const container = document.getElementById("orderItemsInputsContainer");
-      const rowId = "row_" + Date.now() + "_" + Math.floor(Math.random()*1000);
-      const div = document.createElement("div");
-      div.id = rowId;
-      div.className = "flex items-center space-x-2";
-      div.innerHTML = `
-        <input type="text" placeholder="Item description" value="${desc}" class="itemDescInput flex-1 bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs focus:outline-none">
-        <input type="text" placeholder="Size / Spec" value="${size}" class="itemSizeInput w-28 bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs focus:outline-none">
-        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash" class="w-4 h-4"></i></button>
-      `;
-      container.appendChild(div);
-      lucide.createIcons();
-    }
-
     function saveOrder(e) {
       e.preventDefault();
       const id = document.getElementById("orderIdInput").value;
@@ -1635,16 +1733,21 @@
       const dateOrdered = document.getElementById("orderDateInput").value;
       const orderType = document.getElementById("orderTypeInput").value.trim();
       const placedBy = document.getElementById("orderPlacedByInput").value.trim();
+      const freeformText = document.getElementById("orderFreeformItemsInput").value;
       const notes = document.getElementById("orderNotesInput").value.trim();
       const fileInput = document.getElementById("orderScreenshotInput");
 
-      const itemRows = document.querySelectorAll("#orderItemsInputsContainer > div");
+      const rawLines = freeformText.split(/\r?\n|,/);
       const items = [];
-      itemRows.forEach(row => {
-        const desc = row.querySelector(".itemDescInput").value.trim();
-        const size = row.querySelector(".itemSizeInput").value.trim();
-        if (desc) {
-          items.push({ id: "item_" + Date.now() + "_" + Math.random(), desc, size, received: false });
+      rawLines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed) {
+          items.push({
+            id: "it_" + Date.now() + "_" + Math.floor(Math.random()*10000),
+            desc: trimmed,
+            received: false,
+            stocked: false
+          });
         }
       });
 
@@ -1656,7 +1759,7 @@
             ord.dateOrdered = dateOrdered;
             ord.orderType = orderType;
             ord.placedBy = placedBy;
-            ord.items = items;
+            if (items.length > 0) ord.items = items;
             ord.notes = notes;
             if (imgBase64) ord.image = imgBase64;
           }
@@ -1672,8 +1775,12 @@
             image: imgBase64,
             placed: true,
             placedMeta: `Placed by ${activeUser || placedBy} on ${new Date().toLocaleDateString()}`,
+            vbop: false,
+            vbopMeta: null,
             received: false,
             receivedMeta: null,
+            stocked: false,
+            stockedMeta: null,
             completed: false,
             completedMeta: null
           });
@@ -1692,122 +1799,291 @@
     }
 
     function renderOrders() {
-      const container = document.getElementById("ordersListContainer");
-      if (!container) return;
+      const activeContainer = document.getElementById("ordersListContainer");
+      const completedContainer = document.getElementById("completedOrdersList");
+      if (!activeContainer || !completedContainer) return;
 
-      if (!Array.isArray(orders) || orders.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-12 bg-white dark:bg-[#181818] rounded-2xl border border-gray-200 dark:border-gray-800">
-            <i data-lucide="package-open" class="w-12 h-12 text-gray-400 mx-auto mb-2 opacity-50"></i>
-            <h4 class="font-bold text-sm text-gray-300">No orders logged yet</h4>
-            <p class="text-xs text-gray-500 mb-3">Click "+ Add Order" to record new purchase orders.</p>
-          </div>
-        `;
-        return;
+      const query = (document.getElementById("orderSearchInput")?.value || "").toLowerCase().trim();
+
+      let filtered = orders;
+      if (query) {
+        filtered = orders.filter(ord => {
+          const matchPo = ord.poNumber && ord.poNumber.toLowerCase().includes(query);
+          const matchType = ord.orderType && ord.orderType.toLowerCase().includes(query);
+          const matchBy = ord.placedBy && ord.placedBy.toLowerCase().includes(query);
+          const matchNotes = ord.notes && ord.notes.toLowerCase().includes(query);
+          const matchItems = ord.items && ord.items.some(i => i.desc && i.desc.toLowerCase().includes(query));
+          return matchPo || matchType || matchBy || matchNotes || matchItems;
+        });
       }
 
-      container.innerHTML = orders.map(ord => {
-        const allItemsReceived = ord.items.length > 0 && ord.items.every(i => i.received);
-        const partiallyReceived = ord.items.some(i => i.received);
+      const activeOrders = filtered.filter(o => !o.completed);
+      const completedOrders = filtered.filter(o => o.completed);
 
-        return `
-          <div class="bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-2xl p-4 md:p-5 shadow-md space-y-4">
-            
-            <!-- ORDER HEADER -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800 gap-2">
-              <div class="flex items-center space-x-3">
-                <span class="text-xs uppercase font-extrabold px-2.5 py-1 rounded-md bg-[#A6192E] text-white">PO#</span>
-                <span class="text-base md:text-lg font-black tracking-wide text-gray-900 dark:text-white">${ord.poNumber}</span>
-                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400">${ord.orderType}</span>
-              </div>
-              <div class="flex items-center space-x-3 text-xs text-gray-400">
-                <span>Ordered: <strong class="text-gray-200">${ord.dateOrdered}</strong></span>
-                <span>•</span>
-                <span>By: <strong class="text-emerald-400 font-semibold">${ord.placedBy}</strong></span>
-                <button onclick="deleteOrder('${ord.id}')" class="p-1 hover:text-red-400 transition" title="Delete Order"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-              </div>
-            </div>
+      document.getElementById("activeOrdersBadge").innerText = activeOrders.length;
+      document.getElementById("completedOrdersBadge").innerText = completedOrders.length;
 
-            <!-- THREE STATUS CHECKBOXES -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-              
-              <!-- STEP 1: ORDER PLACED -->
-              <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
-                <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]">
-                <div>
-                  <div class="text-xs font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div>
-                  <div class="text-[10px] text-gray-500">${ord.placedMeta || 'Pending order placement'}</div>
-                </div>
-              </label>
-
-              <!-- STEP 2: ORDER RECEIVED -->
-              <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
-                <input type="checkbox" ${ord.received ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="mt-0.5 w-4 h-4 accent-emerald-600">
-                <div>
-                  <div class="text-xs font-bold ${ord.received ? 'text-emerald-400' : 'text-gray-400'}">2. Order Received (Full)</div>
-                  <div class="text-[10px] text-gray-500">${ord.receivedMeta || 'Awaiting full arrival'}</div>
-                </div>
-              </label>
-
-              <!-- STEP 3: EMAILED & COMPLETE -->
-              <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
-                <input type="checkbox" ${ord.completed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'completed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600">
-                <div>
-                  <div class="text-xs font-bold ${ord.completed ? 'text-blue-400' : 'text-gray-400'}">3. Emailed & Marked Complete</div>
-                  <div class="text-[10px] text-gray-500">${ord.completedMeta || 'Not finalized'}</div>
-                </div>
-              </label>
-
-            </div>
-
-            <!-- ORDER NOTES (IF PROVIDED) -->
-            ${ord.notes ? `
-              <div class="bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-gray-800/80 rounded-xl p-3 flex items-start space-x-2.5">
-                <i data-lucide="info" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
-                <div class="text-xs text-gray-300 whitespace-pre-wrap"><strong class="text-gray-400 font-semibold uppercase text-[10px] block mb-0.5">Order Notes:</strong>${ord.notes}</div>
-              </div>
-            ` : ''}
-
-            <!-- COLLAPSIBLE ORDER CONTENTS & PARTIAL DELIVERY CHECKBOXES -->
-            <details class="group bg-gray-50 dark:bg-[#151515] rounded-xl border border-gray-200 dark:border-gray-800 p-3">
-              <summary class="cursor-pointer text-xs font-bold text-gray-300 flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                  <i data-lucide="clipboard-list" class="w-4 h-4 text-[#A6192E]"></i>
-                  <span>Order Contents & Items (${ord.items ? ord.items.length : 0})</span>
-                  ${allItemsReceived ? `<span class="bg-emerald-500/20 text-emerald-400 text-[9px] px-2 py-0.5 rounded-full font-bold">All Received</span>` : 
-                    (partiallyReceived ? `<span class="bg-amber-500/20 text-amber-400 text-[9px] px-2 py-0.5 rounded-full font-bold">Partially Received</span>` : '')}
-                </div>
-                <i data-lucide="chevron-down" class="w-4 h-4 transition group-open:rotate-180"></i>
-              </summary>
-
-              <div class="pt-3 space-y-3">
-                <div class="text-[11px] text-gray-400 italic">Check off individual contents as they arrive (Partially Received tracking):</div>
-                
-                <div class="space-y-1.5">
-                  ${(ord.items && ord.items.length > 0) ? ord.items.map(item => `
-                    <div class="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 text-xs">
-                      <label class="flex items-center space-x-2.5 flex-1 cursor-pointer">
-                        <input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemReceived('${ord.id}', '${item.id}', this.checked)" class="w-4 h-4 accent-emerald-500">
-                        <span class="${item.received ? 'line-through text-gray-400 font-medium' : 'text-gray-200 font-semibold'}">${item.desc}</span>
-                      </label>
-                      <span class="text-[10px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-2 py-0.5 rounded font-mono font-bold">${item.size || 'Standard'}</span>
-                    </div>
-                  `).join('') : '<div class="text-xs text-gray-500 italic">No item rows entered.</div>'}
-                </div>
-
-                ${ord.image ? `
-                  <div class="pt-2 border-t border-gray-200 dark:border-gray-800">
-                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Attached Invoice / Screenshot:</div>
-                    <img src="${ord.image}" onclick="openImageZoomModal(this.src)" class="h-32 object-contain rounded-lg border border-gray-700 cursor-zoom-in hover:opacity-90 transition">
-                  </div>
-                ` : ''}
-              </div>
-            </details>
-
+      if (activeOrders.length === 0) {
+        activeContainer.innerHTML = `
+          <div class="text-center py-10 bg-white dark:bg-[#181818] rounded-2xl border border-gray-200 dark:border-gray-800">
+            <i data-lucide="package-open" class="w-10 h-10 text-gray-400 mx-auto mb-2 opacity-50"></i>
+            <h4 class="font-bold text-sm text-gray-300">${query ? 'No matching orders found' : 'No active orders in tracker'}</h4>
+            <p class="text-xs text-gray-500">${query ? 'Try searching another PO or keyword' : 'Click "+ Add Order" above to log a new purchase order.'}</p>
           </div>
         `;
-      }).join('');
+      } else {
+        activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join('');
+      }
+
+      if (completedOrders.length === 0) {
+        completedContainer.innerHTML = `
+          <div class="text-center py-6 text-xs text-gray-500 italic bg-white dark:bg-[#181818] rounded-xl border border-gray-200 dark:border-gray-800">
+            No completed orders archive entries.
+          </div>
+        `;
+      } else {
+        completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join('');
+      }
+
       lucide.createIcons();
+    }
+
+    function renderOrderCardHtml(ord) {
+      const hasItems = ord.items && ord.items.length > 0;
+      const allReceived = hasItems && ord.items.every(i => i.received);
+      const partialReceived = hasItems && ord.items.some(i => i.received);
+      const receivedCount = hasItems ? ord.items.filter(i => i.received).length : 0;
+      
+      const allStocked = hasItems && ord.items.every(i => i.stocked);
+      const partialStocked = hasItems && ord.items.some(i => i.stocked);
+      const stockedCount = hasItems ? ord.items.filter(i => i.stocked).length : 0;
+
+      return `
+        <div class="bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-2xl p-4 md:p-5 shadow-md space-y-4">
+          
+          <!-- ORDER HEADER -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800 gap-2">
+            <div class="flex items-center space-x-3">
+              <span class="text-xs uppercase font-extrabold px-2.5 py-1 rounded-md bg-[#A6192E] text-white">PO#</span>
+              <span class="text-base md:text-lg font-black tracking-wide text-gray-900 dark:text-white">${ord.poNumber}</span>
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400">${ord.orderType}</span>
+            </div>
+            <div class="flex items-center space-x-3 text-xs text-gray-400">
+              <span>Ordered: <strong class="text-gray-200">${ord.dateOrdered}</strong></span>
+              <span>•</span>
+              <span>By: <strong class="text-emerald-400 font-semibold">${ord.placedBy}</strong></span>
+              ${ord.completed ? `
+                <button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold">Re-open Order</button>
+              ` : `
+                <button onclick="openOrderCompleteVerification('${ord.id}')" class="px-3 py-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                  <span>Mark Order as Complete</span>
+                </button>
+              `}
+              <button onclick="deleteOrder('${ord.id}')" class="p-1 hover:text-red-400 transition" title="Delete Order"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+
+          <!-- PRIMARY STAGE STATUS CHECKBOXES -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+            
+            <!-- STAGE 1: PLACED -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]">
+              <div>
+                <div class="text-xs font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div>
+                <div class="text-[10px] text-gray-500">${ord.placedMeta || 'Pending'}</div>
+              </div>
+            </label>
+
+            <!-- STAGE 2: VBOP ADDED -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="mt-0.5 w-4 h-4 accent-purple-600">
+              <div>
+                <div class="text-xs font-bold ${ord.vbop ? 'text-purple-400' : 'text-gray-400'}">2. Added on VBOP</div>
+                <div class="text-[10px] text-gray-500">${ord.vbopMeta || '(If applicable)'}</div>
+              </div>
+            </label>
+
+            <!-- STAGE 3: RECEIVED FULL -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.received ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="mt-0.5 w-4 h-4 accent-emerald-600">
+              <div>
+                <div class="text-xs font-bold ${ord.received ? 'text-emerald-400' : 'text-gray-400'}">3. Received (Full)</div>
+                <div class="text-[10px] text-gray-500">${ord.receivedMeta || 'Awaiting delivery'}</div>
+              </div>
+            </label>
+
+            <!-- STAGE 4: ADDED TO STOCK FULL -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="mt-0.5 w-4 h-4 accent-amber-500">
+              <div>
+                <div class="text-xs font-bold ${ord.stocked ? 'text-amber-400' : 'text-gray-400'}">4. Added to Stock</div>
+                <div class="text-[10px] text-gray-500">${ord.stockedMeta || 'Not stocked yet'}</div>
+              </div>
+            </label>
+
+            <!-- STAGE 5: EMAILED & COMPLETE -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.completed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'completed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600">
+              <div>
+                <div class="text-xs font-bold ${ord.completed ? 'text-blue-400' : 'text-gray-400'}">5. Emailed & Complete</div>
+                <div class="text-[10px] text-gray-500">${ord.completedMeta || 'Not finalized'}</div>
+              </div>
+            </label>
+
+          </div>
+
+          <!-- ORDER NOTES -->
+          ${ord.notes ? `
+            <div class="bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-gray-800/80 rounded-xl p-3 flex items-start space-x-2.5">
+              <i data-lucide="info" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
+              <div class="text-xs text-gray-300 whitespace-pre-wrap"><strong class="text-gray-400 font-semibold uppercase text-[10px] block mb-0.5">Order Notes:</strong>${ord.notes}</div>
+            </div>
+          ` : ''}
+
+          <!-- ITEM CHECKLIST: RECEIVED & STOCKED CHECKBOXES -->
+          <div class="bg-gray-50 dark:bg-[#151515] rounded-xl border border-gray-200 dark:border-gray-800 p-3.5 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="clipboard-list" class="w-4 h-4 text-[#A6192E]"></i>
+                <span class="text-xs font-bold text-gray-200">Order Contents & Stock Intake</span>
+              </div>
+              <div class="flex items-center space-x-2 text-[10px]">
+                <span class="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-400 font-semibold">Received: ${receivedCount}/${hasItems ? ord.items.length : 0}</span>
+                <span class="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-400 font-semibold">Stocked: ${stockedCount}/${hasItems ? ord.items.length : 0}</span>
+              </div>
+            </div>
+
+            <!-- INDIVIDUAL ITEMS -->
+            <div class="space-y-1.5 pt-1">
+              ${hasItems ? ord.items.map(item => `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2">
+                  <span class="text-xs text-gray-200 font-medium break-words flex-1">${item.desc}</span>
+                  
+                  <div class="flex items-center space-x-4 shrink-0 text-xs">
+                    <!-- ITEM RECEIVED TICK -->
+                    <label class="flex items-center space-x-1.5 cursor-pointer">
+                      <input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'received', this.checked)" class="w-4 h-4 rounded accent-emerald-500 cursor-pointer">
+                      <span class="${item.received ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Arrived</span>
+                    </label>
+
+                    <!-- ITEM ADDED TO STOCK TICK -->
+                    <label class="flex items-center space-x-1.5 cursor-pointer">
+                      <input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-4 h-4 rounded accent-amber-500 cursor-pointer">
+                      <span class="${item.stocked ? 'text-amber-400 font-bold' : 'text-gray-400'}">Added to Stock</span>
+                    </label>
+                  </div>
+                </div>
+              `).join('') : '<div class="text-xs text-gray-500 italic py-1">No items entered for this order.</div>'}
+            </div>
+
+            ${ord.image ? `
+              <div class="pt-3 border-t border-gray-200 dark:border-gray-800">
+                <div class="text-[10px] font-bold text-gray-400 uppercase mb-1.5">Attached Invoice / Screenshot:</div>
+                <img src="${ord.image}" onclick="openImageZoomModal(this.src)" class="h-32 object-contain rounded-lg border border-gray-700 cursor-zoom-in hover:opacity-90 transition">
+              </div>
+            ` : ''}
+          </div>
+
+        </div>
+      `;
+    }
+
+    /* --- ORDER COMPLETION POPUP WORKFLOW --- */
+    function openOrderCompleteVerification(orderId) {
+      const ord = orders.find(x => x.id === orderId);
+      if (!ord) return;
+
+      activeVerifyingOrderId = orderId;
+      document.getElementById("verifyModalPo").innerText = ord.poNumber;
+      document.getElementById("verifyStagePlaced").checked = !!ord.placed;
+      document.getElementById("verifyStageVbop").checked = !!ord.vbop;
+      document.getElementById("verifyStageReceived").checked = !!ord.received;
+      document.getElementById("verifyStageStocked").checked = !!ord.stocked;
+      document.getElementById("verifyStageEmailed").checked = !!ord.completed;
+      document.getElementById("verifyMissingNotes").value = "";
+
+      const missingSection = document.getElementById("verifyMissingItemsSection");
+      const missingList = document.getElementById("verifyMissingItemsList");
+
+      if (ord.items && ord.items.length > 0) {
+        missingList.innerHTML = ord.items.map(item => `
+          <label class="flex items-center space-x-2 text-xs cursor-pointer">
+            <input type="checkbox" value="${item.desc}" ${!item.received ? 'checked' : ''} class="verifyMissingItemCheck accent-amber-500">
+            <span class="${!item.received ? 'text-amber-300 font-bold' : 'text-gray-400'}">${item.desc}</span>
+          </label>
+        `).join('');
+      } else {
+        missingList.innerHTML = `<span class="text-[10px] text-gray-500 italic">No specific items entered.</span>`;
+      }
+
+      toggleVerifyReceivedMissing(!!ord.received);
+      document.getElementById("orderCompleteModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function toggleVerifyReceivedMissing(isAllReceived) {
+      const missingSec = document.getElementById("verifyMissingItemsSection");
+      if (isAllReceived) {
+        missingSec.classList.add("hidden");
+      } else {
+        missingSec.classList.remove("hidden");
+      }
+    }
+
+    function closeOrderCompleteModal() {
+      document.getElementById("orderCompleteModal").classList.add("hidden");
+      activeVerifyingOrderId = null;
+    }
+
+    function confirmOrderCompletion() {
+      const ord = orders.find(x => x.id === activeVerifyingOrderId);
+      if (!ord) return;
+
+      const placed = document.getElementById("verifyStagePlaced").checked;
+      const vbop = document.getElementById("verifyStageVbop").checked;
+      const allReceived = document.getElementById("verifyStageReceived").checked;
+      const allStocked = document.getElementById("verifyStageStocked").checked;
+      const emailed = document.getElementById("verifyStageEmailed").checked;
+
+      ord.placed = placed;
+      ord.vbop = vbop;
+      ord.received = allReceived;
+      ord.stocked = allStocked;
+      ord.completed = true;
+      ord.completedMeta = `Completed by ${activeUser || 'User'} on ${new Date().toLocaleDateString()}`;
+
+      if (!allReceived && ord.items) {
+        const checkedMissingBoxes = Array.from(document.querySelectorAll(".verifyMissingItemCheck:checked")).map(cb => cb.value);
+        const additionalNote = document.getElementById("verifyMissingNotes").value.trim();
+
+        if (checkedMissingBoxes.length > 0 || additionalNote) {
+          const missingMsg = `[Missing upon completion: ${checkedMissingBoxes.join(', ') || 'Partial delivery'}] ${additionalNote}`;
+          ord.notes = ord.notes ? `${ord.notes}\n${missingMsg}` : missingMsg;
+        }
+      }
+
+      closeOrderCompleteModal();
+      saveData();
+    }
+
+    function reopenOrder(id) {
+      const ord = orders.find(x => x.id === id);
+      if (ord) {
+        ord.completed = false;
+        ord.completedMeta = null;
+        saveData();
+      }
+    }
+
+    function clearAllCompletedOrders() {
+      const count = orders.filter(o => o.completed).length;
+      if (count === 0) return;
+      if (confirm(`Permanently delete all ${count} completed orders from archive?`)) {
+        orders = orders.filter(o => !o.completed);
+        saveData();
+      }
     }
 
     function toggleOrderStage(orderId, stage, checked) {
@@ -1818,11 +2094,20 @@
       if (stage === 'placed') {
         ord.placed = checked;
         ord.placedMeta = checked ? meta : null;
+      } else if (stage === 'vbop') {
+        ord.vbop = checked;
+        ord.vbopMeta = checked ? meta : null;
       } else if (stage === 'received') {
         ord.received = checked;
         ord.receivedMeta = checked ? meta : null;
         if (checked && ord.items) {
           ord.items.forEach(i => i.received = true);
+        }
+      } else if (stage === 'stocked') {
+        ord.stocked = checked;
+        ord.stockedMeta = checked ? meta : null;
+        if (checked && ord.items) {
+          ord.items.forEach(i => i.stocked = true);
         }
       } else if (stage === 'completed') {
         ord.completed = checked;
@@ -1831,17 +2116,27 @@
       saveData();
     }
 
-    function toggleItemReceived(orderId, itemId, checked) {
+    function toggleItemCheck(orderId, itemId, field, checked) {
       const ord = orders.find(x => x.id === orderId);
       if (!ord || !ord.items) return;
       const it = ord.items.find(x => x.id === itemId);
       if (it) {
-        it.received = checked;
-        if (ord.items.every(i => i.received)) {
-          ord.received = true;
-          ord.receivedMeta = `All items received (${new Date().toLocaleDateString()})`;
-        } else {
-          ord.received = false;
+        it[field] = checked;
+
+        if (field === 'received') {
+          if (ord.items.every(i => i.received)) {
+            ord.received = true;
+            ord.receivedMeta = `All items received (${new Date().toLocaleDateString()})`;
+          } else {
+            ord.received = false;
+          }
+        } else if (field === 'stocked') {
+          if (ord.items.every(i => i.stocked)) {
+            ord.stocked = true;
+            ord.stockedMeta = `All items added to stock (${new Date().toLocaleDateString()})`;
+          } else {
+            ord.stocked = false;
+          }
         }
         saveData();
       }
@@ -1984,7 +2279,6 @@
         mainSidebar.classList.remove("md:hidden");
       }
 
-      // Update Tab Styles
       const btnTasks = document.getElementById("tabTasks");
       const btnNotes = document.getElementById("tabNotes");
       const btnOrders = document.getElementById("tabOrders");
