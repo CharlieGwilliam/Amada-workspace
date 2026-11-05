@@ -155,11 +155,8 @@
 
   <!-- MAIN APP CONTAINER -->
   <div class="flex-1 flex overflow-hidden relative">
-    
-    <!-- MOBILE BACKDROP -->
     <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="hidden fixed inset-0 bg-black/60 z-30 md:hidden"></div>
 
-    <!-- SIDEBAR -->
     <aside id="mainSidebar" class="w-64 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 p-4 h-full overflow-y-auto z-40 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out shadow-xl md:shadow-none">
       <div class="flex space-x-2 mb-3">
         <button onclick="openNewTaskModal(); toggleMobileSidebar(false);" class="flex-1 bg-[#A6192E] hover:opacity-90 text-white rounded-xl py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
@@ -226,7 +223,6 @@
       <div id="tasksWrapper" class="flex flex-col flex-1">
         <div id="tasksView" class="flex space-x-3 md:space-x-4 items-start flex-1 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none min-h-[380px]"></div>
 
-        <!-- COMPLETED TASKS DROPDOWN ACCORDION -->
         <div id="completedTasksSection" class="mt-4 border-t border-gray-200 dark:border-gray-800 pt-3 shrink-0">
           <div class="flex items-center justify-between bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 cursor-pointer shadow-sm hover:border-gray-700 transition" onclick="toggleCompletedDropdown()">
             <div class="flex items-center space-x-2.5">
@@ -259,7 +255,7 @@
         <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"></div>
       </div>
 
-      <!-- VIEW 3: ORDER TRACKER VIEW WITH SEARCH & VERIFICATION -->
+      <!-- VIEW 3: ORDER TRACKER VIEW -->
       <div id="ordersView" class="hidden h-full flex-1 overflow-y-auto pb-6">
         <div class="flex flex-col gap-3 mb-4 bg-white dark:bg-[#181818] p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
@@ -275,14 +271,12 @@
             </button>
           </div>
 
-          <!-- ORDER SEARCH BAR -->
           <div class="relative">
             <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-gray-400"></i>
             <input type="text" id="orderSearchInput" oninput="renderOrders()" placeholder="Search orders by PO#, item description, supplier, order type..." class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700/80 rounded-xl pl-10 pr-4 py-2 text-xs md:text-sm focus:outline-none focus:border-[#A6192E]">
           </div>
         </div>
 
-        <!-- ACTIVE ORDERS LIST -->
         <div class="space-y-4">
           <div class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center space-x-2">
             <span>Active Orders</span>
@@ -291,7 +285,6 @@
           <div id="ordersListContainer" class="space-y-4"></div>
         </div>
 
-        <!-- COMPLETED ORDERS DROPDOWN ACCORDION -->
         <div class="mt-8 border-t border-gray-200 dark:border-gray-800 pt-4">
           <div class="flex items-center justify-between bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-2xl px-4 py-3 cursor-pointer shadow-sm hover:border-gray-700 transition" onclick="toggleCompletedOrdersDropdown()">
             <div class="flex items-center space-x-2.5">
@@ -315,7 +308,7 @@
     </main>
   </div>
 
-  <!-- ORDER COMPLETION VERIFICATION MODAL (SWAPPED 4 & 5) -->
+  <!-- ORDER COMPLETION VERIFICATION MODAL -->
   <div id="orderCompleteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
@@ -352,7 +345,6 @@
           </label>
         </div>
 
-        <!-- Missing items checklist section -->
         <div id="verifyMissingItemsSection" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
           <div class="font-bold text-amber-400 text-xs flex items-center space-x-1.5">
             <i data-lucide="alert-triangle" class="w-4 h-4"></i>
@@ -373,7 +365,7 @@
     </div>
   </div>
 
-  <!-- ORDER MODAL (FREEFORM ITEMS & UNLOCKED DATE) -->
+  <!-- ORDER MODAL -->
   <div id="orderModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
@@ -641,7 +633,7 @@
     </div>
   </div>
 
-  <!-- SCRIPT ENGINE -->
+  <!-- SCRIPT ENGINE (WITH HARDCODED RECOVERY GUARDS) -->
   <script>
     const JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS";
     const JSONBIN_BIN_ID = "6ae0b445ffd5d160538fff26";
@@ -727,6 +719,7 @@
     }
 
     window.onload = () => {
+      users = ensureProfiles(users);
       renderUserProfiles();
       checkAuth();
       renderAll();
@@ -909,6 +902,8 @@
     function renderUserProfiles() {
       const container = document.getElementById("userProfilesList");
       if (!container) return;
+      users = ensureProfiles(users);
+
       container.innerHTML = users.map(u => `
         <button onclick="selectUserForLogin('${u.name}')" class="p-3 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-xl flex flex-col items-center space-y-1 transition">
           <div class="w-8 h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div>
@@ -1019,7 +1014,7 @@
       `).join('');
     }
 
-    /* --- SIDEBAR CATEGORIES (PERSONAL DRAG AND DROP) --- */
+    /* --- SIDEBAR CATEGORIES --- */
     function renderSectionsSidebar() {
       const container = document.getElementById("sectionsSidebar");
       if (!container) return;
@@ -1143,7 +1138,7 @@
       }
     }
 
-    /* --- TASK BOARD COLUMNS (PERSONAL DRAG AND DROP) --- */
+    /* --- TASK BOARD COLUMNS --- */
     function renderTasksBoard() {
       const view = document.getElementById("tasksView");
       if (!view) return;
@@ -1700,21 +1695,19 @@
       }
     }
 
-    /* --- SMART ITEM CLEANER & FORMATTER (ORIGINAL + BRACKETS) --- */
+    /* --- SMART ITEM CLEANER & FORMATTER --- */
     function formatItemDescription(rawText) {
       const trimmed = rawText.trim();
       if (!trimmed) return "";
 
       let text = trimmed.toLowerCase();
 
-      // Extract Quantity
       let qty = "";
       const qtyMatch = text.match(/(?:x\s*(\d+)|(\d+)\s*x|\bqty:?\s*(\d+)\b)/i);
       if (qtyMatch) {
         qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]);
       }
 
-      // Extract Size
       let size = "";
       if (/\b(xxl|2xl)\b/i.test(text)) size = "XXL";
       else if (/\b(xl|extra\s*large)\b/i.test(text)) size = "XL";
@@ -1723,7 +1716,6 @@
       else if (/\b(s\b|sml\b|small)/i.test(text) && !/\bs\/s\b/i.test(text)) size = "Small";
       else if (/\b(xs|extra\s*small)\b/i.test(text)) size = "XS";
 
-      // Item Name Categorization
       let itemType = "";
       if (text.includes("l/s") || text.includes("long sleeve") || text.includes("longsleeve")) {
         itemType = "Long Sleeve T-Shirt";
@@ -1744,7 +1736,6 @@
       } else if (text.includes("glove")) {
         itemType = "Safety Gloves";
       } else {
-        // Fallback: Capitalize primary words
         itemType = trimmed
           .replace(/(?:x\s*\d+|\d+\s*x|\bqty:?\s*\d+\b)/gi, '')
           .replace(/\b(small|medium|large|xl|xxl|2xl|xs|sml|med)\b/gi, '')
@@ -1752,13 +1743,11 @@
         itemType = itemType.charAt(0).toUpperCase() + itemType.slice(1);
       }
 
-      // Construct Standardized Bracket Token
       const parts = [itemType];
       if (size) parts.push(size);
       if (qty) parts.push(qty);
       const cleanBracket = `(${parts.join(" - ")})`;
 
-      // If user already wrote brackets, return raw
       if (trimmed.includes("(") && trimmed.includes(")")) {
         return trimmed;
       }
@@ -1925,7 +1914,6 @@
       return `
         <div class="bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-2xl p-4 md:p-5 shadow-md space-y-4">
           
-          <!-- ORDER HEADER -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800 gap-2">
             <div class="flex items-center space-x-3">
               <span class="text-xs uppercase font-extrabold px-2.5 py-1 rounded-md bg-[#A6192E] text-white">PO#</span>
@@ -1948,10 +1936,7 @@
             </div>
           </div>
 
-          <!-- PRIMARY STAGE STATUS CHECKBOXES (4 AND 5 SWAPPED) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-            
-            <!-- STAGE 1: PLACED -->
             <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
               <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]">
               <div>
@@ -1960,7 +1945,6 @@
               </div>
             </label>
 
-            <!-- STAGE 2: VBOP ADDED -->
             <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
               <input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="mt-0.5 w-4 h-4 accent-purple-600">
               <div>
@@ -1969,7 +1953,6 @@
               </div>
             </label>
 
-            <!-- STAGE 3: RECEIVED FULL -->
             <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
               <input type="checkbox" ${ord.received ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="mt-0.5 w-4 h-4 accent-emerald-600">
               <div>
@@ -1978,7 +1961,6 @@
               </div>
             </label>
 
-            <!-- STAGE 4: EMAILED & COMPLETE (SWAPPED WITH 5) -->
             <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
               <input type="checkbox" ${ord.completed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'completed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600">
               <div>
@@ -1987,7 +1969,6 @@
               </div>
             </label>
 
-            <!-- STAGE 5: ADDED TO STOCK (SWAPPED WITH 4) -->
             <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
               <input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="mt-0.5 w-4 h-4 accent-amber-500">
               <div>
@@ -1995,10 +1976,8 @@
                 <div class="text-[10px] text-gray-500">${ord.stockedMeta || 'Not stocked yet'}</div>
               </div>
             </label>
-
           </div>
 
-          <!-- ORDER NOTES -->
           ${ord.notes ? `
             <div class="bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-gray-800/80 rounded-xl p-3 flex items-start space-x-2.5">
               <i data-lucide="info" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
@@ -2006,7 +1985,6 @@
             </div>
           ` : ''}
 
-          <!-- ITEM CHECKLIST: RECEIVED & STOCKED CHECKBOXES -->
           <div class="bg-gray-50 dark:bg-[#151515] rounded-xl border border-gray-200 dark:border-gray-800 p-3.5 space-y-3">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <div class="flex items-center space-x-2">
@@ -2019,20 +1997,17 @@
               </div>
             </div>
 
-            <!-- INDIVIDUAL ITEMS (WITH BRACKETED FORMAT DISPLAY) -->
             <div class="space-y-1.5 pt-1">
               ${hasItems ? ord.items.map(item => `
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2">
                   <span class="text-xs text-gray-200 font-medium break-words flex-1">${item.desc}</span>
                   
                   <div class="flex items-center space-x-4 shrink-0 text-xs">
-                    <!-- ITEM RECEIVED TICK -->
                     <label class="flex items-center space-x-1.5 cursor-pointer">
                       <input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'received', this.checked)" class="w-4 h-4 rounded accent-emerald-500 cursor-pointer">
                       <span class="${item.received ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Arrived</span>
                     </label>
 
-                    <!-- ITEM ADDED TO STOCK TICK -->
                     <label class="flex items-center space-x-1.5 cursor-pointer">
                       <input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-4 h-4 rounded accent-amber-500 cursor-pointer">
                       <span class="${item.stocked ? 'text-amber-400 font-bold' : 'text-gray-400'}">Added to Stock</span>
