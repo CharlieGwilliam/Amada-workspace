@@ -47,6 +47,19 @@
       transform: scaleX(1); 
     }
 
+    /* Dragging Visual Effects */
+    .dragging-column {
+      opacity: 0.45;
+      transform: scale(0.98);
+    }
+    .drag-over-column {
+      border: 2px dashed #A6192E !important;
+      background-color: rgba(166, 25, 46, 0.08) !important;
+    }
+    .drag-over-sidebar {
+      border-top: 2px solid #A6192E !important;
+    }
+
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #333333; border-radius: 3px; }
@@ -184,7 +197,7 @@
 
       <div class="flex-1 overflow-y-auto min-h-[120px]">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Task Sections</span>
+          <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Categories (Drag to reorder)</span>
           <button onclick="openNewSectionModal()" class="text-gray-400 hover:text-white"><i data-lucide="folder-plus" class="w-4 h-4"></i></button>
         </div>
         <div id="sectionsSidebar" class="space-y-1"></div>
@@ -262,7 +275,7 @@
     </main>
   </div>
 
-  <!-- ORDER MODAL -->
+  <!-- ORDER MODAL (WITH NOTES SECTION) -->
   <div id="orderModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
@@ -304,6 +317,12 @@
           <button type="button" onclick="addOrderItemRow()" class="text-xs text-[#A6192E] font-bold flex items-center space-x-1 hover:underline">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span>Add Item Line</span>
           </button>
+        </div>
+
+        <!-- NEW ORDER NOTES SECTION -->
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Notes & Remarks</label>
+          <textarea id="orderNotesInput" rows="2" placeholder="Tracking numbers, supplier contacts, urgent delivery instructions..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
         </div>
 
         <div>
@@ -462,7 +481,7 @@
     </div>
   </div>
 
-  <!-- SETTINGS MODAL (WITH USER CREATION FOR ADMINS) -->
+  <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-2xl max-w-lg w-full p-5 md:p-6 my-auto max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
@@ -497,6 +516,13 @@
             </button>
           </div>
         </form>
+      </div>
+
+      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Personal Layout Settings</h4>
+        <button onclick="resetPersonalOrder()" class="px-3 py-1.5 bg-gray-200 dark:bg-[#252525] text-gray-300 hover:text-white rounded-lg text-xs font-semibold border border-gray-700">
+          Reset Category & Column Order to Default
+        </button>
       </div>
 
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
@@ -572,6 +598,39 @@
     let notes = JSON.parse(localStorage.getItem("amada_notes")) || [];
     let orders = JSON.parse(localStorage.getItem("amada_orders")) || [];
 
+    // Personal Drag & Drop Ordering (Only saved locally for activeUser)
+    function getPersonalOrderedSections() {
+      if (!activeUser) return sharedSections;
+      const key = `amada_order_${activeUser}`;
+      const savedOrder = JSON.parse(localStorage.getItem(key));
+      if (!Array.isArray(savedOrder) || savedOrder.length === 0) return sharedSections;
+
+      const ordered = [];
+      savedOrder.forEach(id => {
+        const found = sharedSections.find(s => s.id === id);
+        if (found) ordered.push(found);
+      });
+      // Append any newly added sections not yet in saved order
+      sharedSections.forEach(s => {
+        if (!ordered.some(o => o.id === s.id)) ordered.push(s);
+      });
+      return ordered;
+    }
+
+    function savePersonalSectionOrder(newIdArray) {
+      if (!activeUser) return;
+      const key = `amada_order_${activeUser}`;
+      localStorage.setItem(key, JSON.stringify(newIdArray));
+      renderAll();
+    }
+
+    function resetPersonalOrder() {
+      if (!activeUser) return;
+      localStorage.removeItem(`amada_order_${activeUser}`);
+      renderAll();
+      alert("Category and column order reset to default!");
+    }
+
     window.onload = () => {
       renderUserProfiles();
       checkAuth();
@@ -609,7 +668,6 @@
         chevron.classList.add("rotate-90");
       } else {
         container.classList.add("hidden");
-        chevron.classList.remove("rotate-90");
       }
     }
 
@@ -845,22 +903,32 @@
             <span class="truncate">${t.title}</span>
           </div>
           <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
-            <button onclick="event.stopPropagation(); openNewTagModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-            <button onclick="event.stopPropagation(); deleteTag('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+            <button onclick="event.stopPropagation(); openNewTagModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+            <button onclick="event.stopPropagation(); deleteTag('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
           </div>
         </div>
       `).join('');
     }
 
+    /* --- SIDEBAR CATEGORIES (WITH PERSONAL DRAG-AND-DROP) --- */
     function renderSectionsSidebar() {
       const container = document.getElementById("sectionsSidebar");
       if (!container) return;
-      container.innerHTML = sharedSections.map(s => {
+      const orderedSections = getPersonalOrderedSections();
+
+      container.innerHTML = orderedSections.map(s => {
         const count = tasks.filter(t => t.sectionId === s.id && !t.completed).length;
         return `
-          <div class="group flex items-center justify-between p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-xs">
-            <div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);">
-              <span class="truncate">${s.title}</span>
+          <div draggable="true" 
+               data-sec-id="${s.id}"
+               ondragstart="handleSidebarDragStart(event)" 
+               ondragover="handleSidebarDragOver(event)" 
+               ondrop="handleSidebarDrop(event)" 
+               ondragleave="handleSidebarDragLeave(event)"
+               class="sidebar-cat-row group flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 text-xs cursor-move transition-all">
+            <div class="flex items-center space-x-2 truncate flex-1" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);">
+              <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-gray-400 opacity-40 group-hover:opacity-100"></i>
+              <span class="truncate font-medium">${s.title}</span>
             </div>
             <div class="flex items-center space-x-1">
               <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
@@ -870,6 +938,37 @@
           </div>
         `;
       }).join('');
+    }
+
+    let draggedSidebarSecId = null;
+    function handleSidebarDragStart(e) {
+      draggedSidebarSecId = e.currentTarget.getAttribute("data-sec-id");
+      e.dataTransfer.setData("text/plain", draggedSidebarSecId);
+      e.currentTarget.classList.add("opacity-50");
+    }
+    function handleSidebarDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add("drag-over-sidebar");
+    }
+    function handleSidebarDragLeave(e) {
+      e.currentTarget.classList.remove("drag-over-sidebar");
+    }
+    function handleSidebarDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove("drag-over-sidebar");
+      const targetSecId = e.currentTarget.getAttribute("data-sec-id");
+      if (!draggedSidebarSecId || draggedSidebarSecId === targetSecId) return;
+
+      const ordered = getPersonalOrderedSections();
+      const ids = ordered.map(s => s.id);
+      const fromIdx = ids.indexOf(draggedSidebarSecId);
+      const toIdx = ids.indexOf(targetSecId);
+      if (fromIdx > -1 && toIdx > -1) {
+        ids.splice(fromIdx, 1);
+        ids.splice(toIdx, 0, draggedSidebarSecId);
+        savePersonalSectionOrder(ids);
+      }
+      draggedSidebarSecId = null;
     }
 
     function editSectionTitle(id) {
@@ -935,6 +1034,7 @@
       }
     }
 
+    /* --- TASK BOARD COLUMNS (WITH PERSONAL DRAG-AND-DROP REORDERING) --- */
     function renderTasksBoard() {
       const view = document.getElementById("tasksView");
       if (!view) return;
@@ -951,9 +1051,9 @@
         headerBar.classList.add("hidden");
       }
 
-      let visibleSections = sharedSections;
+      let visibleSections = getPersonalOrderedSections();
       if (activeFilterType === "section") {
-        visibleSections = sharedSections.filter(s => s.id === activeFilterId);
+        visibleSections = visibleSections.filter(s => s.id === activeFilterId);
       }
 
       view.innerHTML = visibleSections.map(s => {
@@ -967,11 +1067,22 @@
         }
 
         return `
-          <div class="w-[85vw] sm:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-3.5 flex flex-col shrink-0 max-h-full snap-center shadow-sm">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-bold text-sm tracking-wide">${s.title}</h3>
+          <div draggable="true"
+               data-column-id="${s.id}"
+               ondragstart="handleColumnDragStart(event)"
+               ondragover="handleColumnDragOver(event)"
+               ondragleave="handleColumnDragLeave(event)"
+               ondrop="handleColumnDrop(event)"
+               class="task-column-card w-[85vw] sm:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-3.5 flex flex-col shrink-0 max-h-full snap-center shadow-sm transition-all duration-150">
+            
+            <div class="flex items-center justify-between mb-2 cursor-grab active:cursor-grabbing pb-1 border-b border-gray-100 dark:border-gray-800/60">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="grip-horizontal" class="w-4 h-4 text-gray-400 opacity-50"></i>
+                <h3 class="font-bold text-sm tracking-wide select-none">${s.title}</h3>
+              </div>
               <span class="text-[10px] bg-gray-100 dark:bg-[#252525] text-gray-400 px-2 py-0.5 rounded-full font-bold">${listTasks.length}</span>
             </div>
+
             <input type="text" placeholder="+ Add task (Press Enter)" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded-xl px-3 py-2 text-xs mb-3 focus:outline-none focus:border-[#A6192E]">
             <div class="space-y-2.5 overflow-y-auto flex-1">
               ${listTasks.map(t => renderTaskCardHtml(t)).join('')}
@@ -980,6 +1091,37 @@
           </div>
         `;
       }).join('');
+    }
+
+    let draggedColumnId = null;
+    function handleColumnDragStart(e) {
+      draggedColumnId = e.currentTarget.getAttribute("data-column-id");
+      e.dataTransfer.setData("text/plain", draggedColumnId);
+      e.currentTarget.classList.add("dragging-column");
+    }
+    function handleColumnDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add("drag-over-column");
+    }
+    function handleColumnDragLeave(e) {
+      e.currentTarget.classList.remove("drag-over-column");
+    }
+    function handleColumnDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove("drag-over-column");
+      const targetColumnId = e.currentTarget.getAttribute("data-column-id");
+      if (!draggedColumnId || draggedColumnId === targetColumnId) return;
+
+      const ordered = getPersonalOrderedSections();
+      const ids = ordered.map(s => s.id);
+      const fromIdx = ids.indexOf(draggedColumnId);
+      const toIdx = ids.indexOf(targetColumnId);
+      if (fromIdx > -1 && toIdx > -1) {
+        ids.splice(fromIdx, 1);
+        ids.splice(toIdx, 0, draggedColumnId);
+        savePersonalSectionOrder(ids);
+      }
+      draggedColumnId = null;
     }
 
     function renderTaskCardHtml(t) {
@@ -1449,13 +1591,14 @@
       }
     }
 
-    /* --- ORDER TRACKER LOGIC --- */
+    /* --- ORDER TRACKER LOGIC (WITH NOTES) --- */
     function openNewOrderModal() {
       document.getElementById("orderIdInput").value = "";
       document.getElementById("orderPoInput").value = "";
       document.getElementById("orderDateInput").value = new Date().toISOString().split('T')[0];
       document.getElementById("orderTypeInput").value = "";
       document.getElementById("orderPlacedByInput").value = activeUser || "";
+      document.getElementById("orderNotesInput").value = "";
       document.getElementById("orderItemsInputsContainer").innerHTML = "";
       addOrderItemRow();
       document.getElementById("orderModalHeading").innerHTML = `
@@ -1492,6 +1635,7 @@
       const dateOrdered = document.getElementById("orderDateInput").value;
       const orderType = document.getElementById("orderTypeInput").value.trim();
       const placedBy = document.getElementById("orderPlacedByInput").value.trim();
+      const notes = document.getElementById("orderNotesInput").value.trim();
       const fileInput = document.getElementById("orderScreenshotInput");
 
       const itemRows = document.querySelectorAll("#orderItemsInputsContainer > div");
@@ -1513,6 +1657,7 @@
             ord.orderType = orderType;
             ord.placedBy = placedBy;
             ord.items = items;
+            ord.notes = notes;
             if (imgBase64) ord.image = imgBase64;
           }
         } else {
@@ -1523,6 +1668,7 @@
             orderType,
             placedBy,
             items,
+            notes,
             image: imgBase64,
             placed: true,
             placedMeta: `Placed by ${activeUser || placedBy} on ${new Date().toLocaleDateString()}`,
@@ -1582,7 +1728,7 @@
               </div>
             </div>
 
-            <!-- THREE PRIMARY STATUS CHECKBOXES -->
+            <!-- THREE STATUS CHECKBOXES -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
               
               <!-- STEP 1: ORDER PLACED -->
@@ -1613,6 +1759,14 @@
               </label>
 
             </div>
+
+            <!-- ORDER NOTES (IF PROVIDED) -->
+            ${ord.notes ? `
+              <div class="bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-gray-800/80 rounded-xl p-3 flex items-start space-x-2.5">
+                <i data-lucide="info" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
+                <div class="text-xs text-gray-300 whitespace-pre-wrap"><strong class="text-gray-400 font-semibold uppercase text-[10px] block mb-0.5">Order Notes:</strong>${ord.notes}</div>
+              </div>
+            ` : ''}
 
             <!-- COLLAPSIBLE ORDER CONTENTS & PARTIAL DELIVERY CHECKBOXES -->
             <details class="group bg-gray-50 dark:bg-[#151515] rounded-xl border border-gray-200 dark:border-gray-800 p-3">
@@ -1830,7 +1984,7 @@
         mainSidebar.classList.remove("md:hidden");
       }
 
-      // Update High-Visibility Tab Button Styles
+      // Update Tab Styles
       const btnTasks = document.getElementById("tabTasks");
       const btnNotes = document.getElementById("tabNotes");
       const btnOrders = document.getElementById("tabOrders");
