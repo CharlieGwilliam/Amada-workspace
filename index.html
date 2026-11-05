@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Amada Workspace</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -21,7 +21,6 @@
       height: 100%;
       margin: 0;
       padding: 0;
-      overflow: hidden;
     }
 
     .strikethrough-anim {
@@ -49,11 +48,11 @@
     ::-webkit-scrollbar-thumb { background: #333333; border-radius: 3px; }
   </style>
 </head>
-<body class="h-screen flex flex-col bg-white text-gray-900 dark:bg-[#121212] dark:text-gray-100 transition-colors duration-200">
+<body class="h-full flex flex-col bg-white text-gray-900 dark:bg-[#121212] dark:text-gray-100 transition-colors duration-200 overflow-hidden">
 
   <!-- AUTH / USER LOGIN OVERLAY -->
   <div id="authOverlay" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center my-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl text-center my-auto">
       <div class="w-14 h-14 bg-[#A6192E] rounded-xl flex items-center justify-center mx-auto mb-4 font-bold text-2xl text-white shadow-lg">A</div>
       <h2 class="text-2xl font-bold mb-1">Amada Workspace</h2>
       <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Who is accessing the workspace today?</p>
@@ -81,68 +80,77 @@
   </div>
 
   <!-- HEADER -->
-  <header class="h-14 bg-gray-100 dark:bg-[#181818] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 shrink-0">
-    <div class="flex items-center space-x-4">
+  <header class="h-14 bg-gray-100 dark:bg-[#181818] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-3 md:px-4 shrink-0">
+    <div class="flex items-center space-x-2 md:space-x-4">
+      <button onclick="toggleMobileSidebar()" class="p-1.5 rounded-lg bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 md:hidden">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+
       <div class="flex items-center space-x-2">
         <div class="w-7 h-7 bg-[#A6192E] rounded flex items-center justify-center font-bold text-white text-sm">A</div>
-        <span class="font-bold text-lg tracking-wide">AMADA</span>
+        <span class="font-bold text-base md:text-lg tracking-wide hidden sm:inline">AMADA</span>
       </div>
 
-      <div class="flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-800">
-        <button id="modeShared" onclick="setWorkspaceScope('shared')" class="px-4 py-1 rounded-lg text-xs font-bold bg-[#A6192E] text-white flex items-center space-x-1">
-          <i data-lucide="users" class="w-3.5 h-3.5"></i> <span>Shared</span>
+      <div class="flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-800 text-[11px] md:text-xs">
+        <button id="modeShared" onclick="setWorkspaceScope('shared')" class="px-2.5 md:px-4 py-1 rounded-lg font-bold bg-[#A6192E] text-white flex items-center space-x-1">
+          <i data-lucide="users" class="w-3.5 h-3.5"></i> <span class="hidden xs:inline">Shared</span>
         </button>
-        <button id="modePersonal" onclick="setWorkspaceScope('personal')" class="px-4 py-1 rounded-lg text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center space-x-1">
-          <i data-lucide="lock" class="w-3.5 h-3.5"></i> <span>Personal</span>
+        <button id="modePersonal" onclick="setWorkspaceScope('personal')" class="px-2.5 md:px-4 py-1 rounded-lg font-bold text-gray-500 dark:text-gray-400 flex items-center space-x-1">
+          <i data-lucide="lock" class="w-3.5 h-3.5"></i> <span class="hidden xs:inline">Personal</span>
         </button>
       </div>
     </div>
 
-    <div class="flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-800">
-      <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white">Tasks Board</button>
-      <button id="tabNotes" onclick="switchMainTab('notes')" class="px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400">Keep Notes</button>
+    <div class="flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-800 text-[11px] md:text-xs">
+      <button id="tabTasks" onclick="switchMainTab('tasks')" class="px-3 md:px-4 py-1 rounded-lg font-semibold bg-[#A6192E] text-white">Tasks</button>
+      <button id="tabNotes" onclick="switchMainTab('notes')" class="px-3 md:px-4 py-1 rounded-lg font-semibold text-gray-500 dark:text-gray-400">Notes</button>
     </div>
 
-    <div class="flex items-center space-x-3">
+    <div class="flex items-center space-x-2 md:space-x-3">
       <div class="relative">
-        <button id="syncBadgeBtn" onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs transition">
+        <button id="syncBadgeBtn" onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1.5 px-2 md:px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[11px] md:text-xs transition">
           <div id="syncPulse" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span id="githubSyncBadge">Auto-Synced</span>
+          <span id="githubSyncBadge">Live Sync</span>
         </button>
-        <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-64 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-3 z-40 text-xs">
-          <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Logged In Session</div>
-          <div id="activeUsersList" class="space-y-1 mb-2"></div>
-          <div id="syncStatusDetail" class="text-[10px] text-gray-500 border-t border-gray-200 dark:border-gray-800 pt-2 break-all">Connected to Cloud Storage</div>
+        <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-64 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl p-3 z-50 text-xs">
+          <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Active Team Members</div>
+          <div id="activeUsersList" class="space-y-1.5 mb-2"></div>
+          <div id="syncStatusDetail" class="text-[10px] text-gray-500 border-t border-gray-200 dark:border-gray-800 pt-2 break-all">Checking presence...</div>
         </div>
       </div>
 
-      <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-[#A6192E]" title="Toggle Theme">
+      <button onclick="toggleDarkMode()" class="p-1.5 md:p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-[#A6192E]">
         <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
         <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
       </button>
 
-      <button id="settingsCogBtn" onclick="openSettingsModal()" class="p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-white" title="Settings">
+      <button id="settingsCogBtn" onclick="openSettingsModal()" class="p-1.5 md:p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-white">
         <i data-lucide="settings" class="w-4 h-4"></i>
       </button>
 
-      <div id="userBadge" class="w-8 h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs border border-white/20">?</div>
-      <button onclick="handleLogout()" class="p-1.5 text-gray-400 hover:text-red-400" title="Log Out"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+      <div id="userBadge" class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs border border-white/20">?</div>
+      <button onclick="handleLogout()" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="log-out" class="w-4 h-4"></i></button>
     </div>
   </header>
 
   <!-- MAIN APP CONTAINER -->
-  <div class="flex-1 flex overflow-hidden">
-    <aside class="w-64 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 p-4 h-full overflow-y-auto">
+  <div class="flex-1 flex overflow-hidden relative">
+    
+    <!-- MOBILE BACKDROP -->
+    <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="hidden fixed inset-0 bg-black/60 z-30 md:hidden"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="mainSidebar" class="w-64 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 p-4 h-full overflow-y-auto z-40 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out">
       <div class="flex space-x-2 mb-3">
-        <button onclick="openNewTaskModal()" class="flex-1 bg-[#A6192E] hover:opacity-90 text-white rounded-xl py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
+        <button onclick="openNewTaskModal(); toggleMobileSidebar(false);" class="flex-1 bg-[#A6192E] hover:opacity-90 text-white rounded-xl py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
           <i data-lucide="check-square" class="w-4 h-4"></i> <span>+ Task</span>
         </button>
-        <button onclick="openNoteModal()" class="flex-1 bg-gray-200 dark:bg-[#252525] hover:bg-gray-300 dark:hover:bg-gray-700 rounded-xl py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
+        <button onclick="openNoteModal(); toggleMobileSidebar(false);" class="flex-1 bg-gray-200 dark:bg-[#252525] hover:bg-gray-300 dark:hover:bg-gray-700 rounded-xl py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
           <i data-lucide="sticky-note" class="w-4 h-4 text-[#A6192E]"></i> <span>+ Note</span>
         </button>
       </div>
 
-      <button onclick="clearActiveFilter()" class="w-full flex items-center justify-between px-3 py-2 mb-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white hover:opacity-90 transition">
+      <button onclick="clearActiveFilter(); toggleMobileSidebar(false);" class="w-full flex items-center justify-between px-3 py-2 mb-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white hover:opacity-90 transition">
         <div class="flex items-center space-x-2">
           <i data-lucide="layers" class="w-4 h-4"></i>
           <span>All Tasks</span>
@@ -150,7 +158,7 @@
         <span id="allTasksCountBadge" class="bg-black/30 px-2 py-0.5 rounded-full text-[10px]">0</span>
       </button>
 
-      <button onclick="filterByStarred()" class="w-full flex items-center justify-between px-3 py-2 mb-4 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30 hover:bg-amber-500/30 transition">
+      <button onclick="filterByStarred(); toggleMobileSidebar(false);" class="w-full flex items-center justify-between px-3 py-2 mb-4 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30 hover:bg-amber-500/30 transition">
         <div class="flex items-center space-x-2">
           <i data-lucide="star" class="w-4 h-4 text-amber-400"></i>
           <span>Starred Items</span>
@@ -180,43 +188,43 @@
       </div>
     </aside>
 
-    <main class="flex-1 bg-gray-100 dark:bg-[#121212] p-4 overflow-x-auto overflow-y-hidden flex flex-col h-full">
-      <div id="isolatedFilterHeader" class="hidden mb-4 bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex items-center justify-between shrink-0">
+    <main class="flex-1 bg-gray-100 dark:bg-[#121212] p-3 md:p-4 overflow-x-auto overflow-y-hidden flex flex-col h-full w-full">
+      <div id="isolatedFilterHeader" class="hidden mb-3 bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex items-center justify-between shrink-0">
         <div class="flex items-center space-x-3">
           <button onclick="clearActiveFilter()" class="px-3 py-1 bg-gray-200 dark:bg-[#252525] hover:bg-gray-300 dark:hover:bg-gray-700 text-xs rounded-lg flex items-center space-x-1 font-semibold">
             <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> <span>Show All Tasks</span>
           </button>
           <div class="flex items-center space-x-2">
-            <span class="text-xs text-gray-400 font-bold uppercase">Active Filter:</span>
-            <span id="isolatedFilterTitle" class="text-sm font-bold bg-[#A6192E] text-white px-2.5 py-0.5 rounded-full">Filter Name</span>
+            <span class="text-xs text-gray-400 font-bold uppercase">Filter:</span>
+            <span id="isolatedFilterTitle" class="text-xs md:text-sm font-bold bg-[#A6192E] text-white px-2.5 py-0.5 rounded-full">Filter Name</span>
           </div>
         </div>
       </div>
 
-      <div id="tasksView" class="flex space-x-4 items-start h-full flex-1 overflow-x-auto pb-4"></div>
+      <div id="tasksView" class="flex space-x-3 md:space-x-4 items-start h-full flex-1 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none"></div>
 
       <div id="notesView" class="hidden h-full flex-1 overflow-y-auto pb-6">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-bold">Keep Notes</h2>
+          <h2 class="text-base md:text-lg font-bold">Keep Notes</h2>
           <button onclick="openNoteModal()" class="bg-[#A6192E] text-white text-xs px-3 py-1.5 rounded-lg flex items-center space-x-1">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span>Add Keep Note</span>
           </button>
         </div>
-        <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"></div>
       </div>
     </main>
   </div>
 
   <!-- MODALS -->
   <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-6 relative shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
       <button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
       <div class="flex items-center space-x-2 mb-2">
         <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK DETAIL</span>
         <span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800">Priority</span>
       </div>
-      <h3 id="detailTitle" class="text-xl font-bold mb-2">Task Title</h3>
-      <div id="detailNotes" class="text-sm text-gray-600 dark:text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded border border-gray-300 dark:border-gray-800">Details...</div>
+      <h3 id="detailTitle" class="text-lg md:text-xl font-bold mb-2">Task Title</h3>
+      <div id="detailNotes" class="text-xs md:text-sm text-gray-600 dark:text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded border border-gray-300 dark:border-gray-800">Details...</div>
       <div id="detailImageContainer" class="hidden mb-4">
         <img id="detailImage" src="" onclick="openImageZoomModal(this.src)" class="w-full h-40 object-cover rounded-lg cursor-zoom-in border border-gray-700">
       </div>
@@ -274,7 +282,7 @@
   </div>
 
   <div id="taskModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-6 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
       <h3 id="taskModalHeading" class="text-base font-bold mb-3">Create / Edit Task</h3>
       <form onsubmit="saveTask(event)" class="space-y-3">
         <input type="hidden" id="taskIdInput">
@@ -286,14 +294,14 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Section</label>
-            <select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs"></select>
+            <select id="taskSectionInput" onchange="autoSyncPriorityWithSection(this.value)" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs"></select>
           </div>
           <div>
             <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Priority</label>
             <select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-1.5 text-xs">
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
               <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
             </select>
           </div>
         </div>
@@ -311,7 +319,7 @@
 
         <div>
           <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Description / Notes</label>
-          <textarea id="taskNotesInput" rows="3" placeholder="Add additional task details..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-2 text-xs focus:outline-none"></textarea>
+          <textarea id="taskNotesInput" rows="3" placeholder="Add additional details..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded p-2 text-xs focus:outline-none"></textarea>
         </div>
 
         <div>
@@ -371,8 +379,8 @@
       </div>
 
       <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
-        <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">Cloud Sync Status</h4>
-        <p class="text-[10px] text-emerald-400 font-semibold">✓ Connected to online cloud storage.</p>
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">Live Multi-User Sync Status</h4>
+        <p class="text-[10px] text-emerald-400 font-semibold">✓ Connected to real-time storage.</p>
       </div>
 
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">
@@ -400,7 +408,6 @@
     const JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS";
     const JSONBIN_BIN_ID = "6ae0b445ffd5d160538fff26";
 
-    // HARDCODED BASELINE PROFILES
     const BASELINE_USERS = [
       { name: "Charlie", role: "master_admin", password: "AMADA" },
       { name: "Jacob", role: "admin", password: "AMADA" }
@@ -433,6 +440,7 @@
     let activeFilterType = null;
     let activeFilterId = null;
     let selectedUserForAuth = "";
+    let presenceMap = {};
 
     let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) || [
       { id: "t_urgent", title: "Urgent", color: "#ef4444" },
@@ -450,12 +458,27 @@
       checkAuth();
       renderAll();
       fetchFromRemoteBin();
-      setInterval(fetchFromRemoteBin, 4000);
+      setInterval(fetchFromRemoteBin, 3500);
     };
 
     function isUserTyping() {
       const el = document.activeElement;
       return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') && el.type !== 'checkbox';
+    }
+
+    function toggleMobileSidebar(force) {
+      const sidebar = document.getElementById("mainSidebar");
+      const backdrop = document.getElementById("sidebarBackdrop");
+      const isOpen = !sidebar.classList.contains("-translate-x-full");
+      const shouldOpen = force !== undefined ? force : !isOpen;
+
+      if (shouldOpen) {
+        sidebar.classList.remove("-translate-x-full");
+        backdrop.classList.remove("hidden");
+      } else {
+        sidebar.classList.add("-translate-x-full");
+        backdrop.classList.add("hidden");
+      }
     }
 
     function updateSyncUI(status, text) {
@@ -475,6 +498,36 @@
       }
     }
 
+    function updatePresenceUI() {
+      const container = document.getElementById("activeUsersList");
+      if (!container) return;
+
+      const now = Date.now();
+      const activeList = [];
+
+      users.forEach(u => {
+        const lastSeen = presenceMap[u.name] || 0;
+        const isOnline = (now - lastSeen < 45000) || (u.name === activeUser);
+        if (isOnline) {
+          activeList.push({ name: u.name, isMe: u.name === activeUser });
+        }
+      });
+
+      if (activeList.length === 0 && activeUser) {
+        activeList.push({ name: activeUser, isMe: true });
+      }
+
+      container.innerHTML = activeList.map(item => `
+        <div class="flex items-center justify-between py-0.5">
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span class="font-bold text-gray-200">${item.name}</span>
+          </div>
+          <span class="text-[10px] text-emerald-400 font-semibold">${item.isMe ? '(You)' : 'Active Now'}</span>
+        </div>
+      `).join('');
+    }
+
     async function fetchFromRemoteBin() {
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
@@ -491,6 +544,11 @@
           if (content.sharedSections) sharedSections = content.sharedSections;
           if (content.tasks) tasks = content.tasks;
           if (content.notes) notes = content.notes;
+          if (content.presence) presenceMap = content.presence;
+
+          if (activeUser) {
+            presenceMap[activeUser] = Date.now();
+          }
 
           localStorage.setItem("amada_users", JSON.stringify(users));
           localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
@@ -499,12 +557,13 @@
           localStorage.setItem("amada_notes", JSON.stringify(notes));
 
           updateSyncUI("ok");
+          updatePresenceUI();
           renderUserProfiles();
           if (!isUserTyping()) {
             renderAll();
           }
         } else {
-          updateSyncUI("error", `Server status: ${res.status}`);
+          updateSyncUI("error", `Status: ${res.status}`);
         }
       } catch (e) {
         updateSyncUI("error", e.message);
@@ -512,6 +571,10 @@
     }
 
     async function saveData() {
+      if (activeUser) {
+        presenceMap[activeUser] = Date.now();
+      }
+
       localStorage.setItem("amada_users", JSON.stringify(users));
       localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
       localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
@@ -519,6 +582,7 @@
       localStorage.setItem("amada_notes", JSON.stringify(notes));
 
       renderAll();
+      updatePresenceUI();
 
       try {
         const putRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
@@ -527,13 +591,13 @@
             "Content-Type": "application/json",
             "X-Master-Key": JSONBIN_KEY
           },
-          body: JSON.stringify({ users, sharedTags, sharedSections, tasks, notes })
+          body: JSON.stringify({ users, sharedTags, sharedSections, tasks, notes, presence: presenceMap })
         });
 
         if (putRes.ok) {
           updateSyncUI("ok");
         } else {
-          updateSyncUI("error", `Save rejected: ${putRes.status}`);
+          updateSyncUI("error", `Save error: ${putRes.status}`);
         }
       } catch (e) {
         updateSyncUI("error", e.message);
@@ -571,11 +635,12 @@
 
       if (document.getElementById("loginPassword").value === targetPassword) {
         activeUser = selectedUserForAuth;
+        presenceMap[activeUser] = Date.now();
         localStorage.setItem("amada_active_user", activeUser);
         document.getElementById("authOverlay").classList.add("hidden");
         document.getElementById("loginPassword").value = "";
         checkAuth();
-        renderAll();
+        saveData();
       } else {
         document.getElementById("authError").classList.remove("hidden");
       }
@@ -592,6 +657,10 @@
     }
 
     function handleLogout() {
+      if (activeUser && presenceMap[activeUser]) {
+        delete presenceMap[activeUser];
+        saveData();
+      }
       localStorage.removeItem("amada_active_user");
       activeUser = "";
       location.reload();
@@ -600,8 +669,8 @@
     function setWorkspaceScope(newScope) {
       scope = newScope;
       localStorage.setItem("amada_scope", scope);
-      document.getElementById("modeShared").className = scope === 'shared' ? "px-4 py-1 rounded-lg text-xs font-bold bg-[#A6192E] text-white flex items-center space-x-1" : "px-4 py-1 rounded-lg text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center space-x-1";
-      document.getElementById("modePersonal").className = scope === 'personal' ? "px-4 py-1 rounded-lg text-xs font-bold bg-[#A6192E] text-white flex items-center space-x-1" : "px-4 py-1 rounded-lg text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center space-x-1";
+      document.getElementById("modeShared").className = scope === 'shared' ? "px-2.5 md:px-4 py-1 rounded-lg font-bold bg-[#A6192E] text-white flex items-center space-x-1" : "px-2.5 md:px-4 py-1 rounded-lg font-bold text-gray-500 dark:text-gray-400 flex items-center space-x-1";
+      document.getElementById("modePersonal").className = scope === 'personal' ? "px-2.5 md:px-4 py-1 rounded-lg font-bold bg-[#A6192E] text-white flex items-center space-x-1" : "px-2.5 md:px-4 py-1 rounded-lg font-bold text-gray-500 dark:text-gray-400 flex items-center space-x-1";
       document.getElementById("assigneeFilterSection").classList.toggle("hidden", scope === "personal");
       clearActiveFilter();
     }
@@ -626,7 +695,7 @@
       const container = document.getElementById("assigneesSidebar");
       if (!container) return;
       container.innerHTML = users.map(u => `
-        <div onclick="filterByAssignee('${u.name}')" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs">
+        <div onclick="filterByAssignee('${u.name}'); toggleMobileSidebar(false);" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs">
           <div class="flex items-center space-x-2">
             <div class="w-5 h-5 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-[10px]">${u.name.charAt(0)}</div>
             <span>${u.name}</span>
@@ -640,7 +709,7 @@
       if (!container) return;
       container.innerHTML = sharedTags.map(t => `
         <div class="group flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs">
-          <div class="flex items-center space-x-2 flex-1 truncate" onclick="filterByTag('${t.id}')">
+          <div class="flex items-center space-x-2 flex-1 truncate" onclick="filterByTag('${t.id}'); toggleMobileSidebar(false);">
             <div class="w-3 h-3 rounded-full" style="background-color: ${t.color}"></div>
             <span class="truncate">${t.title}</span>
           </div>
@@ -659,7 +728,7 @@
         const count = tasks.filter(t => t.sectionId === s.id && !t.completed && matchesScope(t)).length;
         return `
           <div class="group flex items-center justify-between p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-xs">
-            <div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="filterBySection('${s.id}')">
+            <div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);">
               <span class="truncate">${s.title}</span>
             </div>
             <div class="flex items-center space-x-1">
@@ -726,6 +795,20 @@
       return item.scope === "shared";
     }
 
+    function autoSyncPriorityWithSection(secId) {
+      const sec = sharedSections.find(s => s.id === secId);
+      if (!sec) return;
+      const priorityEl = document.getElementById("taskPriorityInput");
+      const titleLower = sec.title.toLowerCase();
+      if (titleLower.includes("high")) {
+        priorityEl.value = "High";
+      } else if (titleLower.includes("low")) {
+        priorityEl.value = "Low";
+      } else {
+        priorityEl.value = "Medium";
+      }
+    }
+
     function renderTasksBoard() {
       const view = document.getElementById("tasksView");
       if (!view) return;
@@ -758,9 +841,9 @@
         }
 
         return `
-          <div class="w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex flex-col shrink-0 max-h-full">
+          <div class="w-[85vw] sm:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex flex-col shrink-0 max-h-full snap-center">
             <h3 class="font-bold text-sm mb-2">${s.title}</h3>
-            <input type="text" placeholder="+ Add task" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded px-2.5 py-1.5 text-xs mb-3 focus:outline-none">
+            <input type="text" placeholder="+ Add task (Press Enter)" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded px-2.5 py-1.5 text-xs mb-3 focus:outline-none">
             <div class="space-y-2 overflow-y-auto flex-1">
               ${listTasks.map(t => renderTaskCardHtml(t)).join('')}
             </div>
@@ -786,11 +869,11 @@
           <div class="flex flex-wrap items-center justify-between gap-1 pt-1 border-t border-gray-200/50 dark:border-gray-700/50">
             <div class="flex flex-wrap items-center gap-1">
               ${tag ? `<span class="text-[9px] px-1.5 py-0.5 rounded text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
-              ${t.priority ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 font-bold">${t.priority}</span>` : ''}
+              ${t.priority ? `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold ${t.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-gray-200 dark:bg-gray-800'}">${t.priority}</span>` : ''}
               ${t.assignees ? t.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">${a}</span>`).join('') : ''}
             </div>
             ${canEdit ? `
-              <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
+              <div class="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center space-x-1">
                 <button onclick="event.stopPropagation(); openEditTaskModal('${t.id}')" class="p-0.5 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
                 <button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="p-0.5 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
               </div>
@@ -802,10 +885,18 @@
 
     function handleQuickTask(e, sectionId) {
       if (e.key === 'Enter' && e.target.value.trim()) {
+        const sec = sharedSections.find(s => s.id === sectionId);
+        let derivedPriority = "Medium";
+        if (sec && sec.title.toLowerCase().includes("high")) {
+          derivedPriority = "High";
+        } else if (sec && sec.title.toLowerCase().includes("low")) {
+          derivedPriority = "Low";
+        }
+
         tasks.push({
           id: Date.now().toString(),
           title: e.target.value.trim(),
-          sectionId, tagId: null, assignees: [activeUser], priority: "Medium", dueDate: "", notes: "",
+          sectionId, tagId: null, assignees: [activeUser], priority: derivedPriority, dueDate: "", notes: "",
           starred: false, image: null, completed: false, scope, owner: activeUser, restricted: false
         });
         e.target.value = "";
@@ -867,7 +958,7 @@
               ${n.assignees ? n.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">${a}</span>`).join('') : ''}
             </div>
             ${canEdit ? `
-              <div class="opacity-0 group-hover:opacity-100 flex space-x-2">
+              <div class="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex space-x-2">
                 <button onclick="event.stopPropagation(); openNoteModal('${n.id}')" class="text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
                 <button onclick="event.stopPropagation(); deleteNote('${n.id}')" class="text-gray-400 hover:text-red-400"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
               </div>
@@ -943,7 +1034,15 @@
       document.getElementById("taskTitleInput").value = "";
       document.getElementById("taskNotesInput").value = "";
       document.getElementById("taskDueDateInput").value = "";
-      document.getElementById("taskPriorityInput").value = "Medium";
+      
+      const firstSecId = sharedSections[0]?.id;
+      if (firstSecId) {
+        document.getElementById("taskSectionInput").value = firstSecId;
+        autoSyncPriorityWithSection(firstSecId);
+      } else {
+        document.getElementById("taskPriorityInput").value = "Medium";
+      }
+
       document.getElementById("taskStarInput").checked = false;
       document.getElementById("taskPrivateInput").checked = false;
       renderAssigneesCheckboxes("taskAssigneesContainer", [activeUser]);
@@ -1138,8 +1237,13 @@
       if (container) {
         container.innerHTML = users.map(u => {
           const isTargetMaster = u.name === "Charlie" || u.role === "master_admin";
-          let canDeleteTarget = isMasterAdmin && !isTargetMaster;
-          let canEditRole = isMasterAdmin && !isTargetMaster;
+          let canDeleteTarget = false;
+          if (isMasterAdmin && !isTargetMaster) canDeleteTarget = true;
+          if (isAdmin && !isMasterAdmin && !isTargetMaster && u.role !== "admin") canDeleteTarget = true;
+
+          let canEditRole = false;
+          if (isMasterAdmin && !isTargetMaster) canEditRole = true;
+          if (isAdmin && !isMasterAdmin && u.role !== "admin") canEditRole = true;
 
           return `
             <div class="flex items-center justify-between bg-gray-100 dark:bg-[#121212] p-2.5 rounded-lg text-xs">
@@ -1150,7 +1254,7 @@
                     <select onchange="changeUserRole('${u.name}', this.value)" class="bg-gray-200 dark:bg-[#252525] border border-gray-700 rounded p-1 text-xs">
                       <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Viewer</option>
                       <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
-                      <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                      ${isMasterAdmin ? `<option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>` : ''}
                     </select>
                   ` : `<span class="text-[9px] text-gray-500 capitalize">${u.role.replace('_', ' ')}</span>`}
                   ${canDeleteTarget ? `
@@ -1188,16 +1292,13 @@
     function switchMainTab(tab) {
       document.getElementById("tasksView").classList.toggle("hidden", tab !== 'tasks');
       document.getElementById("notesView").classList.toggle("hidden", tab !== 'notes');
-      document.getElementById("tabTasks").className = tab === 'tasks' ? "px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white" : "px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400";
-      document.getElementById("tabNotes").className = tab === 'notes' ? "px-4 py-1 rounded-lg text-xs font-semibold bg-[#A6192E] text-white" : "px-4 py-1 rounded-lg text-xs font-semibold text-gray-500 dark:text-gray-400";
+      document.getElementById("tabTasks").className = tab === 'tasks' ? "px-3 md:px-4 py-1 rounded-lg font-semibold bg-[#A6192E] text-white" : "px-3 md:px-4 py-1 rounded-lg font-semibold text-gray-500 dark:text-gray-400";
+      document.getElementById("tabNotes").className = tab === 'notes' ? "px-3 md:px-4 py-1 rounded-lg font-semibold bg-[#A6192E] text-white" : "px-3 md:px-4 py-1 rounded-lg font-semibold text-gray-500 dark:text-gray-400";
     }
 
     function toggleActiveUsersPopover() {
-      const popover = document.getElementById("activeUsersPopover");
-      popover.classList.toggle("hidden");
-      document.getElementById("activeUsersList").innerHTML = activeUser 
-        ? `<div class="flex items-center space-x-1.5"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div><span class="font-bold">${activeUser} (Current Session)</span></div>`
-        : `<p class="text-gray-500">No active user session.</p>`;
+      updatePresenceUI();
+      document.getElementById("activeUsersPopover").classList.toggle("hidden");
     }
 
     function toggleDarkMode() {
