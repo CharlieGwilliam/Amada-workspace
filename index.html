@@ -763,4 +763,1616 @@
         chevron.classList.add("rotate-90");
       } else {
         container.classList.add("hidden");
-        chevron.
+        chevron.classList.remove("rotate-90");
+      }
+    }
+
+    function toggleCompletedOrdersDropdown() {
+      isCompletedOrdersOpen = !isCompletedOrdersOpen;
+      const container = document.getElementById("completedOrdersContainer");
+      const chevron = document.getElementById("completedOrdersChevron");
+      if (isCompletedOrdersOpen) {
+        container.classList.remove("hidden");
+        chevron.classList.add("rotate-90");
+      } else {
+        container.classList.add("hidden");
+        chevron.classList.remove("rotate-90");
+      }
+    }
+
+    function updateSyncUI(status, text) {
+      const badge = document.getElementById("githubSyncBadge");
+      const pulse = document.getElementById("syncPulse");
+      const detail = document.getElementById("syncStatusDetail");
+      if (!badge || !pulse) return;
+
+      if (status === "ok") {
+        badge.innerText = "Auto-Synced";
+        pulse.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        if (detail) detail.innerText = `Connected live (${new Date().toLocaleTimeString()})`;
+      } else {
+        badge.innerText = "Sync Alert";
+        pulse.className = "w-2 h-2 rounded-full bg-red-500";
+        if (detail) detail.innerText = text || "Error syncing";
+      }
+    }
+
+    function updatePresenceUI() {
+      const container = document.getElementById("activeUsersList");
+      if (!container) return;
+
+      const now = Date.now();
+      const activeList = [];
+
+      users.forEach(u => {
+        const lastSeen = presenceMap[u.name] || 0;
+        const isOnline = (now - lastSeen < 45000) || (u.name === activeUser);
+        if (isOnline) {
+          activeList.push({ name: u.name, isMe: u.name === activeUser });
+        }
+      });
+
+      if (activeList.length === 0 && activeUser) {
+        activeList.push({ name: activeUser, isMe: true });
+      }
+
+      container.innerHTML = activeList.map(item => `
+        <div class="flex items-center justify-between py-1 border-b border-gray-100 dark:border-gray-800/50 last:border-none">
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span class="font-bold text-gray-200">${item.name}</span>
+          </div>
+          <span class="text-[10px] text-emerald-400 font-semibold">${item.isMe ? '(You)' : 'Active Now'}</span>
+        </div>
+      `).join('');
+    }
+
+    async function fetchFromRemoteBin() {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+          method: "GET",
+          headers: { "X-Master-Key": JSONBIN_KEY }
+        });
+        
+        if (res.ok) {
+          const json = await res.json();
+          const content = json.record || {};
+
+          if (content.users) users = ensureProfiles(content.users);
+          if (content.sharedTags) sharedTags = content.sharedTags;
+          if (content.sharedSections) sharedSections = content.sharedSections;
+          if (content.tasks) tasks = content.tasks;
+          if (content.notes) notes = content.notes;
+          if (content.orders) orders = content.orders;
+          if (content.presence) presenceMap = content.presence;
+
+          if (activeUser) {
+            presenceMap[activeUser] = Date.now();
+          }
+
+          localStorage.setItem("amada_users", JSON.stringify(users));
+          localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
+          localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
+          localStorage.setItem("amada_tasks", JSON.stringify(tasks));
+          localStorage.setItem("amada_notes", JSON.stringify(notes));
+          localStorage.setItem("amada_orders", JSON.stringify(orders));
+
+          updateSyncUI("ok");
+          updatePresenceUI();
+          renderUserProfiles();
+          if (!isUserTyping()) {
+            renderAll();
+          }
+        } else {
+          updateSyncUI("error", `Status: ${res.status}`);
+        }
+      } catch (e) {
+        updateSyncUI("error", e.message);
+      }
+    }
+
+    async function saveData() {
+      if (activeUser) {
+        presenceMap[activeUser] = Date.now();
+      }
+
+      localStorage.setItem("amada_users", JSON.stringify(users));
+      localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
+      localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
+      localStorage.setItem("amada_tasks", JSON.stringify(tasks));
+      localStorage.setItem("amada_notes", JSON.stringify(notes));
+      localStorage.setItem("amada_orders", JSON.stringify(orders));
+
+      renderAll();
+      updatePresenceUI();
+
+      try {
+        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": JSONBIN_KEY
+          },
+          body: JSON.stringify({ users, sharedTags, sharedSections, tasks, notes, orders, presence: presenceMap })
+        });
+
+        if (putRes.ok) {
+          updateSyncUI("ok");
+        } else {
+          updateSyncUI("error", `Save error: ${putRes.status}`);
+        }
+      } catch (e) {
+        updateSyncUI("error", e.message);
+      }
+    }
+
+    function renderUserProfiles() {
+      const container = document.getElementById("userProfilesList");
+      if (!container) return;
+      container.innerHTML = users.map(u => `
+        <button onclick="selectUserForLogin('${u.name}')" class="p-3 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-xl flex flex-col items-center space-y-1 transition">
+          <div class="w-8 h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div>
+          <span class="text-xs font-semibold">${u.name}</span>
+          <span class="text-[9px] text-gray-400 capitalize">${u.role.replace('_', ' ')}</span>
+        </button>
+      `).join('');
+    }
+
+    function selectUserForLogin(name) {
+      selectedUserForAuth = name;
+      document.getElementById("loginUserLabel").innerText = `Password for ${name}`;
+      document.getElementById("userSelectionStep").classList.add("hidden");
+      document.getElementById("passwordStep").classList.remove("hidden");
+    }
+
+    function resetLoginStep() {
+      document.getElementById("userSelectionStep").classList.remove("hidden");
+      document.getElementById("passwordStep").classList.add("hidden");
+    }
+
+    function verifyPassword(e) {
+      e.preventDefault();
+      const u = users.find(x => x.name === selectedUserForAuth);
+      const targetPassword = (u && u.password) ? u.password : "AMADA";
+
+      if (document.getElementById("loginPassword").value === targetPassword) {
+        activeUser = selectedUserForAuth;
+        presenceMap[activeUser] = Date.now();
+        localStorage.setItem("amada_active_user", activeUser);
+        document.getElementById("authOverlay").classList.add("hidden");
+        document.getElementById("loginPassword").value = "";
+        checkAuth();
+        saveData();
+      } else {
+        document.getElementById("authError").classList.remove("hidden");
+      }
+    }
+
+    function checkAuth() {
+      if (activeUser) {
+        document.getElementById("authOverlay").classList.add("hidden");
+        document.getElementById("userBadge").innerText = activeUser.charAt(0);
+        document.getElementById("userBadge").title = activeUser;
+      } else {
+        document.getElementById("authOverlay").classList.remove("hidden");
+      }
+    }
+
+    function handleLogout() {
+      if (activeUser && presenceMap[activeUser]) {
+        delete presenceMap[activeUser];
+        saveData();
+      }
+      localStorage.removeItem("amada_active_user");
+      activeUser = "";
+      location.reload();
+    }
+
+    function renderAll() {
+      renderAssigneesSidebar();
+      renderTagsSidebar();
+      renderSectionsSidebar();
+      renderTasksBoard();
+      renderCompletedTasks();
+      renderNotesGrid();
+      renderOrders();
+
+      const totalActive = tasks.filter(t => !t.completed).length;
+      document.getElementById("allTasksCountBadge").innerText = totalActive;
+
+      const totalCompleted = tasks.filter(t => t.completed).length;
+      document.getElementById("completedCountBadge").innerText = totalCompleted;
+
+      const totalStarred = tasks.filter(t => t.starred).length + notes.filter(n => n.starred).length;
+      document.getElementById("starredCountBadge").innerText = totalStarred;
+
+      lucide.createIcons();
+    }
+
+    function renderAssigneesSidebar() {
+      const container = document.getElementById("assigneesSidebar");
+      if (!container) return;
+      container.innerHTML = users.map(u => `
+        <div onclick="filterByAssignee('${u.name}'); toggleMobileSidebar(false);" class="flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs">
+          <div class="flex items-center space-x-2">
+            <div class="w-5 h-5 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-[10px]">${u.name.charAt(0)}</div>
+            <span>${u.name}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTagsSidebar() {
+      const container = document.getElementById("tagsSidebar");
+      if (!container) return;
+      container.innerHTML = sharedTags.map(t => `
+        <div class="group flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs">
+          <div class="flex items-center space-x-2 flex-1 truncate" onclick="filterByTag('${t.id}'); toggleMobileSidebar(false);">
+            <div class="w-3 h-3 rounded-full" style="background-color: ${t.color}"></div>
+            <span class="truncate">${t.title}</span>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
+            <button onclick="event.stopPropagation(); openNewTagModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+            <button onclick="event.stopPropagation(); deleteTag('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* --- SIDEBAR CATEGORIES (PERSONAL DRAG AND DROP) --- */
+    function renderSectionsSidebar() {
+      const container = document.getElementById("sectionsSidebar");
+      if (!container) return;
+      const orderedSections = getPersonalOrderedSections();
+
+      container.innerHTML = orderedSections.map(s => {
+        const count = tasks.filter(t => t.sectionId === s.id && !t.completed).length;
+        return `
+          <div draggable="true" 
+               data-sec-id="${s.id}"
+               ondragstart="handleSidebarDragStart(event)" 
+               ondragover="handleSidebarDragOver(event)" 
+               ondrop="handleSidebarDrop(event)" 
+               ondragleave="handleSidebarDragLeave(event)"
+               class="sidebar-cat-row group flex items-center justify-between p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 text-xs cursor-move transition-all">
+            <div class="flex items-center space-x-2 truncate flex-1" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);">
+              <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-gray-400 opacity-40 group-hover:opacity-100"></i>
+              <span class="truncate font-medium">${s.title}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
+              <button onclick="event.stopPropagation(); editSectionTitle('${s.id}')" class="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+              <button onclick="event.stopPropagation(); deleteSection('${s.id}')" class="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    let draggedSidebarSecId = null;
+    function handleSidebarDragStart(e) {
+      draggedSidebarSecId = e.currentTarget.getAttribute("data-sec-id");
+      e.dataTransfer.setData("text/plain", draggedSidebarSecId);
+      e.currentTarget.classList.add("opacity-50");
+    }
+    function handleSidebarDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add("drag-over-sidebar");
+    }
+    function handleSidebarDragLeave(e) {
+      e.currentTarget.classList.remove("drag-over-sidebar");
+    }
+    function handleSidebarDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove("drag-over-sidebar");
+      const targetSecId = e.currentTarget.getAttribute("data-sec-id");
+      if (!draggedSidebarSecId || draggedSidebarSecId === targetSecId) return;
+
+      const ordered = getPersonalOrderedSections();
+      const ids = ordered.map(s => s.id);
+      const fromIdx = ids.indexOf(draggedSidebarSecId);
+      const toIdx = ids.indexOf(targetSecId);
+      if (fromIdx > -1 && toIdx > -1) {
+        ids.splice(fromIdx, 1);
+        ids.splice(toIdx, 0, draggedSidebarSecId);
+        savePersonalSectionOrder(ids);
+      }
+      draggedSidebarSecId = null;
+    }
+
+    function editSectionTitle(id) {
+      const section = sharedSections.find(s => s.id === id);
+      if (!section) return;
+      const newTitle = prompt("Edit Section Name:", section.title);
+      if (newTitle && newTitle.trim()) {
+        section.title = newTitle.trim();
+        saveData();
+      }
+    }
+
+    function deleteSection(id) {
+      if (confirm("Delete this section and its active tasks?")) {
+        sharedSections = sharedSections.filter(s => s.id !== id);
+        tasks = tasks.filter(t => t.sectionId !== id);
+        saveData();
+      }
+    }
+
+    function filterBySection(sectionId) {
+      activeFilterType = "section";
+      activeFilterId = sectionId;
+      switchMainTab('tasks');
+      renderAll();
+    }
+
+    function filterByAssignee(userName) {
+      activeFilterType = "assignee";
+      activeFilterId = userName;
+      renderAll();
+    }
+
+    function filterByTag(tagId) {
+      activeFilterType = "tag";
+      activeFilterId = tagId;
+      renderAll();
+    }
+
+    function filterByStarred() {
+      activeFilterType = "starred";
+      activeFilterId = "starred";
+      renderAll();
+    }
+
+    function clearActiveFilter() {
+      activeFilterType = null;
+      activeFilterId = null;
+      renderAll();
+    }
+
+    function autoSyncPriorityWithSection(secId) {
+      const sec = sharedSections.find(s => s.id === secId);
+      if (!sec) return;
+      const priorityEl = document.getElementById("taskPriorityInput");
+      const titleLower = sec.title.toLowerCase();
+      if (titleLower.includes("high")) {
+        priorityEl.value = "High";
+      } else if (titleLower.includes("low")) {
+        priorityEl.value = "Low";
+      } else {
+        priorityEl.value = "Medium";
+      }
+    }
+
+    /* --- TASK BOARD COLUMNS (PERSONAL DRAG AND DROP) --- */
+    function renderTasksBoard() {
+      const view = document.getElementById("tasksView");
+      if (!view) return;
+      const headerBar = document.getElementById("isolatedFilterHeader");
+      const filterTitle = document.getElementById("isolatedFilterTitle");
+
+      if (activeFilterType) {
+        headerBar.classList.remove("hidden");
+        if (activeFilterType === "section") filterTitle.innerText = `Section: ${sharedSections.find(s => s.id === activeFilterId)?.title || ''}`;
+        if (activeFilterType === "assignee") filterTitle.innerText = `Assigned to: ${activeFilterId}`;
+        if (activeFilterType === "tag") filterTitle.innerText = `Tag: ${sharedTags.find(t => t.id === activeFilterId)?.title || ''}`;
+        if (activeFilterType === "starred") filterTitle.innerText = `Starred Items ⭐`;
+      } else {
+        headerBar.classList.add("hidden");
+      }
+
+      let visibleSections = getPersonalOrderedSections();
+      if (activeFilterType === "section") {
+        visibleSections = visibleSections.filter(s => s.id === activeFilterId);
+      }
+
+      view.innerHTML = visibleSections.map(s => {
+        let listTasks = tasks.filter(t => t.sectionId === s.id && !t.completed);
+        if (activeFilterType === "assignee") {
+          listTasks = listTasks.filter(t => t.assignees && t.assignees.includes(activeFilterId));
+        } else if (activeFilterType === "tag") {
+          listTasks = listTasks.filter(t => t.tagId === activeFilterId);
+        } else if (activeFilterType === "starred") {
+          listTasks = listTasks.filter(t => t.starred);
+        }
+
+        return `
+          <div draggable="true"
+               data-column-id="${s.id}"
+               ondragstart="handleColumnDragStart(event)"
+               ondragover="handleColumnDragOver(event)"
+               ondragleave="handleColumnDragLeave(event)"
+               ondrop="handleColumnDrop(event)"
+               class="task-column-card w-[85vw] sm:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-3.5 flex flex-col shrink-0 max-h-full snap-center shadow-sm transition-all duration-150">
+            
+            <div class="flex items-center justify-between mb-2 cursor-grab active:cursor-grabbing pb-1 border-b border-gray-100 dark:border-gray-800/60">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="grip-horizontal" class="w-4 h-4 text-gray-400 opacity-50"></i>
+                <h3 class="font-bold text-sm tracking-wide select-none">${s.title}</h3>
+              </div>
+              <span class="text-[10px] bg-gray-100 dark:bg-[#252525] text-gray-400 px-2 py-0.5 rounded-full font-bold">${listTasks.length}</span>
+            </div>
+
+            <input type="text" placeholder="+ Add task (Press Enter)" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded-xl px-3 py-2 text-xs mb-3 focus:outline-none focus:border-[#A6192E]">
+            <div class="space-y-2.5 overflow-y-auto flex-1">
+              ${listTasks.map(t => renderTaskCardHtml(t)).join('')}
+              ${listTasks.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs italic">No active tasks in this section</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    let draggedColumnId = null;
+    function handleColumnDragStart(e) {
+      draggedColumnId = e.currentTarget.getAttribute("data-column-id");
+      e.dataTransfer.setData("text/plain", draggedColumnId);
+      e.currentTarget.classList.add("dragging-column");
+    }
+    function handleColumnDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add("drag-over-column");
+    }
+    function handleColumnDragLeave(e) {
+      e.currentTarget.classList.remove("drag-over-column");
+    }
+    function handleColumnDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove("drag-over-column");
+      const targetColumnId = e.currentTarget.getAttribute("data-column-id");
+      if (!draggedColumnId || draggedColumnId === targetColumnId) return;
+
+      const ordered = getPersonalOrderedSections();
+      const ids = ordered.map(s => s.id);
+      const fromIdx = ids.indexOf(draggedColumnId);
+      const toIdx = ids.indexOf(targetColumnId);
+      if (fromIdx > -1 && toIdx > -1) {
+        ids.splice(fromIdx, 1);
+        ids.splice(toIdx, 0, draggedColumnId);
+        savePersonalSectionOrder(ids);
+      }
+      draggedColumnId = null;
+    }
+
+    function renderTaskCardHtml(t) {
+      const tag = sharedTags.find(x => x.id === t.tagId);
+      const section = sharedSections.find(x => x.id === t.sectionId);
+      const canEdit = canModifyItem(t);
+
+      return `
+        <div id="task_card_${t.id}" onclick="openTaskDetailModal('${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-xl p-3 flex flex-col space-y-2 relative cursor-pointer shadow-sm transition">
+          <div class="flex items-start space-x-2.5">
+            <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); handleTaskCheckAnimation('${t.id}', this)" class="mt-0.5 w-4 h-4 rounded accent-green-600 cursor-pointer shrink-0">
+            <div class="flex-1 min-w-0">
+              <span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>
+            </div>
+            <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${t.starred ? '⭐' : '☆'}</button>
+          </div>
+          
+          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-gray-200/50 dark:border-gray-700/50">
+            <div class="flex flex-wrap items-center gap-1">
+              ${section ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold truncate max-w-[100px]">${section.title}</span>` : ''}
+              ${tag ? `<span class="text-[9px] px-1.5 py-0.5 rounded text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
+              ${t.priority ? `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold ${t.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-gray-200 dark:bg-gray-800 text-gray-400'}">${t.priority}</span>` : ''}
+              ${t.assignees ? t.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">${a}</span>`).join('') : ''}
+            </div>
+            ${canEdit ? `
+              <div class="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center space-x-1 shrink-0">
+                <button onclick="event.stopPropagation(); openEditTaskModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                <button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCompletedTasks() {
+      const container = document.getElementById("completedTasksList");
+      if (!container) return;
+
+      const completed = tasks.filter(t => t.completed);
+      if (completed.length === 0) {
+        container.innerHTML = `<div class="col-span-full py-4 text-center text-xs text-gray-500 italic">No completed tasks. Ticked items will settle here with history preserved.</div>`;
+        return;
+      }
+
+      container.innerHTML = completed.map(t => {
+        const tag = sharedTags.find(x => x.id === t.tagId);
+        const section = sharedSections.find(x => x.id === t.sectionId);
+
+        return `
+          <div onclick="openTaskDetailModal('${t.id}')" class="bg-gray-50 dark:bg-[#1C1C1C] border border-gray-200 dark:border-gray-800/80 rounded-xl p-3 flex flex-col space-y-2 cursor-pointer shadow-sm hover:border-gray-700 transition">
+            <div class="flex items-start justify-between space-x-2">
+              <div class="flex items-start space-x-2 flex-1 min-w-0">
+                <input type="checkbox" checked onclick="event.stopPropagation(); restoreTask('${t.id}')" class="mt-0.5 w-4 h-4 rounded accent-green-600 cursor-pointer shrink-0" title="Click to uncomplete">
+                <span class="text-xs font-medium line-through text-gray-400 break-words">${t.title}</span>
+              </div>
+              <button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="text-gray-500 hover:text-red-400 p-1" title="Delete permanently">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-1 pt-1.5 border-t border-gray-200/40 dark:border-gray-800">
+              <div class="flex flex-wrap items-center gap-1">
+                ${section ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold truncate max-w-[110px]">Orig: ${section.title}</span>` : ''}
+                ${tag ? `<span class="text-[9px] px-1.5 py-0.5 rounded text-white font-bold opacity-80" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
+                ${t.priority ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-gray-400 font-bold">${t.priority}</span>` : ''}
+              </div>
+              <span class="text-[9px] text-emerald-500 font-semibold flex items-center space-x-1">
+                <i data-lucide="check" class="w-3 h-3"></i> <span>Completed</span>
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleTaskCheckAnimation(id, checkboxEl) {
+      const titleEl = document.getElementById(`task_title_${id}`);
+      if (titleEl) {
+        titleEl.classList.add('strikethrough-active');
+      }
+
+      setTimeout(() => {
+        const t = tasks.find(x => x.id === id);
+        if (t) {
+          t.completed = true;
+          if (!Array.isArray(t.history)) t.history = [];
+          t.history.unshift({
+            action: `Marked completed`,
+            user: activeUser || "User",
+            date: new Date().toLocaleString()
+          });
+          saveData();
+        }
+      }, 350);
+    }
+
+    function restoreTask(id) {
+      const t = tasks.find(x => x.id === id);
+      if (t) {
+        t.completed = false;
+        if (!Array.isArray(t.history)) t.history = [];
+        t.history.unshift({
+          action: `Restored to active board`,
+          user: activeUser || "User",
+          date: new Date().toLocaleString()
+        });
+        saveData();
+      }
+    }
+
+    function clearAllCompletedTasks() {
+      const count = tasks.filter(t => t.completed).length;
+      if (count === 0) return;
+      if (confirm(`Permanently delete all ${count} completed tasks?`)) {
+        tasks = tasks.filter(t => !t.completed);
+        saveData();
+      }
+    }
+
+    function handleQuickTask(e, sectionId) {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        const sec = sharedSections.find(s => s.id === sectionId);
+        let derivedPriority = "Medium";
+        if (sec && sec.title.toLowerCase().includes("high")) {
+          derivedPriority = "High";
+        } else if (sec && sec.title.toLowerCase().includes("low")) {
+          derivedPriority = "Low";
+        }
+
+        tasks.push({
+          id: Date.now().toString(),
+          title: e.target.value.trim(),
+          sectionId, 
+          tagId: null, 
+          assignees: [activeUser], 
+          priority: derivedPriority, 
+          dueDate: "", 
+          notes: "",
+          starred: false, 
+          completed: false, 
+          owner: activeUser, 
+          restricted: false,
+          history: [{
+            action: "Created task",
+            user: activeUser || "User",
+            date: new Date().toLocaleString()
+          }]
+        });
+        e.target.value = "";
+        saveData();
+      }
+    }
+
+    function toggleStarTask(id) {
+      const t = tasks.find(x => x.id === id);
+      if (t) {
+        t.starred = !t.starred;
+        saveData();
+      }
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(x => x.id !== id);
+      saveData();
+    }
+
+    function renderNotesGrid() {
+      const grid = document.getElementById("notesGrid");
+      if (!grid) return;
+      let filteredNotes = notes;
+      if (activeFilterType === "assignee") {
+        filteredNotes = filteredNotes.filter(n => n.assignees && n.assignees.includes(activeFilterId));
+      } else if (activeFilterType === "tag") {
+        filteredNotes = filteredNotes.filter(n => n.tagId === activeFilterId);
+      } else if (activeFilterType === "starred") {
+        filteredNotes = filteredNotes.filter(n => n.starred);
+      }
+
+      grid.innerHTML = filteredNotes.map(n => renderNoteCardHtml(n)).join('');
+    }
+
+    function renderNoteCardHtml(n) {
+      const tag = sharedTags.find(x => x.id === n.tagId);
+      const canEdit = canModifyItem(n);
+      return `
+        <div onclick="openNoteModal('${n.id}')" class="group bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between relative shadow-sm hover:shadow-md transition cursor-pointer">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-bold text-sm">${n.title}</h4>
+              <button onclick="event.stopPropagation(); toggleStarNote('${n.id}')" class="text-xs p-1">${n.starred ? '⭐' : '☆'}</button>
+            </div>
+            <p class="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap mb-3">${n.content}</p>
+          </div>
+          <div class="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-800">
+            <div class="flex items-center space-x-1">
+              ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
+              ${n.assignees ? n.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded">${a}</span>`).join('') : ''}
+            </div>
+            ${canEdit ? `
+              <div class="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex space-x-2">
+                <button onclick="event.stopPropagation(); openNoteModal('${n.id}')" class="text-gray-400 hover:text-white p-1"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                <button onclick="event.stopPropagation(); deleteNote('${n.id}')" class="text-gray-400 hover:text-red-400 p-1"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleStarNote(id) {
+      const n = notes.find(x => x.id === id);
+      if (n) { n.starred = !n.starred; saveData(); }
+    }
+
+    function deleteNote(id) {
+      notes = notes.filter(x => x.id !== id);
+      saveData();
+    }
+
+    function canModifyItem(item) {
+      if (item.owner === activeUser) return true;
+      if (item.restricted) return false;
+      const u = users.find(x => x.name === activeUser);
+      return u && (u.role === "admin" || u.role === "master_admin");
+    }
+
+    function openTaskDetailModal(id) {
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+      document.getElementById("detailTitle").innerText = t.title;
+      document.getElementById("detailNotes").innerText = t.notes || "No description provided.";
+      document.getElementById("detailPriority").innerText = t.priority || "Medium";
+      
+      const sec = sharedSections.find(s => s.id === t.sectionId);
+      document.getElementById("detailSection").innerText = sec ? sec.title : "General";
+      document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone";
+      document.getElementById("detailDueDate").innerText = t.dueDate || "No Date";
+      document.getElementById("detailOwner").innerText = t.owner || "System";
+
+      const statusBadge = document.getElementById("detailStatusBadge");
+      if (t.completed) {
+        statusBadge.innerText = "Completed";
+        statusBadge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        statusBadge.classList.remove("hidden");
+      } else {
+        statusBadge.classList.add("hidden");
+      }
+
+      const logContainer = document.getElementById("detailHistoryLog");
+      if (Array.isArray(t.history) && t.history.length > 0) {
+        logContainer.innerHTML = t.history.map(h => `
+          <div class="border-b border-gray-200 dark:border-gray-800/80 pb-1 last:border-none">
+            <span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span>
+            <div class="text-[10px] text-gray-400">${h.date} by <span class="font-semibold text-emerald-400">${h.user}</span></div>
+          </div>
+        `).join('');
+      } else {
+        logContainer.innerHTML = `<div class="text-gray-500 italic text-[10px]">No edit history recorded for this item.</div>`;
+      }
+
+      document.getElementById("detailEditBtn").onclick = () => {
+        closeTaskDetailModal();
+        openEditTaskModal(id);
+      };
+      document.getElementById("taskDetailModal").classList.remove("hidden");
+    }
+
+    function closeTaskDetailModal() {
+      document.getElementById("taskDetailModal").classList.add("hidden");
+    }
+
+    function openEditTaskModal(id) {
+      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+
+      const t = tasks.find(x => x.id === id);
+      if (t) {
+        document.getElementById("taskIdInput").value = t.id;
+        document.getElementById("taskTitleInput").value = t.title;
+        document.getElementById("taskSectionInput").value = t.sectionId;
+        document.getElementById("taskPriorityInput").value = t.priority || "Medium";
+        document.getElementById("taskTagInput").value = t.tagId || "";
+        document.getElementById("taskDueDateInput").value = t.dueDate || "";
+        document.getElementById("taskNotesInput").value = t.notes || "";
+        document.getElementById("taskStarInput").checked = t.starred || false;
+        renderAssigneesCheckboxes("taskAssigneesContainer", t.assignees || []);
+      }
+      document.getElementById("taskModalHeading").innerText = "Edit Task Details";
+      document.getElementById("taskModal").classList.remove("hidden");
+    }
+
+    function openNewTaskModal() {
+      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      document.getElementById("taskIdInput").value = "";
+      document.getElementById("taskTitleInput").value = "";
+      document.getElementById("taskNotesInput").value = "";
+      document.getElementById("taskDueDateInput").value = "";
+      
+      const firstSecId = sharedSections[0]?.id;
+      if (firstSecId) {
+        document.getElementById("taskSectionInput").value = firstSecId;
+        autoSyncPriorityWithSection(firstSecId);
+      } else {
+        document.getElementById("taskPriorityInput").value = "Medium";
+      }
+
+      document.getElementById("taskStarInput").checked = false;
+      renderAssigneesCheckboxes("taskAssigneesContainer", [activeUser]);
+      document.getElementById("taskModalHeading").innerText = "Create New Task";
+      document.getElementById("taskModal").classList.remove("hidden");
+    }
+
+    function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); }
+
+    function saveTask(e) {
+      e.preventDefault();
+      const id = document.getElementById("taskIdInput").value;
+      const title = document.getElementById("taskTitleInput").value;
+      const sectionId = document.getElementById("taskSectionInput").value;
+      const priority = document.getElementById("taskPriorityInput").value;
+      const tagId = document.getElementById("taskTagInput").value;
+      const dueDate = document.getElementById("taskDueDateInput").value;
+      const notesText = document.getElementById("taskNotesInput").value;
+      const starred = document.getElementById("taskStarInput").checked;
+      const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
+
+      if (id) {
+        const t = tasks.find(x => x.id === id);
+        if (t) {
+          t.title = title; 
+          t.sectionId = sectionId; 
+          t.priority = priority; 
+          t.tagId = tagId;
+          t.dueDate = dueDate; 
+          t.notes = notesText; 
+          t.starred = starred; 
+          t.assignees = assignees;
+          if (!Array.isArray(t.history)) t.history = [];
+          t.history.unshift({
+            action: `Edited details`,
+            user: activeUser || "User",
+            date: new Date().toLocaleString()
+          });
+        }
+      } else {
+        tasks.push({
+          id: Date.now().toString(),
+          title, sectionId, priority, tagId, dueDate, notes: notesText, assignees, starred,
+          completed: false, owner: activeUser,
+          history: [{
+            action: "Created task",
+            user: activeUser || "User",
+            date: new Date().toLocaleString()
+          }]
+        });
+      }
+      closeTaskModal();
+      saveData();
+    }
+
+    function renderAssigneesCheckboxes(containerId, selected = []) {
+      const c = document.getElementById(containerId);
+      if (!c) return;
+      c.innerHTML = users.map(u => `
+        <label class="flex items-center space-x-1.5 cursor-pointer bg-white dark:bg-[#1A1A1A] px-2.5 py-1 rounded-md border border-gray-200 dark:border-gray-800">
+          <input type="checkbox" value="${u.name}" ${selected.includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]">
+          <span class="text-xs">${u.name}</span>
+        </label>
+      `).join('');
+    }
+
+    function openNoteModal(id = null) {
+      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      if (id) {
+        const n = notes.find(x => x.id === id);
+        document.getElementById("noteId").value = n.id;
+        document.getElementById("noteTitleInput").value = n.title;
+        document.getElementById("noteContentInput").value = n.content;
+        document.getElementById("noteTagInput").value = n.tagId || "";
+        document.getElementById("noteStarInput").checked = n.starred;
+        renderAssigneesCheckboxes("noteAssigneesContainer", n.assignees || []);
+      } else {
+        document.getElementById("noteId").value = "";
+        document.getElementById("noteTitleInput").value = "";
+        document.getElementById("noteContentInput").value = "";
+        document.getElementById("noteStarInput").checked = false;
+        renderAssigneesCheckboxes("noteAssigneesContainer", [activeUser]);
+      }
+      document.getElementById("noteModal").classList.remove("hidden");
+    }
+
+    function closeNoteModal() { document.getElementById("noteModal").classList.add("hidden"); }
+
+    function saveNote(e) {
+      e.preventDefault();
+      const id = document.getElementById("noteId").value;
+      const title = document.getElementById("noteTitleInput").value;
+      const content = document.getElementById("noteContentInput").value;
+      const tagId = document.getElementById("noteTagInput").value;
+      const starred = document.getElementById("noteStarInput").checked;
+      const assignees = Array.from(document.querySelectorAll("#noteAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
+
+      if (id) {
+        const n = notes.find(x => x.id === id);
+        n.title = title; n.content = content; n.tagId = tagId; n.starred = starred; n.assignees = assignees;
+      } else {
+        notes.push({
+          id: Date.now().toString(),
+          title, content, tagId, starred, assignees, owner: activeUser
+        });
+      }
+      closeNoteModal();
+      saveData();
+    }
+
+    function openNewSectionModal() {
+      const name = prompt("Enter section name:");
+      if (name && name.trim()) {
+        sharedSections.push({ id: "s_" + Date.now(), title: name.trim() });
+        saveData();
+      }
+    }
+
+    function openNewTagModal(idToEdit = null) {
+      if (idToEdit) {
+        const t = sharedTags.find(x => x.id === idToEdit);
+        if (t) {
+          document.getElementById("tagIdInput").value = t.id;
+          document.getElementById("tagTitleInput").value = t.title;
+          document.getElementById("tagColorInput").value = t.color;
+          document.getElementById("tagModalTitle").innerText = "Edit Custom Tag";
+        }
+      } else {
+        document.getElementById("tagIdInput").value = "";
+        document.getElementById("tagTitleInput").value = "";
+        document.getElementById("tagColorInput").value = "#A6192E";
+        document.getElementById("tagModalTitle").innerText = "Create Custom Tag";
+      }
+      document.getElementById("tagModal").classList.remove("hidden");
+    }
+
+    function closeTagModal() { document.getElementById("tagModal").classList.add("hidden"); }
+
+    function saveCustomTag() {
+      const id = document.getElementById("tagIdInput").value;
+      const title = document.getElementById("tagTitleInput").value.trim();
+      const color = document.getElementById("tagColorInput").value;
+
+      if (title) {
+        if (id) {
+          const t = sharedTags.find(x => x.id === id);
+          if (t) { t.title = title; t.color = color; }
+        } else {
+          sharedTags.push({ id: "t_" + Date.now(), title, color });
+        }
+        closeTagModal();
+        saveData();
+      }
+    }
+
+    function deleteTag(id) {
+      if (confirm("Delete custom tag?")) {
+        sharedTags = sharedTags.filter(t => t.id !== id);
+        saveData();
+      }
+    }
+
+    /* --- SMART ITEM CLEANER & FORMATTER (ORIGINAL + BRACKETS) --- */
+    function formatItemDescription(rawText) {
+      const trimmed = rawText.trim();
+      if (!trimmed) return "";
+
+      let text = trimmed.toLowerCase();
+
+      // Extract Quantity
+      let qty = "";
+      const qtyMatch = text.match(/(?:x\s*(\d+)|(\d+)\s*x|\bqty:?\s*(\d+)\b)/i);
+      if (qtyMatch) {
+        qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]);
+      }
+
+      // Extract Size
+      let size = "";
+      if (/\b(xxl|2xl)\b/i.test(text)) size = "XXL";
+      else if (/\b(xl|extra\s*large)\b/i.test(text)) size = "XL";
+      else if (/\b(l\b|large)/i.test(text) && !/\bl\/s\b/i.test(text)) size = "Large";
+      else if (/\b(m\b|med\b|medium)/i.test(text)) size = "Medium";
+      else if (/\b(s\b|sml\b|small)/i.test(text) && !/\bs\/s\b/i.test(text)) size = "Small";
+      else if (/\b(xs|extra\s*small)\b/i.test(text)) size = "XS";
+
+      // Item Name Categorization
+      let itemType = "";
+      if (text.includes("l/s") || text.includes("long sleeve") || text.includes("longsleeve")) {
+        itemType = "Long Sleeve T-Shirt";
+      } else if (text.includes("tshirt") || text.includes("t-shirt") || text.includes("t shirt") || text.includes("shirth")) {
+        itemType = "Work T-Shirt";
+      } else if (text.includes("polo")) {
+        itemType = "Polo Shirt";
+      } else if (text.includes("hoodie") || text.includes("hoody")) {
+        itemType = "Work Hoodie";
+      } else if (text.includes("jumper") || text.includes("sweatshirt")) {
+        itemType = "Sweatshirt";
+      } else if (text.includes("jacket") || text.includes("coat")) {
+        itemType = "Work Jacket";
+      } else if (text.includes("trouser") || text.includes("pants")) {
+        itemType = "Work Trousers";
+      } else if (text.includes("boot") || text.includes("shoe")) {
+        itemType = "Safety Boots";
+      } else if (text.includes("glove")) {
+        itemType = "Safety Gloves";
+      } else {
+        // Fallback: Capitalize primary words
+        itemType = trimmed
+          .replace(/(?:x\s*\d+|\d+\s*x|\bqty:?\s*\d+\b)/gi, '')
+          .replace(/\b(small|medium|large|xl|xxl|2xl|xs|sml|med)\b/gi, '')
+          .trim();
+        itemType = itemType.charAt(0).toUpperCase() + itemType.slice(1);
+      }
+
+      // Construct Standardized Bracket Token
+      const parts = [itemType];
+      if (size) parts.push(size);
+      if (qty) parts.push(qty);
+      const cleanBracket = `(${parts.join(" - ")})`;
+
+      // If user already wrote brackets, return raw
+      if (trimmed.includes("(") && trimmed.includes(")")) {
+        return trimmed;
+      }
+
+      return `${trimmed} ${cleanBracket}`;
+    }
+
+    /* --- ORDER TRACKER LOGIC --- */
+    function openNewOrderModal() {
+      document.getElementById("orderIdInput").value = "";
+      document.getElementById("orderPoInput").value = "";
+      
+      const todayStr = new Date().toISOString().split('T')[0];
+      const dateEl = document.getElementById("orderDateInput");
+      dateEl.value = todayStr;
+      
+      document.getElementById("orderTypeInput").value = "";
+      document.getElementById("orderPlacedByInput").value = activeUser || "";
+      document.getElementById("orderFreeformItemsInput").value = "";
+      document.getElementById("orderNotesInput").value = "";
+      
+      document.getElementById("orderModalHeading").innerHTML = `
+        <i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i>
+        <span>Create New Purchase Order</span>
+      `;
+      document.getElementById("orderModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function closeOrderModal() {
+      document.getElementById("orderModal").classList.add("hidden");
+    }
+
+    function saveOrder(e) {
+      e.preventDefault();
+      const id = document.getElementById("orderIdInput").value;
+      const poNumber = document.getElementById("orderPoInput").value.trim();
+      const dateOrdered = document.getElementById("orderDateInput").value;
+      const orderType = document.getElementById("orderTypeInput").value.trim();
+      const placedBy = document.getElementById("orderPlacedByInput").value.trim();
+      const freeformText = document.getElementById("orderFreeformItemsInput").value;
+      const notes = document.getElementById("orderNotesInput").value.trim();
+      const fileInput = document.getElementById("orderScreenshotInput");
+
+      const rawLines = freeformText.split(/\r?\n|,/);
+      const items = [];
+      rawLines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed) {
+          items.push({
+            id: "it_" + Date.now() + "_" + Math.floor(Math.random()*10000),
+            desc: formatItemDescription(trimmed),
+            received: false,
+            stocked: false
+          });
+        }
+      });
+
+      const commitOrderSave = (imgBase64 = null) => {
+        if (id) {
+          const ord = orders.find(x => x.id === id);
+          if (ord) {
+            ord.poNumber = poNumber;
+            ord.dateOrdered = dateOrdered;
+            ord.orderType = orderType;
+            ord.placedBy = placedBy;
+            if (items.length > 0) ord.items = items;
+            ord.notes = notes;
+            if (imgBase64) ord.image = imgBase64;
+          }
+        } else {
+          orders.unshift({
+            id: "ord_" + Date.now(),
+            poNumber,
+            dateOrdered,
+            orderType,
+            placedBy,
+            items,
+            notes,
+            image: imgBase64,
+            placed: true,
+            placedMeta: `Placed by ${activeUser || placedBy} on ${new Date().toLocaleDateString()}`,
+            vbop: false,
+            vbopMeta: null,
+            received: false,
+            receivedMeta: null,
+            completed: false,
+            completedMeta: null,
+            stocked: false,
+            stockedMeta: null
+          });
+        }
+        closeOrderModal();
+        saveData();
+      };
+
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (evt) => commitOrderSave(evt.target.result);
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        commitOrderSave();
+      }
+    }
+
+    function renderOrders() {
+      const activeContainer = document.getElementById("ordersListContainer");
+      const completedContainer = document.getElementById("completedOrdersList");
+      if (!activeContainer || !completedContainer) return;
+
+      const query = (document.getElementById("orderSearchInput")?.value || "").toLowerCase().trim();
+
+      let filtered = orders;
+      if (query) {
+        filtered = orders.filter(ord => {
+          const matchPo = ord.poNumber && ord.poNumber.toLowerCase().includes(query);
+          const matchType = ord.orderType && ord.orderType.toLowerCase().includes(query);
+          const matchBy = ord.placedBy && ord.placedBy.toLowerCase().includes(query);
+          const matchNotes = ord.notes && ord.notes.toLowerCase().includes(query);
+          const matchItems = ord.items && ord.items.some(i => i.desc && i.desc.toLowerCase().includes(query));
+          return matchPo || matchType || matchBy || matchNotes || matchItems;
+        });
+      }
+
+      const activeOrders = filtered.filter(o => !o.completed);
+      const completedOrders = filtered.filter(o => o.completed);
+
+      document.getElementById("activeOrdersBadge").innerText = activeOrders.length;
+      document.getElementById("completedOrdersBadge").innerText = completedOrders.length;
+
+      if (activeOrders.length === 0) {
+        activeContainer.innerHTML = `
+          <div class="text-center py-10 bg-white dark:bg-[#181818] rounded-2xl border border-gray-200 dark:border-gray-800">
+            <i data-lucide="package-open" class="w-10 h-10 text-gray-400 mx-auto mb-2 opacity-50"></i>
+            <h4 class="font-bold text-sm text-gray-300">${query ? 'No matching orders found' : 'No active orders in tracker'}</h4>
+            <p class="text-xs text-gray-500">${query ? 'Try searching another PO or keyword' : 'Click "+ Add Order" above to log a new purchase order.'}</p>
+          </div>
+        `;
+      } else {
+        activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join('');
+      }
+
+      if (completedOrders.length === 0) {
+        completedContainer.innerHTML = `
+          <div class="text-center py-6 text-xs text-gray-500 italic bg-white dark:bg-[#181818] rounded-xl border border-gray-200 dark:border-gray-800">
+            No completed orders archive entries.
+          </div>
+        `;
+      } else {
+        completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join('');
+      }
+
+      lucide.createIcons();
+    }
+
+    function renderOrderCardHtml(ord) {
+      const hasItems = ord.items && ord.items.length > 0;
+      const allReceived = hasItems && ord.items.every(i => i.received);
+      const receivedCount = hasItems ? ord.items.filter(i => i.received).length : 0;
+      
+      const allStocked = hasItems && ord.items.every(i => i.stocked);
+      const stockedCount = hasItems ? ord.items.filter(i => i.stocked).length : 0;
+
+      return `
+        <div class="bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-2xl p-4 md:p-5 shadow-md space-y-4">
+          
+          <!-- ORDER HEADER -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800 gap-2">
+            <div class="flex items-center space-x-3">
+              <span class="text-xs uppercase font-extrabold px-2.5 py-1 rounded-md bg-[#A6192E] text-white">PO#</span>
+              <span class="text-base md:text-lg font-black tracking-wide text-gray-900 dark:text-white">${ord.poNumber}</span>
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400">${ord.orderType}</span>
+            </div>
+            <div class="flex items-center space-x-3 text-xs text-gray-400">
+              <span>Ordered: <strong class="text-gray-200">${ord.dateOrdered}</strong></span>
+              <span>•</span>
+              <span>By: <strong class="text-emerald-400 font-semibold">${ord.placedBy}</strong></span>
+              ${ord.completed ? `
+                <button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold">Re-open Order</button>
+              ` : `
+                <button onclick="openOrderCompleteVerification('${ord.id}')" class="px-3 py-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                  <span>Mark Order as Complete</span>
+                </button>
+              `}
+              <button onclick="deleteOrder('${ord.id}')" class="p-1 hover:text-red-400 transition" title="Delete Order"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+
+          <!-- PRIMARY STAGE STATUS CHECKBOXES (4 AND 5 SWAPPED) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+            
+            <!-- STAGE 1: PLACED -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]">
+              <div>
+                <div class="text-xs font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div>
+                <div class="text-[10px] text-gray-500">${ord.placedMeta || 'Pending'}</div>
+              </div>
+            </label>
+
+            <!-- STAGE 2: VBOP ADDED -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="mt-0.5 w-4 h-4 accent-purple-600">
+              <div>
+                <div class="text-xs font-bold ${ord.vbop ? 'text-purple-400' : 'text-gray-400'}">2. Added on VBOP</div>
+                <div class="text-[10px] text-gray-500">${ord.vbopMeta || '(If applicable)'}</div>
+              </div>
+            </label>
+
+            <!-- STAGE 3: RECEIVED FULL -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.received ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="mt-0.5 w-4 h-4 accent-emerald-600">
+              <div>
+                <div class="text-xs font-bold ${ord.received ? 'text-emerald-400' : 'text-gray-400'}">3. Received (Full)</div>
+                <div class="text-[10px] text-gray-500">${ord.receivedMeta || 'Awaiting delivery'}</div>
+              </div>
+            </label>
+
+            <!-- STAGE 4: EMAILED & COMPLETE (SWAPPED WITH 5) -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.completed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'completed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600">
+              <div>
+                <div class="text-xs font-bold ${ord.completed ? 'text-blue-400' : 'text-gray-400'}">4. Emailed & Complete</div>
+                <div class="text-[10px] text-gray-500">${ord.completedMeta || 'Not finalized'}</div>
+              </div>
+            </label>
+
+            <!-- STAGE 5: ADDED TO STOCK (SWAPPED WITH 4) -->
+            <label class="flex items-start space-x-2.5 p-3 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="mt-0.5 w-4 h-4 accent-amber-500">
+              <div>
+                <div class="text-xs font-bold ${ord.stocked ? 'text-amber-400' : 'text-gray-400'}">5. Added to Stock</div>
+                <div class="text-[10px] text-gray-500">${ord.stockedMeta || 'Not stocked yet'}</div>
+              </div>
+            </label>
+
+          </div>
+
+          <!-- ORDER NOTES -->
+          ${ord.notes ? `
+            <div class="bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-gray-800/80 rounded-xl p-3 flex items-start space-x-2.5">
+              <i data-lucide="info" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
+              <div class="text-xs text-gray-300 whitespace-pre-wrap"><strong class="text-gray-400 font-semibold uppercase text-[10px] block mb-0.5">Order Notes:</strong>${ord.notes}</div>
+            </div>
+          ` : ''}
+
+          <!-- ITEM CHECKLIST: RECEIVED & STOCKED CHECKBOXES -->
+          <div class="bg-gray-50 dark:bg-[#151515] rounded-xl border border-gray-200 dark:border-gray-800 p-3.5 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="clipboard-list" class="w-4 h-4 text-[#A6192E]"></i>
+                <span class="text-xs font-bold text-gray-200">Order Contents & Stock Intake</span>
+              </div>
+              <div class="flex items-center space-x-2 text-[10px]">
+                <span class="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-400 font-semibold">Received: ${receivedCount}/${hasItems ? ord.items.length : 0}</span>
+                <span class="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-400 font-semibold">Stocked: ${stockedCount}/${hasItems ? ord.items.length : 0}</span>
+              </div>
+            </div>
+
+            <!-- INDIVIDUAL ITEMS (WITH BRACKETED FORMAT DISPLAY) -->
+            <div class="space-y-1.5 pt-1">
+              ${hasItems ? ord.items.map(item => `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2">
+                  <span class="text-xs text-gray-200 font-medium break-words flex-1">${item.desc}</span>
+                  
+                  <div class="flex items-center space-x-4 shrink-0 text-xs">
+                    <!-- ITEM RECEIVED TICK -->
+                    <label class="flex items-center space-x-1.5 cursor-pointer">
+                      <input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'received', this.checked)" class="w-4 h-4 rounded accent-emerald-500 cursor-pointer">
+                      <span class="${item.received ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Arrived</span>
+                    </label>
+
+                    <!-- ITEM ADDED TO STOCK TICK -->
+                    <label class="flex items-center space-x-1.5 cursor-pointer">
+                      <input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-4 h-4 rounded accent-amber-500 cursor-pointer">
+                      <span class="${item.stocked ? 'text-amber-400 font-bold' : 'text-gray-400'}">Added to Stock</span>
+                    </label>
+                  </div>
+                </div>
+              `).join('') : '<div class="text-xs text-gray-500 italic py-1">No items entered for this order.</div>'}
+            </div>
+
+            ${ord.image ? `
+              <div class="pt-3 border-t border-gray-200 dark:border-gray-800">
+                <div class="text-[10px] font-bold text-gray-400 uppercase mb-1.5">Attached Invoice / Screenshot:</div>
+                <img src="${ord.image}" onclick="openImageZoomModal(this.src)" class="h-32 object-contain rounded-lg border border-gray-700 cursor-zoom-in hover:opacity-90 transition">
+              </div>
+            ` : ''}
+          </div>
+
+        </div>
+      `;
+    }
+
+    /* --- ORDER COMPLETION POPUP WORKFLOW --- */
+    function openOrderCompleteVerification(orderId) {
+      const ord = orders.find(x => x.id === orderId);
+      if (!ord) return;
+
+      activeVerifyingOrderId = orderId;
+      document.getElementById("verifyModalPo").innerText = ord.poNumber;
+      document.getElementById("verifyStagePlaced").checked = !!ord.placed;
+      document.getElementById("verifyStageVbop").checked = !!ord.vbop;
+      document.getElementById("verifyStageReceived").checked = !!ord.received;
+      document.getElementById("verifyStageEmailed").checked = !!ord.completed;
+      document.getElementById("verifyStageStocked").checked = !!ord.stocked;
+      document.getElementById("verifyMissingNotes").value = "";
+
+      const missingSection = document.getElementById("verifyMissingItemsSection");
+      const missingList = document.getElementById("verifyMissingItemsList");
+
+      if (ord.items && ord.items.length > 0) {
+        missingList.innerHTML = ord.items.map(item => `
+          <label class="flex items-center space-x-2 text-xs cursor-pointer">
+            <input type="checkbox" value="${item.desc}" ${!item.received ? 'checked' : ''} class="verifyMissingItemCheck accent-amber-500">
+            <span class="${!item.received ? 'text-amber-300 font-bold' : 'text-gray-400'}">${item.desc}</span>
+          </label>
+        `).join('');
+      } else {
+        missingList.innerHTML = `<span class="text-[10px] text-gray-500 italic">No specific items entered.</span>`;
+      }
+
+      toggleVerifyReceivedMissing(!!ord.received);
+      document.getElementById("orderCompleteModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function toggleVerifyReceivedMissing(isAllReceived) {
+      const missingSec = document.getElementById("verifyMissingItemsSection");
+      if (isAllReceived) {
+        missingSec.classList.add("hidden");
+      } else {
+        missingSec.classList.remove("hidden");
+      }
+    }
+
+    function closeOrderCompleteModal() {
+      document.getElementById("orderCompleteModal").classList.add("hidden");
+      activeVerifyingOrderId = null;
+    }
+
+    function confirmOrderCompletion() {
+      const ord = orders.find(x => x.id === activeVerifyingOrderId);
+      if (!ord) return;
+
+      const placed = document.getElementById("verifyStagePlaced").checked;
+      const vbop = document.getElementById("verifyStageVbop").checked;
+      const allReceived = document.getElementById("verifyStageReceived").checked;
+      const emailed = document.getElementById("verifyStageEmailed").checked;
+      const allStocked = document.getElementById("verifyStageStocked").checked;
+
+      ord.placed = placed;
+      ord.vbop = vbop;
+      ord.received = allReceived;
+      ord.stocked = allStocked;
+      ord.completed = true;
+      ord.completedMeta = `Completed by ${activeUser || 'User'} on ${new Date().toLocaleDateString()}`;
+
+      if (!allReceived && ord.items) {
+        const checkedMissingBoxes = Array.from(document.querySelectorAll(".verifyMissingItemCheck:checked")).map(cb => cb.value);
+        const additionalNote = document.getElementById("verifyMissingNotes").value.trim();
+
+        if (checkedMissingBoxes.length > 0 || additionalNote) {
+          const missingMsg = `[Missing upon completion: ${checkedMissingBoxes.join(', ') || 'Partial delivery'}] ${additionalNote}`;
+          ord.notes = ord.notes ? `${ord.notes}\n${missingMsg}` : missingMsg;
+        }
+      }
+
+      closeOrderCompleteModal();
+      saveData();
+    }
+
+    function reopenOrder(id) {
+      const ord = orders.find(x => x.id === id);
+      if (ord) {
+        ord.completed = false;
+        ord.completedMeta = null;
+        saveData();
+      }
+    }
+
+    function clearAllCompletedOrders() {
+      const count = orders.filter(o => o.completed).length;
+      if (count === 0) return;
+      if (confirm(`Permanently delete all ${count} completed orders from archive?`)) {
+        orders = orders.filter(o => !o.completed);
+        saveData();
+      }
+    }
+
+    function toggleOrderStage(orderId, stage, checked) {
+      const ord = orders.find(x => x.id === orderId);
+      if (!ord) return;
+
+      const meta = `${checked ? 'Confirmed' : 'Unchecked'} by ${activeUser || 'User'} on ${new Date().toLocaleString()}`;
+      if (stage === 'placed') {
+        ord.placed = checked;
+        ord.placedMeta = checked ? meta : null;
+      } else if (stage === 'vbop') {
+        ord.vbop = checked;
+        ord.vbopMeta = checked ? meta : null;
+      } else if (stage === 'received') {
+        ord.received = checked;
+        ord.receivedMeta = checked ? meta : null;
+        if (checked && ord.items) {
+          ord.items.forEach(i => i.received = true);
+        }
+      } else if (stage === 'completed') {
+        ord.completed = checked;
+        ord.completedMeta = checked ? meta : null;
+      } else if (stage === 'stocked') {
+        ord.stocked = checked;
+        ord.stockedMeta = checked ? meta : null;
+        if (checked && ord.items) {
+          ord.items.forEach(i => i.stocked = true);
+        }
+      }
+      saveData();
+    }
+
+    function toggleItemCheck(orderId, itemId, field, checked) {
+      const ord = orders.find(x => x.id === orderId);
+      if (!ord || !ord.items) return;
+      const it = ord.items.find(x => x.id === itemId);
+      if (it) {
+        it[field] = checked;
+
+        if (field === 'received') {
+          if (ord.items.every(i => i.received)) {
+            ord.received = true;
+            ord.receivedMeta = `All items received (${new Date().toLocaleDateString()})`;
+          } else {
+            ord.received = false;
+          }
+        } else if (field === 'stocked') {
+          if (ord.items.every(i => i.stocked)) {
+            ord.stocked = true;
+            ord.stockedMeta = `All items added to stock (${new Date().toLocaleDateString()})`;
+          } else {
+            ord.stocked = false;
+          }
+        }
+        saveData();
+      }
+    }
+
+    function deleteOrder(id) {
+      if (confirm("Permanently delete this order from the tracker?")) {
+        orders = orders.filter(x => x.id !== id);
+        saveData();
+      }
+    }
+
+    /* --- ADMIN USER CREATION --- */
+    function adminAddNewUser(e) {
+      e.preventDefault();
+      const current = users.find(u => u.name === activeUser);
+      if (!current || (current.role !== "admin" && current.role !== "master_admin")) {
+        alert("Access Denied: Only Admins can create user profiles.");
+        return;
+      }
+
+      const name = document.getElementById("adminNewUserName").value.trim();
+      const role = document.getElementById("adminNewUserRole").value;
+      const pwd = document.getElementById("adminNewUserPassword").value.trim() || "AMADA";
+
+      if (!name) return;
+      if (users.some(u => u.name.toLowerCase() === name.toLowerCase())) {
+        alert("A user profile with this name already exists.");
+        return;
+      }
+
+      users.push({ name, role, password: pwd });
+      document.getElementById("adminNewUserName").value = "";
+      document.getElementById("adminNewUserPassword").value = "";
+      saveData();
+      openSettingsModal();
+      alert(`User profile '${name}' (${role}) has been created and synced!`);
+    }
+
+    function changeMyPassword(e) {
+      e.preventDefault();
+      const newPwd = document.getElementById("newPasswordInput").value.trim();
+      const u = users.find(x => x.name === activeUser);
+      if (u && newPwd) {
+        u.password = newPwd;
+        document.getElementById("newPasswordInput").value = "";
+        saveData();
+        alert("Your password has been updated!");
+      }
+    }
+
+    function resetAllPasswordsToDefault() {
+      if (confirm("Master Reset: Reset all user passwords back to 'AMADA'?")) {
+        users.forEach(u => u.password = "AMADA");
+        saveData();
+        alert("All passwords reset to AMADA!");
+      }
+    }
+
+    function openSettingsModal() {
+      const activeObj = users.find(u => u.name === activeUser);
+      const isMasterAdmin = activeObj && activeObj.role === "master_admin";
+      const isAdmin = activeObj && (activeObj.role === "admin" || isMasterAdmin);
+
+      const adminCreateSec = document.getElementById("adminCreateUserSection");
+      if (adminCreateSec) {
+        adminCreateSec.classList.toggle("hidden", !isAdmin);
+      }
+
+      const masterResetBtn = document.getElementById("btnMasterResetPasswords");
+      if (masterResetBtn) masterResetBtn.classList.toggle("hidden", !isMasterAdmin);
+
+      const container = document.getElementById("permissionsUserList");
+      if (container) {
+        container.innerHTML = users.map(u => {
+          const isTargetMaster = u.name === "Charlie" || u.role === "master_admin";
+          let canDeleteTarget = isMasterAdmin && !isTargetMaster;
+          let canEditRole = isMasterAdmin && !isTargetMaster;
+
+          return `
+            <div class="flex items-center justify-between bg-gray-100 dark:bg-[#121212] p-2.5 rounded-lg text-xs">
+              <span class="font-bold">${u.name} ${isTargetMaster ? '(Master Admin)' : `(${u.role.replace('_', ' ')})`}</span>
+              <div class="flex items-center space-x-2">
+                ${isTargetMaster ? '<span class="text-[10px] text-amber-500 font-semibold">Protected Master</span>' : `
+                  ${canEditRole ? `
+                    <select onchange="changeUserRole('${u.name}', this.value)" class="bg-gray-200 dark:bg-[#252525] border border-gray-700 rounded p-1 text-xs">
+                      <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Viewer</option>
+                      <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
+                      <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                    </select>
+                  ` : `<span class="text-[9px] text-gray-500 capitalize">${u.role.replace('_', ' ')}</span>`}
+                  ${canDeleteTarget ? `
+                    <button onclick="deleteUserProfile('${u.name}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  ` : ''}
+                `}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      document.getElementById("settingsModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function closeSettingsModal() { document.getElementById("settingsModal").classList.add("hidden"); }
+
+    function changeUserRole(name, role) {
+      const u = users.find(x => x.name === name);
+      if (u && u.name !== "Charlie") { u.role = role; saveData(); }
+    }
+
+    function deleteUserProfile(name) {
+      if (name === "Charlie") {
+        alert("Action Denied: The Master Admin profile cannot be deleted.");
+        return;
+      }
+      if (confirm(`Delete user profile '${name}'?`)) {
+        users = users.filter(x => x.name !== name);
+        renderUserProfiles();
+        openSettingsModal();
+        saveData();
+      }
+    }
+
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      
+      const tasksWrapper = document.getElementById("tasksWrapper");
+      const notesView = document.getElementById("notesView");
+      const ordersView = document.getElementById("ordersView");
+      const mainSidebar = document.getElementById("mainSidebar");
+
+      tasksWrapper.classList.toggle("hidden", tab !== 'tasks');
+      notesView.classList.toggle("hidden", tab !== 'notes');
+      ordersView.classList.toggle("hidden", tab !== 'orders');
+
+      if (tab === 'orders') {
+        mainSidebar.classList.add("md:hidden");
+      } else {
+        mainSidebar.classList.remove("md:hidden");
+      }
+
+      const btnTasks = document.getElementById("tabTasks");
+      const btnNotes = document.getElementById("tabNotes");
+      const btnOrders = document.getElementById("tabOrders");
+
+      const activeClass = "px-3.5 md:px-5 py-2 rounded-xl text-xs md:text-sm font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all";
+      const inactiveClass = "px-3.5 md:px-5 py-2 rounded-xl text-xs md:text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all";
+
+      btnTasks.className = tab === 'tasks' ? activeClass : inactiveClass;
+      btnNotes.className = tab === 'notes' ? activeClass : inactiveClass;
+      btnOrders.className = tab === 'orders' ? activeClass : inactiveClass;
+
+      renderAll();
+    }
+
+    function toggleActiveUsersPopover() {
+      updatePresenceUI();
+      document.getElementById("activeUsersPopover").classList.toggle("hidden");
+    }
+
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle("dark");
+    }
+
+    function openImageZoomModal(src) {
+      const modal = document.createElement("div");
+      modal.className = "fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-zoom-out";
+      modal.onclick = () => modal.remove();
+      modal.innerHTML = `<img src="${src}" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl">`;
+      document.body.appendChild(modal);
+    }
+  </script>
+</body>
+</html>
