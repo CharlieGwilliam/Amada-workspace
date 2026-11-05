@@ -78,8 +78,20 @@
       <h2 class="text-2xl font-bold mb-1">Amada Workspace</h2>
       <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Select your profile to continue</p>
       
+      <!-- HARDCODED BASELINE BUTTONS (CANNOT RENDER EMPTY) -->
       <div id="userSelectionStep" class="space-y-3">
-        <div id="userProfilesList" class="grid grid-cols-2 gap-3 mb-4"></div>
+        <div id="userProfilesList" class="grid grid-cols-2 gap-3 mb-4">
+          <button onclick="selectUserForLogin('Charlie')" class="p-3 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-xl flex flex-col items-center space-y-1 transition">
+            <div class="w-8 h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs">C</div>
+            <span class="text-xs font-semibold">Charlie</span>
+            <span class="text-[9px] text-amber-500 font-bold capitalize">Master Admin</span>
+          </button>
+          <button onclick="selectUserForLogin('Jacob')" class="p-3 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-xl flex flex-col items-center space-y-1 transition">
+            <div class="w-8 h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs">J</div>
+            <span class="text-xs font-semibold">Jacob</span>
+            <span class="text-[9px] text-gray-400 capitalize">Admin</span>
+          </button>
+        </div>
       </div>
 
       <form id="passwordStep" onsubmit="verifyPassword(event)" class="hidden space-y-4">
@@ -581,7 +593,6 @@
         <p class="text-[10px] text-emerald-400 font-semibold">✓ Connected to real-time storage.</p>
       </div>
 
-      <!-- ADMIN ONLY: CREATE USER SECTION -->
       <div id="adminCreateUserSection" class="hidden mb-6 bg-gray-100 dark:bg-[#121212] p-3.5 rounded-xl border border-gray-300 dark:border-gray-800">
         <h4 class="text-xs font-bold text-[#A6192E] uppercase mb-2 flex items-center space-x-1.5">
           <i data-lucide="user-plus" class="w-4 h-4"></i>
@@ -633,7 +644,7 @@
     </div>
   </div>
 
-  <!-- SCRIPT ENGINE (WITH HARDCODED RECOVERY GUARDS) -->
+  <!-- SCRIPT ENGINE -->
   <script>
     const JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS";
     const JSONBIN_BIN_ID = "6ae0b445ffd5d160538fff26";
@@ -647,14 +658,14 @@
       if (!Array.isArray(userList) || userList.length === 0) {
         return JSON.parse(JSON.stringify(BASELINE_USERS));
       }
-      let charlie = userList.find(u => u.name === "Charlie");
+      let charlie = userList.find(u => u && u.name === "Charlie");
       if (!charlie) {
         userList.unshift({ name: "Charlie", role: "master_admin", password: "AMADA" });
       } else {
         charlie.role = "master_admin";
         if (!charlie.password) charlie.password = "AMADA";
       }
-      let jacob = userList.find(u => u.name === "Jacob");
+      let jacob = userList.find(u => u && u.name === "Jacob");
       if (!jacob) {
         userList.push({ name: "Jacob", role: "admin", password: "AMADA" });
       } else {
@@ -666,6 +677,13 @@
 
     let users = ensureProfiles(JSON.parse(localStorage.getItem("amada_users")));
     let activeUser = localStorage.getItem("amada_active_user") || "";
+
+    // Clear ghost empty sessions
+    if (activeUser && !users.some(u => u.name === activeUser)) {
+      activeUser = "";
+      localStorage.removeItem("amada_active_user");
+    }
+
     let currentMainTab = "tasks";
     let activeFilterType = null;
     let activeFilterId = null;
@@ -905,10 +923,10 @@
       users = ensureProfiles(users);
 
       container.innerHTML = users.map(u => `
-        <button onclick="selectUserForLogin('${u.name}')" class="p-3 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-xl flex flex-col items-center space-y-1 transition">
+        <button onclick="selectUserForLogin('${u.name}')" class="p-3 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-xl flex flex-col items-center space-y-1 transition shadow-sm">
           <div class="w-8 h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div>
           <span class="text-xs font-semibold">${u.name}</span>
-          <span class="text-[9px] text-gray-400 capitalize">${u.role.replace('_', ' ')}</span>
+          <span class="text-[9px] ${u.role === 'master_admin' ? 'text-amber-500 font-bold' : 'text-gray-400'} capitalize">${u.role.replace('_', ' ')}</span>
         </button>
       `).join('');
     }
@@ -918,6 +936,7 @@
       document.getElementById("loginUserLabel").innerText = `Password for ${name}`;
       document.getElementById("userSelectionStep").classList.add("hidden");
       document.getElementById("passwordStep").classList.remove("hidden");
+      document.getElementById("loginPassword").focus();
     }
 
     function resetLoginStep() {
@@ -944,12 +963,13 @@
     }
 
     function checkAuth() {
-      if (activeUser) {
+      if (activeUser && users.some(u => u.name === activeUser)) {
         document.getElementById("authOverlay").classList.add("hidden");
         document.getElementById("userBadge").innerText = activeUser.charAt(0);
         document.getElementById("userBadge").title = activeUser;
       } else {
         document.getElementById("authOverlay").classList.remove("hidden");
+        renderUserProfiles();
       }
     }
 
@@ -1014,7 +1034,6 @@
       `).join('');
     }
 
-    /* --- SIDEBAR CATEGORIES --- */
     function renderSectionsSidebar() {
       const container = document.getElementById("sectionsSidebar");
       if (!container) return;
@@ -1138,7 +1157,6 @@
       }
     }
 
-    /* --- TASK BOARD COLUMNS --- */
     function renderTasksBoard() {
       const view = document.getElementById("tasksView");
       if (!view) return;
