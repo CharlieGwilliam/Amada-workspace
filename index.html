@@ -261,7 +261,7 @@
           <div class="flex justify-between items-center gap-2">
             <div>
               <h2 class="text-base font-bold flex items-center space-x-2">
-                <i data-lucide="package" class="w-5 h-5 text-[#A6192E]"></i>
+                <i data-lucide="package" class="w-4 h-4 text-[#A6192E]"></i>
                 <span>Order Tracker</span>
               </h2>
             </div>
@@ -270,6 +270,7 @@
             </button>
           </div>
 
+          <!-- SEARCH INPUT -->
           <div class="relative w-full">
             <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-gray-400"></i>
             <input type="text" id="orderSearchInput" oninput="renderOrders()" placeholder="Search PO#, item, supplier..." class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700/80 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-[#A6192E]">
@@ -277,9 +278,12 @@
         </div>
 
         <div class="space-y-3">
-          <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center space-x-2 px-1">
-            <span>Active Orders</span>
-            <span id="activeOrdersBadge" class="bg-gray-200 dark:bg-gray-800 text-gray-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+          <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between px-1">
+            <div class="flex items-center space-x-2">
+              <span>Active Orders</span>
+              <span id="activeOrdersBadge" class="bg-gray-200 dark:bg-gray-800 text-gray-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+            </div>
+            <span class="text-[10px] text-gray-500 font-medium">Sorted: Newest at top</span>
           </div>
           <div id="ordersListContainer" class="space-y-3"></div>
         </div>
@@ -380,7 +384,7 @@
     </div>
   </div>
 
-  <!-- ORDER MODAL -->
+  <!-- ORDER MODAL (WITH PASTEABLE FILE ZONE) -->
   <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
@@ -427,9 +431,21 @@
           <textarea id="orderNotesInput" rows="2" placeholder="Tracking numbers, supplier contacts, urgent delivery instructions..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
         </div>
 
+        <!-- PASTE & DROP FILE ATTACHMENT ZONE -->
         <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach Screenshot / Invoice (Optional)</label>
-          <input type="file" id="orderScreenshotInput" accept="image/*" class="w-full text-xs text-gray-400">
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File / Screenshot (Click & Paste Ctrl+V)</label>
+          <div id="fileDropZone" tabindex="0" onpaste="handleFilePaste(event)" class="border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#A6192E] rounded-2xl p-4 text-center cursor-pointer transition focus:outline-none focus:border-[#A6192E] bg-gray-50 dark:bg-[#141414]">
+            <input type="file" id="orderScreenshotInput" accept="image/*,.pdf" onchange="handleFileSelect(event)" class="hidden">
+            <div onclick="document.getElementById('orderScreenshotInput').click()">
+              <i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i>
+              <div class="text-xs font-semibold text-gray-200">Click to browse or <span class="text-[#A6192E] font-bold">paste (Ctrl+V)</span> file here</div>
+              <p class="text-[10px] text-gray-500 mt-0.5">Supports screenshots, images and invoices</p>
+            </div>
+            <div id="filePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs">
+              <span id="fileNameLabel" class="text-emerald-400 truncate max-w-[240px] font-semibold">File attached</span>
+              <button type="button" onclick="removeAttachedFile()" class="text-red-400 hover:text-red-300 font-bold ml-2">Remove</button>
+            </div>
+          </div>
         </div>
 
         <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
@@ -695,6 +711,8 @@
     let isCompletedOpen = false;
     let isCompletedOrdersOpen = false;
     let activeVerifyingOrderId = null;
+    let attachedFileBase64 = null;
+    let attachedFileName = "";
 
     let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) || [
       { id: "t_urgent", title: "Urgent", color: "#ef4444" },
@@ -1781,6 +1799,43 @@
       return `${trimmed} ${cleanBracket}`;
     }
 
+    /* --- CLIPBOARD & FILE ATTACHMENT LOGIC --- */
+    function handleFilePaste(e) {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file') {
+          const file = items[i].getAsFile();
+          processUploadedFile(file);
+          break;
+        }
+      }
+    }
+
+    function handleFileSelect(e) {
+      if (e.target.files && e.target.files[0]) {
+        processUploadedFile(e.target.files[0]);
+      }
+    }
+
+    function processUploadedFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        attachedFileBase64 = evt.target.result;
+        attachedFileName = file.name || "Pasted screenshot";
+        document.getElementById("fileNameLabel").innerText = attachedFileName;
+        document.getElementById("filePreviewContainer").classList.remove("hidden");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeAttachedFile() {
+      attachedFileBase64 = null;
+      attachedFileName = "";
+      document.getElementById("orderScreenshotInput").value = "";
+      document.getElementById("filePreviewContainer").classList.add("hidden");
+    }
+
     /* --- ORDER TRACKER LOGIC --- */
     function openNewOrderModal() {
       document.getElementById("orderIdInput").value = "";
@@ -1794,6 +1849,7 @@
       document.getElementById("orderPlacedByInput").value = activeUser || "";
       document.getElementById("orderFreeformItemsInput").value = "";
       document.getElementById("orderNotesInput").value = "";
+      removeAttachedFile();
       
       document.getElementById("orderModalHeading").innerHTML = `
         <i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i>
@@ -1805,6 +1861,7 @@
 
     function closeOrderModal() {
       document.getElementById("orderModal").classList.add("hidden");
+      removeAttachedFile();
     }
 
     function saveOrder(e) {
@@ -1816,7 +1873,6 @@
       const placedBy = document.getElementById("orderPlacedByInput").value.trim();
       const freeformText = document.getElementById("orderFreeformItemsInput").value;
       const notes = document.getElementById("orderNotesInput").value.trim();
-      const fileInput = document.getElementById("orderScreenshotInput");
 
       const rawLines = freeformText.split(/\r?\n|,/);
       const items = [];
@@ -1832,52 +1888,58 @@
         }
       });
 
-      const commitOrderSave = (imgBase64 = null) => {
-        if (id) {
-          const ord = orders.find(x => x.id === id);
-          if (ord) {
-            ord.poNumber = poNumber;
-            ord.dateOrdered = dateOrdered;
-            ord.orderType = orderType;
-            ord.placedBy = placedBy;
-            if (items.length > 0) ord.items = items;
-            ord.notes = notes;
-            if (imgBase64) ord.image = imgBase64;
-          }
-        } else {
-          orders.unshift({
-            id: "ord_" + Date.now(),
-            poNumber,
-            dateOrdered,
-            orderType,
-            placedBy,
-            items,
-            notes,
-            image: imgBase64,
-            placed: true,
-            placedMeta: `Placed by ${activeUser || placedBy} on ${new Date().toLocaleDateString()}`,
-            vbop: false,
-            vbopMeta: null,
-            received: false,
-            receivedMeta: null,
-            emailed: false,
-            emailedMeta: null,
-            stocked: false,
-            stockedMeta: null,
-            completed: false,
-            completedMeta: null
-          });
+      if (id) {
+        const ord = orders.find(x => x.id === id);
+        if (ord) {
+          ord.poNumber = poNumber;
+          ord.dateOrdered = dateOrdered;
+          ord.orderType = orderType;
+          ord.placedBy = placedBy;
+          if (items.length > 0) ord.items = items;
+          ord.notes = notes;
+          if (attachedFileBase64) ord.image = attachedFileBase64;
         }
-        closeOrderModal();
-        saveData();
-      };
-
-      if (fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (evt) => commitOrderSave(evt.target.result);
-        reader.readAsDataURL(fileInput.files[0]);
       } else {
-        commitOrderSave();
+        orders.push({
+          id: "ord_" + Date.now(),
+          poNumber,
+          dateOrdered,
+          orderType,
+          placedBy,
+          items,
+          notes,
+          image: attachedFileBase64,
+          placed: true,
+          placedMeta: `Placed by ${activeUser || placedBy} on ${new Date().toLocaleDateString()}`,
+          vbop: false,
+          vbopMeta: null,
+          received: false,
+          receivedMeta: null,
+          emailed: false,
+          emailedMeta: null,
+          stocked: false,
+          stockedMeta: null,
+          completed: false,
+          completedMeta: null
+        });
+      }
+
+      closeOrderModal();
+      saveData();
+    }
+
+    function toggleOrderItemsAccordion(orderId) {
+      const container = document.getElementById(`itemsAccordion_${orderId}`);
+      const chevron = document.getElementById(`itemsChevron_${orderId}`);
+      if (!container || !chevron) return;
+
+      const isHidden = container.classList.contains("hidden");
+      if (isHidden) {
+        container.classList.remove("hidden");
+        chevron.classList.add("rotate-180");
+      } else {
+        container.classList.add("hidden");
+        chevron.classList.remove("rotate-180");
       }
     }
 
@@ -1888,9 +1950,16 @@
 
       const query = (document.getElementById("orderSearchInput")?.value || "").toLowerCase().trim();
 
-      let filtered = orders;
+      // Sort chronological: Newest at top, Oldest at bottom
+      const sortedOrders = [...orders].sort((a, b) => {
+        const dateA = new Date(a.dateOrdered || 0).getTime();
+        const dateB = new Date(b.dateOrdered || 0).getTime();
+        return dateB - dateA;
+      });
+
+      let filtered = sortedOrders;
       if (query) {
-        filtered = orders.filter(ord => {
+        filtered = sortedOrders.filter(ord => {
           const matchPo = ord.poNumber && ord.poNumber.toLowerCase().includes(query);
           const matchType = ord.orderType && ord.orderType.toLowerCase().includes(query);
           const matchBy = ord.placedBy && ord.placedBy.toLowerCase().includes(query);
@@ -1949,8 +2018,10 @@
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400">${ord.orderType}</span>
             </div>
             <div class="flex items-center justify-between sm:justify-end space-x-2 text-xs text-gray-400">
-              <span>Date: <strong class="text-gray-200">${ord.dateOrdered}</strong></span>
-              <span>•</span>
+              <div class="bg-gray-200 dark:bg-[#252525] px-2.5 py-1 rounded-lg text-gray-300 font-bold flex items-center space-x-1.5 border border-gray-300 dark:border-gray-700/60">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#A6192E]"></i>
+                <span>Ordered: <strong class="text-white">${ord.dateOrdered}</strong></span>
+              </div>
               <span class="text-emerald-400 font-semibold">${ord.placedBy}</span>
               ${ord.completed ? `
                 <button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold ml-2">Re-open</button>
@@ -1990,7 +2061,6 @@
               </div>
             </label>
 
-            <!-- STAGE 4: EMAILED (DOES NOT COMPLETE ORDER) -->
             <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
               <input type="checkbox" ${ord.emailed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'emailed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600">
               <div>
@@ -1999,7 +2069,6 @@
               </div>
             </label>
 
-            <!-- STAGE 5: ADDED TO STOCK -->
             <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
               <input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="mt-0.5 w-4 h-4 accent-amber-500">
               <div>
@@ -2016,41 +2085,49 @@
             </div>
           ` : ''}
 
-          <!-- ITEMS LIST -->
-          <div class="bg-gray-50 dark:bg-[#151515] rounded-2xl border border-gray-200 dark:border-gray-800 p-3 space-y-2.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-gray-300">Order Contents</span>
+          <!-- NATURALLY CLOSED COLLAPSIBLE ORDER CONTENTS ACCORDION -->
+          <div class="bg-gray-50 dark:bg-[#151515] rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <button onclick="toggleOrderItemsAccordion('${ord.id}')" class="w-full flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#1B1B1B] transition">
+              <div class="flex items-center space-x-2">
+                <i id="itemsChevron_${ord.id}" data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200"></i>
+                <i data-lucide="clipboard-list" class="w-4 h-4 text-[#A6192E]"></i>
+                <span class="text-xs font-bold text-gray-200">Order Contents (${hasItems ? ord.items.length : 0})</span>
+              </div>
               <div class="flex items-center space-x-2 text-[10px]">
-                <span class="text-emerald-400 font-semibold">Arrived: ${receivedCount}/${hasItems ? ord.items.length : 0}</span>
-                <span class="text-amber-400 font-semibold">Stocked: ${stockedCount}/${hasItems ? ord.items.length : 0}</span>
+                <span class="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-semibold border border-emerald-500/20">Arrived: ${receivedCount}/${hasItems ? ord.items.length : 0}</span>
+                <span class="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-semibold border border-amber-500/20">Stocked: ${stockedCount}/${hasItems ? ord.items.length : 0}</span>
               </div>
-            </div>
+            </button>
 
-            <div class="space-y-1.5">
-              ${hasItems ? ord.items.map(item => `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2">
-                  <span class="text-xs text-gray-200 font-medium break-words">${item.desc}</span>
-                  
-                  <div class="flex items-center space-x-4 shrink-0 text-xs justify-end">
-                    <label class="flex items-center space-x-1.5 cursor-pointer">
-                      <input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'received', this.checked)" class="w-4 h-4 rounded accent-emerald-500">
-                      <span class="${item.received ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Arrived</span>
-                    </label>
+            <!-- COLLAPSIBLE ACCORDION CONTAINER (HIDDEN NATURALLY) -->
+            <div id="itemsAccordion_${ord.id}" class="hidden p-3 pt-0 border-t border-gray-200/50 dark:border-gray-800/60 space-y-2 mt-2">
+              <div class="space-y-1.5 pt-1">
+                ${hasItems ? ord.items.map(item => `
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2">
+                    <span class="text-xs text-gray-200 font-medium break-words">${item.desc}</span>
+                    
+                    <div class="flex items-center space-x-4 shrink-0 text-xs justify-end">
+                      <label class="flex items-center space-x-1.5 cursor-pointer">
+                        <input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'received', this.checked)" class="w-4 h-4 rounded accent-emerald-500">
+                        <span class="${item.received ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Arrived</span>
+                      </label>
 
-                    <label class="flex items-center space-x-1.5 cursor-pointer">
-                      <input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-4 h-4 rounded accent-amber-500">
-                      <span class="${item.stocked ? 'text-amber-400 font-bold' : 'text-gray-400'}">Stocked</span>
-                    </label>
+                      <label class="flex items-center space-x-1.5 cursor-pointer">
+                        <input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-4 h-4 rounded accent-amber-500">
+                        <span class="${item.stocked ? 'text-amber-400 font-bold' : 'text-gray-400'}">Stocked</span>
+                      </label>
+                    </div>
                   </div>
-                </div>
-              `).join('') : '<div class="text-xs text-gray-500 italic py-1">No items listed.</div>'}
-            </div>
-
-            ${ord.image ? `
-              <div class="pt-2 border-t border-gray-200 dark:border-gray-800">
-                <img src="${ord.image}" onclick="openImageZoomModal(this.src)" class="h-28 object-contain rounded-xl border border-gray-700 cursor-zoom-in">
+                `).join('') : '<div class="text-xs text-gray-500 italic py-1">No items listed.</div>'}
               </div>
-            ` : ''}
+
+              ${ord.image ? `
+                <div class="pt-2 border-t border-gray-200 dark:border-gray-800">
+                  <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Attached Receipt / Invoice:</div>
+                  <img src="${ord.image}" onclick="openImageZoomModal(this.src)" class="h-28 object-contain rounded-xl border border-gray-700 cursor-zoom-in hover:opacity-90 transition">
+                </div>
+              ` : ''}
+            </div>
           </div>
 
         </div>
