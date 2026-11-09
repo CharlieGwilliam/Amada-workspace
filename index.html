@@ -4,8 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Amada Workspace</title>
+  
+  <!-- EXACT AMADA LOGO CHROME TAB FAVICON (NO BACKGROUND) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23A6192E'/><text x='50%' y='74%' font-family='Arial, sans-serif' font-size='68' font-weight='900' fill='white' text-anchor='middle'>A</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- ONESIGNAL PUSH NOTIFICATION SDK -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -63,7 +73,12 @@
   <!-- AUTH / USER LOGIN OVERLAY -->
   <div id="authOverlay" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center my-auto">
-      <div class="w-14 h-14 bg-[#A6192E] rounded-2xl flex items-center justify-center mx-auto mb-4 font-bold text-2xl text-white shadow-lg shadow-red-900/30">A</div>
+      
+      <svg class="w-16 h-16 mx-auto mb-4 drop-shadow-lg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="22" fill="#A6192E"/>
+        <text x="50%" y="74%" font-family="Arial, sans-serif" font-size="68" font-weight="900" fill="white" text-anchor="middle">A</text>
+      </svg>
+
       <h2 class="text-2xl font-bold mb-1">Amada Workspace</h2>
       <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Select your profile to continue</p>
       
@@ -97,21 +112,28 @@
   </div>
 
   <!-- HEADER -->
-  <header class="h-14 md:h-16 bg-gray-100 dark:bg-[#181818] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-3 md:px-5 shrink-0 z-20">
-    <div class="flex items-center space-x-2 md:space-x-4">
-      <button onclick="toggleMobileSidebar()" class="p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 md:hidden active:scale-95 transition">
+  <header class="h-14 md:h-16 bg-gray-100 dark:bg-[#181818] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-2 md:px-5 shrink-0 z-20">
+    <div class="flex items-center space-x-2 md:space-x-4 shrink-0">
+      <button onclick="toggleMobileSidebar()" class="p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 md:hidden active:scale-95 transition shrink-0">
         <i data-lucide="menu" class="w-5 h-5"></i>
       </button>
 
-      <div class="flex items-center space-x-2">
-        <div class="w-7 h-7 md:w-8 md:h-8 bg-[#A6192E] rounded-xl flex items-center justify-center font-bold text-white text-sm md:text-base shadow">A</div>
-        <span class="font-extrabold text-base md:text-xl tracking-wider text-red-600 dark:text-red-500">AMADA</span>
+      <div class="flex items-center space-x-2 shrink-0">
+        <svg class="w-8 h-8 md:w-9 md:h-9 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" rx="22" fill="#A6192E"/>
+          <text x="50%" y="74%" font-family="Arial, sans-serif" font-size="68" font-weight="900" fill="white" text-anchor="middle">A</text>
+        </svg>
+        <span class="font-extrabold text-base md:text-xl tracking-wider text-[#A6192E] hidden xl:inline">AMADA</span>
+      </div>
+
+      <div class="inline-flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-700 shadow-inner shrink-0 ml-1 md:ml-3">
+        <button id="wsBtnShared" onclick="switchWorkspace('shared')" class="px-2.5 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold bg-[#A6192E] text-white shadow transition-all whitespace-nowrap">Shared</button>
+        <button id="wsBtnPersonal" onclick="switchWorkspace('personal')" class="px-2.5 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-all whitespace-nowrap">Personal</button>
       </div>
     </div>
 
-    <!-- DESKTOP TOP NAVIGATION -->
-    <nav class="hidden md:flex items-center space-x-2 bg-gray-200/80 dark:bg-[#121212] p-1.5 rounded-2xl border border-gray-300 dark:border-gray-800 shadow-inner">
-      <button id="tabTasksDesktop" onclick="switchMainTab('tasks')" class="px-4 py-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all">
+    <nav class="hidden md:flex items-center space-x-2 bg-gray-200/80 dark:bg-[#121212] p-1.5 rounded-2xl border border-gray-300 dark:border-gray-800 shadow-inner mx-2">
+      <button id="tabTasksDesktop" onclick="switchMainTab('tasks')" class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-300 dark:bg-[#2A2A2A] text-gray-700 dark:text-gray-200 shadow flex items-center space-x-2 transition-all">
         <i data-lucide="check-square" class="w-4 h-4"></i>
         <span>Tasks Board</span>
       </button>
@@ -125,10 +147,9 @@
       </button>
     </nav>
 
-    <!-- RIGHT STATUS BADGES & SETTINGS -->
-    <div class="flex items-center space-x-1.5 md:space-x-3">
+    <div class="flex items-center space-x-1.5 md:space-x-3 shrink-0">
       <div class="relative">
-        <button id="syncBadgeBtn" onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1.5 px-2 md:px-2.5 py-1 md:py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[10px] md:text-xs font-semibold shadow-sm transition">
+        <button id="syncBadgeBtn" onclick="toggleActiveUsersPopover()" class="flex items-center space-x-1 px-2 md:px-2.5 py-1 md:py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[10px] md:text-xs font-semibold shadow-sm transition">
           <div id="syncPulse" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
           <span id="githubSyncBadge">Live</span>
         </button>
@@ -144,12 +165,12 @@
         <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
       </button>
 
-      <button id="settingsCogBtn" onclick="openSettingsModal()" class="p-1.5 md:p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-white">
+      <button id="settingsCogBtn" onclick="openSettingsModal()" class="p-1.5 md:p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-white" title="Settings & Notifications">
         <i data-lucide="settings" class="w-4 h-4"></i>
       </button>
 
-      <div id="userBadge" class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs border border-white/20">?</div>
-      <button onclick="handleLogout()" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+      <div id="userBadge" class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-[10px] md:text-xs border border-white/20">?</div>
+      <button onclick="handleLogout()" class="p-1 text-gray-400 hover:text-red-400 hidden sm:block"><i data-lucide="log-out" class="w-4 h-4"></i></button>
     </div>
   </header>
 
@@ -157,7 +178,6 @@
   <div class="flex-1 flex overflow-hidden relative pb-14 md:pb-0">
     <div id="sidebarBackdrop" onclick="toggleMobileSidebar(false)" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-30 md:hidden transition-opacity"></div>
 
-    <!-- SIDEBAR -->
     <aside id="mainSidebar" class="w-72 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 p-4 h-full overflow-y-auto z-40 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out shadow-2xl md:shadow-none">
       <div class="flex space-x-2 mb-3">
         <button onclick="openNewTaskModal(); toggleMobileSidebar(false);" class="flex-1 bg-[#A6192E] active:scale-95 text-white rounded-xl py-2.5 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
@@ -206,7 +226,6 @@
       </div>
     </aside>
 
-    <!-- MAIN VIEW AREA -->
     <main class="flex-1 bg-gray-100 dark:bg-[#121212] p-2.5 sm:p-4 overflow-y-auto flex flex-col h-full w-full">
       <div id="isolatedFilterHeader" class="hidden mb-3 bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 flex items-center justify-between shrink-0 shadow-sm">
         <div class="flex items-center space-x-2">
@@ -217,12 +236,10 @@
         </div>
       </div>
 
-      <!-- VIEW 1: ACTIVE TASKS BOARD -->
       <div id="tasksWrapper" class="flex flex-col flex-1 w-full overflow-hidden">
         <div class="md:hidden flex items-center space-x-1.5 overflow-x-auto pb-2 shrink-0 no-scrollbar" id="mobileColumnTabs"></div>
         <div id="tasksView" class="flex flex-col md:flex-row md:space-x-4 items-stretch md:items-start flex-1 md:overflow-x-auto pb-4 gap-3 md:gap-0"></div>
 
-        <!-- COMPLETED TASKS ACCORDION -->
         <div id="completedTasksSection" class="mt-2 border-t border-gray-200 dark:border-gray-800 pt-3 shrink-0">
           <div class="flex items-center justify-between bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl px-3.5 py-2.5 cursor-pointer shadow-sm active:bg-gray-50 dark:active:bg-[#252525] transition" onclick="toggleCompletedDropdown()">
             <div class="flex items-center space-x-2">
@@ -244,7 +261,6 @@
         </div>
       </div>
 
-      <!-- VIEW 2: KEEP NOTES VIEW -->
       <div id="notesView" class="hidden h-full flex-1 overflow-y-auto pb-6">
         <div class="flex justify-between items-center mb-3">
           <h2 class="text-base font-bold">Keep Notes</h2>
@@ -255,14 +271,13 @@
         <div id="notesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
       </div>
 
-      <!-- VIEW 3: ORDER TRACKER VIEW -->
       <div id="ordersView" class="hidden h-full flex-1 overflow-y-auto pb-6">
         <div class="flex flex-col gap-2.5 mb-3 bg-white dark:bg-[#181818] p-3 md:p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
           <div class="flex justify-between items-center gap-2">
             <div>
               <h2 class="text-base font-bold flex items-center space-x-2">
                 <i data-lucide="package" class="w-4 h-4 text-[#A6192E]"></i>
-                <span>Order Tracker</span>
+                <span id="orderTrackerTitle">Order Tracker</span>
               </h2>
             </div>
             <button onclick="openNewOrderModal()" class="bg-[#A6192E] text-white text-xs px-3.5 py-2 rounded-xl font-bold flex items-center space-x-1 shadow">
@@ -288,7 +303,6 @@
           <div id="ordersListContainer" class="space-y-3"></div>
         </div>
 
-        <!-- COMPLETED ORDERS ARCHIVE -->
         <div class="mt-6 border-t border-gray-200 dark:border-gray-800 pt-3">
           <div class="flex items-center justify-between bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl px-3.5 py-2.5 cursor-pointer shadow-sm" onclick="toggleCompletedOrdersDropdown()">
             <div class="flex items-center space-x-2">
@@ -327,284 +341,43 @@
     </button>
   </nav>
 
-  <!-- ORDER COMPLETION VERIFICATION MODAL -->
-  <div id="orderCompleteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
-      <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
-        <h3 class="text-base font-bold flex items-center space-x-2 text-emerald-500">
-          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-          <span>Verify Order Completion</span>
-        </h3>
-        <button onclick="closeOrderCompleteModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <div class="space-y-4 text-xs">
-        <p class="text-gray-300">Confirm all milestones for <strong id="verifyModalPo" class="text-white">PO</strong>:</p>
-
-        <div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-2xl border border-gray-200 dark:border-gray-800">
-          <label class="flex items-center space-x-3 cursor-pointer py-1">
-            <input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]">
-            <span class="font-bold">1. Order Placed / Created</span>
-          </label>
-          <label class="flex items-center space-x-3 cursor-pointer py-1">
-            <input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600">
-            <span class="font-bold">2. Order PO added on VBOP (if applicable)</span>
-          </label>
-          <label class="flex items-center space-x-3 cursor-pointer py-1">
-            <input type="checkbox" id="verifyStageReceived" onchange="toggleVerifyReceivedMissing(this.checked)" class="w-4 h-4 accent-emerald-600">
-            <span class="font-bold">3. Items All Received</span>
-          </label>
-          <label class="flex items-center space-x-3 cursor-pointer py-1">
-            <input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600">
-            <span class="font-bold">4. Emailed & Marked Order as Complete</span>
-          </label>
-          <label class="flex items-center space-x-3 cursor-pointer py-1">
-            <input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500">
-            <span class="font-bold">5. Items Added to Stock</span>
-          </label>
-        </div>
-
-        <div id="verifyMissingItemsSection" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
-          <div class="font-bold text-amber-400 text-xs flex items-center space-x-1.5">
-            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-            <span>Missing / Unreceived Items Tracker:</span>
-          </div>
-          <p class="text-[11px] text-gray-400">Select any missing items below:</p>
-          <div id="verifyMissingItemsList" class="space-y-1.5 max-h-28 overflow-y-auto"></div>
-          <textarea id="verifyMissingNotes" rows="2" placeholder="Add specific note regarding missing items..." class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none"></textarea>
-        </div>
-
-        <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
-          <button type="button" onclick="closeOrderCompleteModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
-          <button type="button" onclick="confirmOrderCompletion()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow transition">
-            Confirm & Complete
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ORDER MODAL (WITH PASTEABLE FILE ZONE & EDIT CAPABILITY) -->
-  <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
-      <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
-        <h3 id="orderModalHeading" class="text-base font-bold flex items-center space-x-2">
-          <i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i>
-          <span>Create New Order</span>
-        </h3>
-        <button onclick="closeOrderModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <form onsubmit="saveOrder(event)" class="space-y-3">
-        <input type="hidden" id="orderIdInput">
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Purchase Order # (PO)</label>
-            <input type="text" id="orderPoInput" placeholder="e.g. PO-9842, PO-123" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]">
-          </div>
-          <div>
-            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Date Ordered</label>
-            <input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs text-gray-800 dark:text-gray-100 cursor-pointer focus:outline-none focus:border-[#A6192E]">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Type of Order</label>
-            <input type="text" id="orderTypeInput" placeholder="e.g. Uniform, Tooling, Steel" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Ordered By (Person/Entity)</label>
-            <input type="text" id="orderPlacedByInput" placeholder="e.g. Charlie, Supplier, Dave" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Contents (Items, Sizes & Quantities)</label>
-          <p class="text-[10px] text-gray-500 mb-1.5">Type items freely (e.g., M-tshirt x10, large l/s shirt x12). Automatically standardized in brackets.</p>
-          <textarea id="orderFreeformItemsInput" rows="3" placeholder="M-tshirt x10&#10;large l/s shirth x12&#10;tshirt size small x5" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Notes & Remarks</label>
-          <textarea id="orderNotesInput" rows="2" placeholder="Tracking numbers, supplier contacts, urgent delivery instructions..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
-        </div>
-
-        <!-- PASTE & DROP FILE ATTACHMENT ZONE -->
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File / Screenshot (Click & Paste Ctrl+V)</label>
-          <div id="fileDropZone" tabindex="0" onpaste="handleFilePaste(event)" class="border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#A6192E] rounded-2xl p-4 text-center cursor-pointer transition focus:outline-none focus:border-[#A6192E] bg-gray-50 dark:bg-[#141414]">
-            <input type="file" id="orderScreenshotInput" accept="image/*,.pdf" onchange="handleFileSelect(event)" class="hidden">
-            <div onclick="document.getElementById('orderScreenshotInput').click()">
-              <i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i>
-              <div class="text-xs font-semibold text-gray-200">Click to browse or <span class="text-[#A6192E] font-bold">paste (Ctrl+V)</span> file here</div>
-              <p class="text-[10px] text-gray-500 mt-0.5">Supports screenshots, images and invoices</p>
-            </div>
-            <div id="filePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs">
-              <span id="fileNameLabel" class="text-emerald-400 truncate max-w-[240px] font-semibold">File attached</span>
-              <button type="button" onclick="removeAttachedFile()" class="text-red-400 hover:text-red-300 font-bold ml-2">Remove</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
-          <button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl shadow">Save Order</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- TASK DETAIL MODAL -->
-  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
-      <button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      <div class="flex items-center space-x-2 mb-2">
-        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK DETAIL</span>
-        <span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800">Priority</span>
-        <span id="detailStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded hidden">Status</span>
-      </div>
-      <h3 id="detailTitle" class="text-lg md:text-xl font-bold mb-2 break-words">Task Title</h3>
-      <div id="detailNotes" class="text-xs md:text-sm text-gray-600 dark:text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-300 dark:border-gray-800">Details...</div>
-      
-      <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border border-gray-200 dark:border-gray-800">
-        <div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate">General</div></div>
-        <div><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate">Anyone</div></div>
-        <div><span class="font-bold text-gray-400">Due Date:</span> <div id="detailDueDate" class="text-gray-800 dark:text-gray-200 font-semibold truncate">No Date</div></div>
-        <div><span class="font-bold text-gray-400">Owner:</span> <div id="detailOwner" class="text-gray-800 dark:text-gray-200 font-semibold truncate">System</div></div>
-      </div>
-
-      <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mb-4">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center space-x-1">
-          <i data-lucide="history" class="w-3.5 h-3.5"></i>
-          <span>Edit History</span>
-        </div>
-        <div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-gray-100 dark:bg-[#121212] p-2.5 rounded-xl border border-gray-300 dark:border-gray-800"></div>
-      </div>
-
-      <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200 dark:border-gray-800">
-        <button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl flex items-center space-x-1.5 shadow">
-          <i data-lucide="pencil" class="w-3.5 h-3.5"></i> <span>Edit Task</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TASK CREATE/EDIT MODAL -->
-  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
-      <h3 id="taskModalHeading" class="text-base font-bold mb-3">Create / Edit Task</h3>
-      <form onsubmit="saveTask(event)" class="space-y-3">
-        <input type="hidden" id="taskIdInput">
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Task Title</label>
-          <input type="text" id="taskTitleInput" placeholder="Task Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-[#A6192E]">
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Section</label>
-            <select id="taskSectionInput" onchange="autoSyncPriorityWithSection(this.value)" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select>
-          </div>
-          <div>
-            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Priority</label>
-            <select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs">
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Tag</label>
-            <select id="taskTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select>
-          </div>
-          <div>
-            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Due Date</label>
-            <input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs text-gray-800 dark:text-gray-100 cursor-pointer">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Description / Notes</label>
-          <textarea id="taskNotesInput" rows="3" placeholder="Add additional details..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assign Users</label>
-          <div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border border-gray-300 dark:border-gray-700 max-h-24 overflow-y-auto text-xs"></div>
-        </div>
-
-        <div class="flex items-center space-x-2 pt-1">
-          <input type="checkbox" id="taskStarInput" class="w-4 h-4 accent-[#A6192E]">
-          <label for="taskStarInput" class="text-xs font-semibold">Star Task ⭐</label>
-        </div>
-
-        <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
-          <button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl shadow">Save Task</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- NOTE MODAL -->
-  <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
-      <h3 id="noteModalTitle" class="text-base font-bold mb-3">Add Keep Note</h3>
-      <form onsubmit="saveNote(event)" class="space-y-3">
-        <input type="hidden" id="noteId">
-        <input type="text" id="noteTitleInput" placeholder="Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:outline-none">
-        <textarea id="noteContentInput" rows="4" placeholder="Take a note..." required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:outline-none"></textarea>
-        
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Tag</label>
-            <select id="noteTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-1.5 text-xs"></select>
-          </div>
-          <div class="flex items-center space-x-2 pt-4">
-            <input type="checkbox" id="noteStarInput" class="w-4 h-4 accent-[#A6192E]">
-            <label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assign Users</label>
-          <div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2 bg-gray-100 dark:bg-[#121212] rounded-xl border border-gray-300 dark:border-gray-700 max-h-24 overflow-y-auto text-xs"></div>
-        </div>
-
-        <div class="flex justify-end space-x-2 pt-2 border-t border-gray-800">
-          <button type="button" onclick="closeNoteModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
-          <button type="submit" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save Note</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- TAG MODAL -->
-  <div id="tagModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl">
-      <h3 id="tagModalTitle" class="text-base font-bold mb-3">Create Custom Tag</h3>
-      <input type="hidden" id="tagIdInput">
-      <input type="text" id="tagTitleInput" placeholder="Tag Name" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm mb-3 focus:outline-none">
-      <label class="block text-xs text-gray-400 mb-1">Custom Tag Color</label>
-      <input type="color" id="tagColorInput" value="#A6192E" class="w-full h-9 rounded-xl border-none cursor-pointer mb-4">
-      <div class="flex justify-end space-x-2">
-        <button onclick="closeTagModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
-        <button onclick="saveCustomTag()" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save Tag</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS MODAL -->
+  <!-- SETTINGS & NOTIFICATION CENTRE MODAL -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 my-auto max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
         <h3 class="text-base font-bold flex items-center space-x-2"><i data-lucide="settings" class="w-5 h-5 text-[#A6192E]"></i><span>Workspace Settings</span></h3>
         <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <!-- NOTIFICATION CENTRE (OFF BY DEFAULT) -->
+      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-4 rounded-2xl border border-gray-300 dark:border-gray-800">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-xs font-bold text-gray-400 uppercase flex items-center space-x-1.5">
+            <i data-lucide="bell" class="w-4 h-4 text-[#A6192E]"></i>
+            <span>Notification Centre</span>
+          </h4>
+          <span id="pushStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400">OFF</span>
+        </div>
+        <p class="text-[11px] text-gray-500 mb-3">Push notifications are disabled by default on every device. Enable below to turn on alerts for your account.</p>
+
+        <button id="enablePushBtn" onclick="requestNotificationPermission()" class="w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">
+          Enable Device Push Notifications
+        </button>
+
+        <div id="notificationPreferencesList" class="space-y-2 border-t border-gray-200 dark:border-gray-800 pt-3">
+          <label class="flex items-center justify-between text-xs cursor-pointer">
+            <span class="text-gray-300">New Task Assigned to Me</span>
+            <input type="checkbox" id="prefNotifyAssigned" onchange="saveNotificationPref('notifyAssigned', this.checked)" class="w-4 h-4 accent-[#A6192E]">
+          </label>
+          <label class="flex items-center justify-between text-xs cursor-pointer">
+            <span class="text-gray-300">My Task Marked Completed</span>
+            <input type="checkbox" id="prefNotifyCompleted" onchange="saveNotificationPref('notifyCompleted', this.checked)" class="w-4 h-4 accent-[#A6192E]">
+          </label>
+          <label class="flex items-center justify-between text-xs cursor-pointer">
+            <span class="text-gray-300">Order Updates & Intake Changes</span>
+            <input type="checkbox" id="prefNotifyOrders" onchange="saveNotificationPref('notifyOrders', this.checked)" class="w-4 h-4 accent-[#A6192E]">
+          </label>
+        </div>
       </div>
 
       <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800">
@@ -663,10 +436,264 @@
     </div>
   </div>
 
+  <!-- ORDER MODAL & OTHER FORMS (Task modal, note modal, order complete modal) -->
+  <div id="orderCompleteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
+        <h3 class="text-base font-bold flex items-center space-x-2 text-emerald-500">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          <span>Verify Order Completion</span>
+        </h3>
+        <button onclick="closeOrderCompleteModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <p class="text-gray-300">Confirm all milestones for <strong id="verifyModalPo" class="text-white">PO</strong>:</p>
+
+        <div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-2xl border border-gray-200 dark:border-gray-800">
+          <label class="flex items-center space-x-3 cursor-pointer py-1">
+            <input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]">
+            <span class="font-bold">1. Order Placed / Created</span>
+          </label>
+          <label class="flex items-center space-x-3 cursor-pointer py-1">
+            <input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600">
+            <span class="font-bold">2. Order PO added on VBOP (if applicable)</span>
+          </label>
+          <label class="flex items-center space-x-3 cursor-pointer py-1">
+            <input type="checkbox" id="verifyStageReceived" onchange="toggleVerifyReceivedMissing(this.checked)" class="w-4 h-4 accent-emerald-600">
+            <span class="font-bold">3. Items All Received</span>
+          </label>
+          <label class="flex items-center space-x-3 cursor-pointer py-1">
+            <input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600">
+            <span class="font-bold">4. Emailed & Marked Order as Complete</span>
+          </label>
+          <label class="flex items-center space-x-3 cursor-pointer py-1">
+            <input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500">
+            <span class="font-bold">5. Items Added to Stock</span>
+          </label>
+        </div>
+
+        <div id="verifyMissingItemsSection" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
+          <div class="font-bold text-amber-400 text-xs flex items-center space-x-1.5">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+            <span>Missing / Unreceived Items Tracker:</span>
+          </div>
+          <p class="text-[11px] text-gray-400">Select any missing items below:</p>
+          <div id="verifyMissingItemsList" class="space-y-1.5 max-h-28 overflow-y-auto"></div>
+          <textarea id="verifyMissingNotes" rows="2" placeholder="Add specific note regarding missing items..." class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
+          <button type="button" onclick="closeOrderCompleteModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
+          <button type="button" onclick="confirmOrderCompletion()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow transition">
+            Confirm & Complete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
+        <h3 id="orderModalHeading" class="text-base font-bold flex items-center space-x-2">
+          <i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i>
+          <span>Create New Order</span>
+        </h3>
+        <button onclick="closeOrderModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form onsubmit="saveOrder(event)" class="space-y-3">
+        <input type="hidden" id="orderIdInput">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Purchase Order # (PO)</label>
+            <input type="text" id="orderPoInput" placeholder="e.g. PO-9842, PO-123" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]">
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Date Ordered</label>
+            <input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs text-gray-800 dark:text-gray-100 cursor-pointer focus:outline-none focus:border-[#A6192E]">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Type of Order</label>
+            <input type="text" id="orderTypeInput" placeholder="e.g. Uniform, Tooling, Steel" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Ordered By (Person/Entity)</label>
+            <input type="text" id="orderPlacedByInput" placeholder="e.g. Charlie, Supplier, Dave" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Contents (Items, Sizes & Quantities)</label>
+          <textarea id="orderFreeformItemsInput" rows="3" placeholder="M-tshirt x10&#10;large l/s shirt x12" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Notes & Remarks</label>
+          <textarea id="orderNotesInput" rows="2" placeholder="Tracking numbers, supplier contacts..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
+        </div>
+
+        <!-- PASTE & DROP FILE ATTACHMENT ZONE -->
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File / Screenshot (Click & Paste Ctrl+V)</label>
+          <div id="fileDropZone" tabindex="0" onpaste="handleFilePaste(event)" class="border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#A6192E] rounded-2xl p-4 text-center cursor-pointer transition focus:outline-none focus:border-[#A6192E] bg-gray-50 dark:bg-[#141414]">
+            <input type="file" id="orderScreenshotInput" accept="image/*,.pdf" onchange="handleFileSelect(event)" class="hidden">
+            <div onclick="document.getElementById('orderScreenshotInput').click()">
+              <i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i>
+              <div class="text-xs font-semibold text-gray-200">Click to browse or <span class="text-[#A6192E] font-bold">paste (Ctrl+V)</span> file here</div>
+              <p class="text-[10px] text-gray-500 mt-0.5">Supports screenshots, images and invoices</p>
+            </div>
+            <div id="filePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs">
+              <span id="fileNameLabel" class="text-emerald-400 truncate max-w-[240px] font-semibold">File attached</span>
+              <button type="button" onclick="removeAttachedFile()" class="text-red-400 hover:text-red-300 font-bold ml-2">Remove</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
+          <button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl shadow">Save Order</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
+      <h3 id="taskModalHeading" class="text-base font-bold mb-3">Create / Edit Task</h3>
+      <form onsubmit="saveTask(event)" class="space-y-3">
+        <input type="hidden" id="taskIdInput">
+        <input type="text" id="taskTitleInput" placeholder="Task Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-[#A6192E]">
+        <div class="grid grid-cols-2 gap-2">
+          <select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select>
+          <select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs">
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <textarea id="taskNotesInput" rows="3" placeholder="Add additional details..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assign Users</label>
+          <div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border border-gray-300 dark:border-gray-700 max-h-24 overflow-y-auto text-xs"></div>
+        </div>
+        <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
+          <button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl shadow">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+      <h3 id="noteModalTitle" class="text-base font-bold mb-3">Add Keep Note</h3>
+      <form onsubmit="saveNote(event)" class="space-y-3">
+        <input type="hidden" id="noteId">
+        <input type="text" id="noteTitleInput" placeholder="Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:outline-none">
+        <textarea id="noteContentInput" rows="4" placeholder="Take a note..." required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:outline-none"></textarea>
+        <div class="flex justify-end space-x-2 pt-2 border-t border-gray-800">
+          <button type="button" onclick="closeNoteModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save Note</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto">
+      <button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <h3 id="detailTitle" class="text-lg font-bold mb-2 break-words">Task Title</h3>
+      <div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div>
+      <button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Task</button>
+    </div>
+  </div>
+
   <!-- SCRIPT ENGINE -->
   <script>
+    // =========================================================================
+    // CONFIGURATION BLOCK: PASTE YOUR ONESIGNAL APP ID HERE
+    // (Safe for public GitHub repositories; App ID is a public identifier)
+    // =========================================================================
+    const ONESIGNAL_APP_ID = "40ee1473-8e3b-4e29-b08e-e424b0e35e39";
     const JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS";
     const JSONBIN_BIN_ID = "6ae0b445ffd5d160538fff26";
+
+    // --- ONESIGNAL INITIALIZATION ---
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      if (ONESIGNAL_APP_ID && !ONESIGNAL_APP_ID.includes("PASTE_")) {
+        await OneSignal.init({
+          appId: ONESIGNAL_APP_ID,
+          notifyButton: { enable: false } // We use our custom notification centre in Settings
+        });
+        updatePushUI();
+      }
+    });
+
+    function getNotificationPrefs(username) {
+      const saved = localStorage.getItem(`amada_notify_${username}`);
+      if (!saved) return { enabled: false, notifyAssigned: false, notifyCompleted: false, notifyOrders: false };
+      return JSON.parse(saved);
+    }
+
+    function saveNotificationPref(key, value) {
+      if (!activeUser) return;
+      const prefs = getNotificationPrefs(activeUser);
+      prefs[key] = value;
+      localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs));
+    }
+
+    async function requestNotificationPermission() {
+      if (!window.OneSignalDeferred) return;
+      OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          await OneSignal.Slidedown.promptPush();
+          const prefs = getNotificationPrefs(activeUser);
+          prefs.enabled = true;
+          prefs.notifyAssigned = true;
+          prefs.notifyCompleted = true;
+          prefs.notifyOrders = true;
+          localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs));
+          updatePushUI();
+        } catch(e) {
+          alert("Notification permission request denied or unavailable.");
+        }
+      });
+    }
+
+    function updatePushUI() {
+      if (!activeUser) return;
+      const prefs = getNotificationPrefs(activeUser);
+      const badge = document.getElementById("pushStatusBadge");
+      const btn = document.getElementById("enablePushBtn");
+      
+      const chkAssigned = document.getElementById("prefNotifyAssigned");
+      const chkCompleted = document.getElementById("prefNotifyCompleted");
+      const chkOrders = document.getElementById("prefNotifyOrders");
+
+      if (chkAssigned) chkAssigned.checked = !!prefs.notifyAssigned;
+      if (chkCompleted) chkCompleted.checked = !!prefs.notifyCompleted;
+      if (chkOrders) chkOrders.checked = !!prefs.notifyOrders;
+
+      if (prefs.enabled) {
+        if (badge) { badge.innerText = "ACTIVE"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400"; }
+        if (btn) { btn.innerText = "Push Notifications Active"; btn.disabled = true; btn.className = "w-full py-2 px-3 rounded-xl bg-gray-700 text-gray-400 text-xs font-bold cursor-default mb-3"; }
+      } else {
+        if (badge) { badge.innerText = "OFF"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400"; }
+        if (btn) { btn.innerText = "Enable Device Push Notifications"; btn.disabled = false; btn.className = "w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3"; }
+      }
+    }
+
+    function triggerLocalNotification(title, message) {
+      if (Notification && Notification.permission === "granted") {
+        new Notification(title, { body: message, icon: "icon.png" });
+      }
+    }
 
     const BASELINE_USERS = [
       { name: "Charlie", role: "master_admin", password: "AMADA" },
@@ -674,33 +701,17 @@
     ];
 
     function ensureProfiles(userList) {
-      if (!Array.isArray(userList) || userList.length === 0) {
-        return JSON.parse(JSON.stringify(BASELINE_USERS));
-      }
+      if (!Array.isArray(userList) || userList.length === 0) return JSON.parse(JSON.stringify(BASELINE_USERS));
       let charlie = userList.find(u => u && u.name === "Charlie");
-      if (!charlie) {
-        userList.unshift({ name: "Charlie", role: "master_admin", password: "AMADA" });
-      } else {
-        charlie.role = "master_admin";
-        if (!charlie.password) charlie.password = "AMADA";
-      }
+      if (!charlie) userList.unshift({ name: "Charlie", role: "master_admin", password: "AMADA" });
       let jacob = userList.find(u => u && u.name === "Jacob");
-      if (!jacob) {
-        userList.push({ name: "Jacob", role: "admin", password: "AMADA" });
-      } else {
-        if (!jacob.role) jacob.role = "admin";
-        if (!jacob.password) jacob.password = "AMADA";
-      }
+      if (!jacob) userList.push({ name: "Jacob", role: "admin", password: "AMADA" });
       return userList;
     }
 
     let users = ensureProfiles(JSON.parse(localStorage.getItem("amada_users")));
     let activeUser = localStorage.getItem("amada_active_user") || "";
-
-    if (activeUser && !users.some(u => u.name === activeUser)) {
-      activeUser = "";
-      localStorage.removeItem("amada_active_user");
-    }
+    let currentWorkspace = 'shared'; 
 
     let currentMainTab = "tasks";
     let activeFilterType = null;
@@ -711,10 +722,6 @@
     let isCompletedOpen = false;
     let isCompletedOrdersOpen = false;
     let activeVerifyingOrderId = null;
-    let attachedFileBase64 = null;
-    let attachedFileName = "";
-    
-    // Persistent state tracker for open order accordions across remote sync re-renders
     let openAccordionsMap = {};
 
     let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) || [
@@ -734,7 +741,6 @@
       const key = `amada_order_${activeUser}`;
       const savedOrder = JSON.parse(localStorage.getItem(key));
       if (!Array.isArray(savedOrder) || savedOrder.length === 0) return sharedSections;
-
       const ordered = [];
       savedOrder.forEach(id => {
         const found = sharedSections.find(s => s.id === id);
@@ -748,8 +754,7 @@
 
     function savePersonalSectionOrder(newIdArray) {
       if (!activeUser) return;
-      const key = `amada_order_${activeUser}`;
-      localStorage.setItem(key, JSON.stringify(newIdArray));
+      localStorage.setItem(`amada_order_${activeUser}`, JSON.stringify(newIdArray));
       renderAll();
     }
 
@@ -769,17 +774,27 @@
       setInterval(fetchFromRemoteBin, 3500);
     };
 
-    function isUserTyping() {
-      const el = document.activeElement;
-      return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') && el.type !== 'checkbox';
+    function switchWorkspace(ws) {
+      currentWorkspace = ws;
+      const btnS = document.getElementById("wsBtnShared");
+      const btnP = document.getElementById("wsBtnPersonal");
+      const activeClass = "px-2.5 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold bg-[#A6192E] text-white shadow transition-all whitespace-nowrap";
+      const inactiveClass = "px-2.5 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-all whitespace-nowrap";
+      
+      if (ws === 'shared') {
+        btnS.className = activeClass;
+        btnP.className = inactiveClass;
+      } else {
+        btnP.className = activeClass;
+        btnS.className = inactiveClass;
+      }
+      renderAll();
     }
 
     function toggleMobileSidebar(force) {
       const sidebar = document.getElementById("mainSidebar");
       const backdrop = document.getElementById("sidebarBackdrop");
-      const isOpen = !sidebar.classList.contains("-translate-x-full");
-      const shouldOpen = force !== undefined ? force : !isOpen;
-
+      const shouldOpen = force !== undefined ? force : sidebar.classList.contains("-translate-x-full");
       if (shouldOpen) {
         sidebar.classList.remove("-translate-x-full");
         backdrop.classList.remove("hidden");
@@ -791,66 +806,38 @@
 
     function toggleCompletedDropdown() {
       isCompletedOpen = !isCompletedOpen;
-      const container = document.getElementById("completedDropdownContainer");
-      const chevron = document.getElementById("completedChevron");
-      if (isCompletedOpen) {
-        container.classList.remove("hidden");
-        chevron.classList.add("rotate-90");
-      } else {
-        container.classList.add("hidden");
-        chevron.classList.remove("rotate-90");
-      }
+      document.getElementById("completedDropdownContainer").classList.toggle("hidden", !isCompletedOpen);
+      document.getElementById("completedChevron").classList.toggle("rotate-90", isCompletedOpen);
     }
 
     function toggleCompletedOrdersDropdown() {
       isCompletedOrdersOpen = !isCompletedOrdersOpen;
-      const container = document.getElementById("completedOrdersContainer");
-      const chevron = document.getElementById("completedOrdersChevron");
-      if (isCompletedOrdersOpen) {
-        container.classList.remove("hidden");
-        chevron.classList.add("rotate-90");
-      } else {
-        container.classList.add("hidden");
-        chevron.classList.remove("rotate-90");
-      }
+      document.getElementById("completedOrdersContainer").classList.toggle("hidden", !isCompletedOrdersOpen);
+      document.getElementById("completedOrdersChevron").classList.toggle("rotate-90", isCompletedOrdersOpen);
     }
 
     function updateSyncUI(status, text) {
       const badge = document.getElementById("githubSyncBadge");
       const pulse = document.getElementById("syncPulse");
-      const detail = document.getElementById("syncStatusDetail");
       if (!badge || !pulse) return;
-
       if (status === "ok") {
         badge.innerText = "Live";
         pulse.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-        if (detail) detail.innerText = `Connected (${new Date().toLocaleTimeString()})`;
       } else {
         badge.innerText = "Alert";
         pulse.className = "w-2 h-2 rounded-full bg-red-500";
-        if (detail) detail.innerText = text || "Sync Alert";
       }
     }
 
     function updatePresenceUI() {
       const container = document.getElementById("activeUsersList");
       if (!container) return;
-
       const now = Date.now();
       const activeList = [];
-
       users.forEach(u => {
         const lastSeen = presenceMap[u.name] || 0;
-        const isOnline = (now - lastSeen < 45000) || (u.name === activeUser);
-        if (isOnline) {
-          activeList.push({ name: u.name, isMe: u.name === activeUser });
-        }
+        if ((now - lastSeen < 45000) || (u.name === activeUser)) activeList.push({ name: u.name, isMe: u.name === activeUser });
       });
-
-      if (activeList.length === 0 && activeUser) {
-        activeList.push({ name: activeUser, isMe: true });
-      }
-
       container.innerHTML = activeList.map(item => `
         <div class="flex items-center justify-between py-1 border-b border-gray-100 dark:border-gray-800/50 last:border-none">
           <div class="flex items-center space-x-2">
@@ -868,10 +855,19 @@
           method: "GET",
           headers: { "X-Master-Key": JSONBIN_KEY }
         });
-        
         if (res.ok) {
           const json = await res.json();
           const content = json.record || {};
+          
+          if (content.tasks && content.tasks.length > tasks.length) {
+            const prefs = getNotificationPrefs(activeUser);
+            if (prefs.enabled && prefs.notifyAssigned) {
+              const latest = content.tasks[content.tasks.length - 1];
+              if (latest.assignees && latest.assignees.includes(activeUser) && latest.owner !== activeUser) {
+                triggerLocalNotification("New Task Assigned", `${latest.owner} assigned you: ${latest.title}`);
+              }
+            }
+          }
 
           if (content.users) users = ensureProfiles(content.users);
           if (content.sharedTags) sharedTags = content.sharedTags;
@@ -880,10 +876,7 @@
           if (content.notes) notes = content.notes;
           if (content.orders) orders = content.orders;
           if (content.presence) presenceMap = content.presence;
-
-          if (activeUser) {
-            presenceMap[activeUser] = Date.now();
-          }
+          if (activeUser) presenceMap[activeUser] = Date.now();
 
           localStorage.setItem("amada_users", JSON.stringify(users));
           localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
@@ -895,22 +888,20 @@
           updateSyncUI("ok");
           updatePresenceUI();
           renderUserProfiles();
-          if (!isUserTyping()) {
+          const el = document.activeElement;
+          if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' && el.tagName !== 'SELECT')) {
             renderAll();
           }
         } else {
-          updateSyncUI("error", `Status: ${res.status}`);
+          updateSyncUI("error");
         }
       } catch (e) {
-        updateSyncUI("error", e.message);
+        updateSyncUI("error");
       }
     }
 
     async function saveData() {
-      if (activeUser) {
-        presenceMap[activeUser] = Date.now();
-      }
-
+      if (activeUser) presenceMap[activeUser] = Date.now();
       localStorage.setItem("amada_users", JSON.stringify(users));
       localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
       localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
@@ -922,22 +913,14 @@
       updatePresenceUI();
 
       try {
-        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": JSONBIN_KEY
-          },
+          headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
           body: JSON.stringify({ users, sharedTags, sharedSections, tasks, notes, orders, presence: presenceMap })
         });
-
-        if (putRes.ok) {
-          updateSyncUI("ok");
-        } else {
-          updateSyncUI("error", `Save rejected: ${putRes.status}`);
-        }
+        updateSyncUI("ok");
       } catch (e) {
-        updateSyncUI("error", e.message);
+        updateSyncUI("error");
       }
     }
 
@@ -945,7 +928,6 @@
       const container = document.getElementById("userProfilesList");
       if (!container) return;
       users = ensureProfiles(users);
-
       container.innerHTML = users.map(u => `
         <button onclick="selectUserForLogin('${u.name}')" class="p-3.5 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-2xl flex flex-col items-center space-y-1.5 transition shadow-sm active:scale-95">
           <div class="w-9 h-9 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-sm">${u.name.charAt(0)}</div>
@@ -979,6 +961,14 @@
         localStorage.setItem("amada_active_user", activeUser);
         document.getElementById("authOverlay").classList.add("hidden");
         document.getElementById("loginPassword").value = "";
+        
+        if (window.OneSignalDeferred) {
+          OneSignalDeferred.push(function(OneSignal) {
+            OneSignal.login(activeUser);
+          });
+        }
+        
+        switchWorkspace('shared');
         checkAuth();
         saveData();
       } else {
@@ -991,6 +981,7 @@
         document.getElementById("authOverlay").classList.add("hidden");
         document.getElementById("userBadge").innerText = activeUser.charAt(0);
         document.getElementById("userBadge").title = activeUser;
+        updatePushUI();
       } else {
         document.getElementById("authOverlay").classList.remove("hidden");
         renderUserProfiles();
@@ -998,9 +989,9 @@
     }
 
     function handleLogout() {
-      if (activeUser && presenceMap[activeUser]) {
-        delete presenceMap[activeUser];
-        saveData();
+      if (activeUser && presenceMap[activeUser]) delete presenceMap[activeUser];
+      if (window.OneSignalDeferred) {
+        OneSignalDeferred.push(function(OneSignal) { OneSignal.logout(); });
       }
       localStorage.removeItem("amada_active_user");
       activeUser = "";
@@ -1016,14 +1007,15 @@
       renderNotesGrid();
       renderOrders();
 
-      const totalActive = tasks.filter(t => !t.completed).length;
-      document.getElementById("allTasksCountBadge").innerText = totalActive;
+      const activeList = tasks.filter(t => !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
+      document.getElementById("allTasksCountBadge").innerText = activeList.length;
 
-      const totalCompleted = tasks.filter(t => t.completed).length;
-      document.getElementById("completedCountBadge").innerText = totalCompleted;
+      const completedList = tasks.filter(t => t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
+      document.getElementById("completedCountBadge").innerText = completedList.length;
 
-      const totalStarred = tasks.filter(t => t.starred).length + notes.filter(n => n.starred).length;
-      document.getElementById("starredCountBadge").innerText = totalStarred;
+      const starredList = tasks.filter(t => t.starred && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser)).length 
+                        + notes.filter(n => n.starred && (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser)).length;
+      document.getElementById("starredCountBadge").innerText = starredList;
 
       lucide.createIcons();
     }
@@ -1050,10 +1042,7 @@
             <div class="w-3 h-3 rounded-full" style="background-color: ${t.color}"></div>
             <span class="truncate">${t.title}</span>
           </div>
-          <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
-            <button onclick="event.stopPropagation(); openNewTagModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-            <button onclick="event.stopPropagation(); deleteTag('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-          </div>
+          <button onclick="event.stopPropagation(); deleteTag('${t.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
       `).join('');
     }
@@ -1062,257 +1051,67 @@
       const container = document.getElementById("sectionsSidebar");
       if (!container) return;
       const orderedSections = getPersonalOrderedSections();
-
       container.innerHTML = orderedSections.map(s => {
-        const count = tasks.filter(t => t.sectionId === s.id && !t.completed).length;
+        const count = tasks.filter(t => t.sectionId === s.id && !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser)).length;
         return `
-          <div draggable="true" 
-               data-sec-id="${s.id}"
-               ondragstart="handleSidebarDragStart(event)" 
-               ondragover="handleSidebarDragOver(event)" 
-               ondrop="handleSidebarDrop(event)" 
-               ondragleave="handleSidebarDragLeave(event)"
-               class="sidebar-cat-row group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs cursor-move transition-all">
+          <div class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all">
             <div class="flex items-center space-x-2 truncate flex-1" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);">
-              <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-gray-400 opacity-40 group-hover:opacity-100"></i>
               <span class="truncate font-medium">${s.title}</span>
             </div>
-            <div class="flex items-center space-x-1">
-              <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
-              <button onclick="event.stopPropagation(); editSectionTitle('${s.id}')" class="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-              <button onclick="event.stopPropagation(); deleteSection('${s.id}')" class="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-            </div>
+            <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
           </div>
         `;
       }).join('');
     }
 
-    let draggedSidebarSecId = null;
-    function handleSidebarDragStart(e) {
-      draggedSidebarSecId = e.currentTarget.getAttribute("data-sec-id");
-      e.dataTransfer.setData("text/plain", draggedSidebarSecId);
-      e.currentTarget.classList.add("opacity-50");
-    }
-    function handleSidebarDragOver(e) {
-      e.preventDefault();
-      e.currentTarget.classList.add("drag-over-sidebar");
-    }
-    function handleSidebarDragLeave(e) {
-      e.currentTarget.classList.remove("drag-over-sidebar");
-    }
-    function handleSidebarDrop(e) {
-      e.preventDefault();
-      e.currentTarget.classList.remove("drag-over-sidebar");
-      const targetSecId = e.currentTarget.getAttribute("data-sec-id");
-      if (!draggedSidebarSecId || draggedSidebarSecId === targetSecId) return;
+    function filterBySection(sectionId) { activeFilterType = "section"; activeFilterId = sectionId; switchMainTab('tasks'); renderAll(); }
+    function filterByAssignee(userName) { activeFilterType = "assignee"; activeFilterId = userName; renderAll(); }
+    function filterByTag(tagId) { activeFilterType = "tag"; activeFilterId = tagId; renderAll(); }
+    function filterByStarred() { activeFilterType = "starred"; activeFilterId = "starred"; renderAll(); }
+    function clearActiveFilter() { activeFilterType = null; activeFilterId = null; renderAll(); }
 
-      const ordered = getPersonalOrderedSections();
-      const ids = ordered.map(s => s.id);
-      const fromIdx = ids.indexOf(draggedSidebarSecId);
-      const toIdx = ids.indexOf(targetSecId);
-      if (fromIdx > -1 && toIdx > -1) {
-        ids.splice(fromIdx, 1);
-        ids.splice(toIdx, 0, draggedSidebarSecId);
-        savePersonalSectionOrder(ids);
-      }
-      draggedSidebarSecId = null;
-    }
-
-    function editSectionTitle(id) {
-      const section = sharedSections.find(s => s.id === id);
-      if (!section) return;
-      const newTitle = prompt("Edit Section Name:", section.title);
-      if (newTitle && newTitle.trim()) {
-        section.title = newTitle.trim();
-        saveData();
-      }
-    }
-
-    function deleteSection(id) {
-      if (confirm("Delete this section and its active tasks?")) {
-        sharedSections = sharedSections.filter(s => s.id !== id);
-        tasks = tasks.filter(t => t.sectionId !== id);
-        saveData();
-      }
-    }
-
-    function filterBySection(sectionId) {
-      activeFilterType = "section";
-      activeFilterId = sectionId;
-      switchMainTab('tasks');
-      renderAll();
-    }
-
-    function filterByAssignee(userName) {
-      activeFilterType = "assignee";
-      activeFilterId = userName;
-      renderAll();
-    }
-
-    function filterByTag(tagId) {
-      activeFilterType = "tag";
-      activeFilterId = tagId;
-      renderAll();
-    }
-
-    function filterByStarred() {
-      activeFilterType = "starred";
-      activeFilterId = "starred";
-      renderAll();
-    }
-
-    function clearActiveFilter() {
-      activeFilterType = null;
-      activeFilterId = null;
-      renderAll();
-    }
-
-    function autoSyncPriorityWithSection(secId) {
-      const sec = sharedSections.find(s => s.id === secId);
-      if (!sec) return;
-      const priorityEl = document.getElementById("taskPriorityInput");
-      const titleLower = sec.title.toLowerCase();
-      if (titleLower.includes("high")) priorityEl.value = "High";
-      else if (titleLower.includes("low")) priorityEl.value = "Low";
-      else priorityEl.value = "Medium";
-    }
-
-    /* --- RESPONSIVE TASKS BOARD --- */
     function renderTasksBoard() {
       const view = document.getElementById("tasksView");
-      const mobileTabs = document.getElementById("mobileColumnTabs");
       if (!view) return;
-      
-      const headerBar = document.getElementById("isolatedFilterHeader");
-      const filterTitle = document.getElementById("isolatedFilterTitle");
-
-      if (activeFilterType) {
-        headerBar.classList.remove("hidden");
-        if (activeFilterType === "section") filterTitle.innerText = `Section: ${sharedSections.find(s => s.id === activeFilterId)?.title || ''}`;
-        if (activeFilterType === "assignee") filterTitle.innerText = `Assigned: ${activeFilterId}`;
-        if (activeFilterType === "tag") filterTitle.innerText = `Tag: ${sharedTags.find(t => t.id === activeFilterId)?.title || ''}`;
-        if (activeFilterType === "starred") filterTitle.innerText = `Starred ⭐`;
-      } else {
-        headerBar.classList.add("hidden");
-      }
-
       let visibleSections = getPersonalOrderedSections();
-      if (activeFilterType === "section") {
-        visibleSections = visibleSections.filter(s => s.id === activeFilterId);
-      }
-
-      if (!mobileSelectedSectionId || !visibleSections.some(s => s.id === mobileSelectedSectionId)) {
-        mobileSelectedSectionId = visibleSections[0]?.id || null;
-      }
-
-      if (mobileTabs) {
-        mobileTabs.innerHTML = visibleSections.map(s => `
-          <button onclick="selectMobileColumn('${s.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${mobileSelectedSectionId === s.id ? 'bg-[#A6192E] text-white shadow' : 'bg-gray-200 dark:bg-[#1E1E1E] text-gray-400'}">
-            ${s.title}
-          </button>
-        `).join('');
-      }
+      if (activeFilterType === "section") visibleSections = visibleSections.filter(s => s.id === activeFilterId);
 
       view.innerHTML = visibleSections.map(s => {
-        let listTasks = tasks.filter(t => t.sectionId === s.id && !t.completed);
+        let listTasks = tasks.filter(t => t.sectionId === s.id && !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
         if (activeFilterType === "assignee") listTasks = listTasks.filter(t => t.assignees && t.assignees.includes(activeFilterId));
         else if (activeFilterType === "tag") listTasks = listTasks.filter(t => t.tagId === activeFilterId);
         else if (activeFilterType === "starred") listTasks = listTasks.filter(t => t.starred);
 
-        const isMobileHidden = mobileSelectedSectionId && mobileSelectedSectionId !== s.id ? 'hidden md:flex' : 'flex';
-
         return `
-          <div draggable="true"
-               data-column-id="${s.id}"
-               ondragstart="handleColumnDragStart(event)"
-               ondragover="handleColumnDragOver(event)"
-               ondragleave="handleColumnDragLeave(event)"
-               ondrop="handleColumnDrop(event)"
-               class="task-column-card w-full md:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl p-3.5 ${isMobileHidden} flex-col shrink-0 md:max-h-full shadow-sm transition-all duration-150">
-            
-            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-gray-100 dark:border-gray-800/60 cursor-grab active:cursor-grabbing">
-              <div class="flex items-center space-x-2">
-                <i data-lucide="grip-horizontal" class="w-4 h-4 text-gray-400 opacity-40"></i>
-                <h3 class="font-bold text-sm tracking-wide select-none">${s.title}</h3>
-              </div>
+          <div class="task-column-card w-full md:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl p-3.5 flex flex-col shrink-0 shadow-sm">
+            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-gray-100 dark:border-gray-800/60">
+              <h3 class="font-bold text-sm tracking-wide">${s.title}</h3>
               <span class="text-[10px] bg-gray-100 dark:bg-[#252525] text-gray-400 px-2 py-0.5 rounded-full font-bold">${listTasks.length}</span>
             </div>
-
             <input type="text" placeholder="+ Add task (Press Enter)" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded-xl px-3 py-2 text-xs mb-3 focus:outline-none focus:border-[#A6192E]">
             <div class="space-y-2.5 overflow-y-auto flex-1">
               ${listTasks.map(t => renderTaskCardHtml(t)).join('')}
-              ${listTasks.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs italic">No active tasks in this section</div>` : ''}
+              ${listTasks.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs italic">No active tasks</div>` : ''}
             </div>
           </div>
         `;
       }).join('');
     }
 
-    function selectMobileColumn(secId) {
-      mobileSelectedSectionId = secId;
-      renderTasksBoard();
-      lucide.createIcons();
-    }
-
-    let draggedColumnId = null;
-    function handleColumnDragStart(e) {
-      draggedColumnId = e.currentTarget.getAttribute("data-column-id");
-      e.dataTransfer.setData("text/plain", draggedColumnId);
-      e.currentTarget.classList.add("dragging-column");
-    }
-    function handleColumnDragOver(e) {
-      e.preventDefault();
-      e.currentTarget.classList.add("drag-over-column");
-    }
-    function handleColumnDragLeave(e) {
-      e.currentTarget.classList.remove("drag-over-column");
-    }
-    function handleColumnDrop(e) {
-      e.preventDefault();
-      e.currentTarget.classList.remove("drag-over-column");
-      const targetColumnId = e.currentTarget.getAttribute("data-column-id");
-      if (!draggedColumnId || draggedColumnId === targetColumnId) return;
-
-      const ordered = getPersonalOrderedSections();
-      const ids = ordered.map(s => s.id);
-      const fromIdx = ids.indexOf(draggedColumnId);
-      const toIdx = ids.indexOf(targetColumnId);
-      if (fromIdx > -1 && toIdx > -1) {
-        ids.splice(fromIdx, 1);
-        ids.splice(toIdx, 0, draggedColumnId);
-        savePersonalSectionOrder(ids);
-      }
-      draggedColumnId = null;
-    }
-
     function renderTaskCardHtml(t) {
-      const tag = sharedTags.find(x => x.id === t.tagId);
       const section = sharedSections.find(x => x.id === t.sectionId);
-      const canEdit = canModifyItem(t);
-
       return `
-        <div id="task_card_${t.id}" onclick="openTaskDetailModal('${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 relative cursor-pointer shadow-sm active:scale-[0.99] transition">
+        <div onclick="openTaskDetailModal('${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 cursor-pointer shadow-sm">
           <div class="flex items-start space-x-2.5">
             <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); handleTaskCheckAnimation('${t.id}', this)" class="mt-0.5 w-5 h-5 rounded-lg accent-green-600 cursor-pointer shrink-0">
             <div class="flex-1 min-w-0">
               <span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>
+              ${t.notes ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-tight">${t.notes}</div>` : ''}
             </div>
-            <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${t.starred ? '⭐' : '☆'}</button>
           </div>
-          
-          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-gray-200/50 dark:border-gray-700/50">
-            <div class="flex flex-wrap items-center gap-1">
-              ${section ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold truncate max-w-[100px]">${section.title}</span>` : ''}
-              ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
-              ${t.priority ? `<span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${t.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-gray-200 dark:bg-gray-800 text-gray-400'}">${t.priority}</span>` : ''}
-              ${t.assignees ? t.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded-full">${a}</span>`).join('') : ''}
-            </div>
-            ${canEdit ? `
-              <div class="flex items-center space-x-1 shrink-0">
-                <button onclick="event.stopPropagation(); openEditTaskModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                <button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-              </div>
-            ` : ''}
+          <div class="flex items-center justify-between pt-1.5 border-t border-gray-200/50 dark:border-gray-700/50 text-[9px] text-gray-400">
+            <span>${section ? section.title : ''}</span>
+            <span>${t.assignees ? t.assignees.join(', ') : ''}</span>
           </div>
         </div>
       `;
@@ -1321,585 +1120,86 @@
     function renderCompletedTasks() {
       const container = document.getElementById("completedTasksList");
       if (!container) return;
-
-      const completed = tasks.filter(t => t.completed);
-      if (completed.length === 0) {
-        container.innerHTML = `<div class="col-span-full py-4 text-center text-xs text-gray-500 italic">No completed tasks.</div>`;
-        return;
-      }
-
-      container.innerHTML = completed.map(t => {
-        const tag = sharedTags.find(x => x.id === t.tagId);
-        const section = sharedSections.find(x => x.id === t.sectionId);
-
-        return `
-          <div onclick="openTaskDetailModal('${t.id}')" class="bg-gray-50 dark:bg-[#1C1C1C] border border-gray-200 dark:border-gray-800/80 rounded-2xl p-3 flex flex-col space-y-2 cursor-pointer shadow-sm hover:border-gray-700 transition">
-            <div class="flex items-start justify-between space-x-2">
-              <div class="flex items-start space-x-2 flex-1 min-w-0">
-                <input type="checkbox" checked onclick="event.stopPropagation(); restoreTask('${t.id}')" class="mt-0.5 w-4 h-4 rounded accent-green-600 cursor-pointer shrink-0">
-                <span class="text-xs font-medium line-through text-gray-400 break-words">${t.title}</span>
-              </div>
-              <button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="text-gray-500 hover:text-red-400 p-1" title="Delete">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
-
-            <div class="flex flex-wrap items-center justify-between gap-1 pt-1.5 border-t border-gray-200/40 dark:border-gray-800">
-              <div class="flex flex-wrap items-center gap-1">
-                ${section ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold truncate max-w-[110px]">Orig: ${section.title}</span>` : ''}
-                ${tag ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full text-white font-bold opacity-80" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
-              </div>
-              <span class="text-[9px] text-emerald-500 font-semibold flex items-center space-x-1">
-                <i data-lucide="check" class="w-3 h-3"></i> <span>Completed</span>
-              </span>
-            </div>
-          </div>
-        `;
-      }).join('');
+      const completed = tasks.filter(t => t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
+      container.innerHTML = completed.map(t => `
+        <div class="bg-gray-50 dark:bg-[#1C1C1C] border border-gray-200 dark:border-gray-800 rounded-2xl p-3 flex items-center justify-between text-xs">
+          <span class="line-through text-gray-400">${t.title}</span>
+          <button onclick="deleteTask('${t.id}')" class="text-gray-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        </div>
+      `).join('');
     }
 
     function handleTaskCheckAnimation(id, checkboxEl) {
-      const titleEl = document.getElementById(`task_title_${id}`);
-      if (titleEl) titleEl.classList.add('strikethrough-active');
-
       setTimeout(() => {
         const t = tasks.find(x => x.id === id);
         if (t) {
           t.completed = true;
-          if (!Array.isArray(t.history)) t.history = [];
-          t.history.unshift({
-            action: `Marked completed`,
-            user: activeUser || "User",
-            date: new Date().toLocaleString()
-          });
+          const prefs = getNotificationPrefs(t.owner);
+          if (prefs.enabled && prefs.notifyCompleted && t.owner !== activeUser) {
+            triggerLocalNotification("Task Completed", `${activeUser} finished: ${t.title}`);
+          }
           saveData();
         }
-      }, 350);
-    }
-
-    function restoreTask(id) {
-      const t = tasks.find(x => x.id === id);
-      if (t) {
-        t.completed = false;
-        if (!Array.isArray(t.history)) t.history = [];
-        t.history.unshift({
-          action: `Restored to active board`,
-          user: activeUser || "User",
-          date: new Date().toLocaleString()
-        });
-        saveData();
-      }
+      }, 250);
     }
 
     function clearAllCompletedTasks() {
-      const count = tasks.filter(t => t.completed).length;
-      if (count === 0) return;
-      if (confirm(`Permanently delete all ${count} completed tasks?`)) {
-        tasks = tasks.filter(t => !t.completed);
-        saveData();
-      }
+      tasks = tasks.filter(t => !(t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser)));
+      saveData();
     }
 
     function handleQuickTask(e, sectionId) {
       if (e.key === 'Enter' && e.target.value.trim()) {
-        const sec = sharedSections.find(s => s.id === sectionId);
-        let derivedPriority = "Medium";
-        if (sec && sec.title.toLowerCase().includes("high")) derivedPriority = "High";
-        else if (sec && sec.title.toLowerCase().includes("low")) derivedPriority = "Low";
-
+        const title = e.target.value.trim();
         tasks.push({
           id: Date.now().toString(),
-          title: e.target.value.trim(),
-          sectionId, 
-          tagId: null, 
-          assignees: [activeUser], 
-          priority: derivedPriority, 
-          dueDate: "", 
-          notes: "",
-          starred: false, 
-          completed: false, 
-          owner: activeUser, 
-          restricted: false,
-          history: [{
-            action: "Created task",
-            user: activeUser || "User",
-            date: new Date().toLocaleString()
-          }]
+          title, sectionId, priority: "Medium", assignees: [activeUser],
+          completed: false, owner: activeUser, workspace: currentWorkspace
         });
         e.target.value = "";
         saveData();
       }
     }
 
-    function toggleStarTask(id) {
-      const t = tasks.find(x => x.id === id);
-      if (t) {
-        t.starred = !t.starred;
-        saveData();
-      }
-    }
-
-    function deleteTask(id) {
-      tasks = tasks.filter(x => x.id !== id);
-      saveData();
-    }
+    function deleteTask(id) { tasks = tasks.filter(x => x.id !== id); saveData(); }
+    function deleteNote(id) { notes = notes.filter(x => x.id !== id); saveData(); }
+    function deleteOrder(id) { orders = orders.filter(x => x.id !== id); saveData(); }
 
     function renderNotesGrid() {
       const grid = document.getElementById("notesGrid");
       if (!grid) return;
-      let filteredNotes = notes;
-      if (activeFilterType === "assignee") filteredNotes = filteredNotes.filter(n => n.assignees && n.assignees.includes(activeFilterId));
-      else if (activeFilterType === "tag") filteredNotes = filteredNotes.filter(n => n.tagId === activeFilterId);
-      else if (activeFilterType === "starred") filteredNotes = filteredNotes.filter(n => n.starred);
-
-      grid.innerHTML = filteredNotes.map(n => renderNoteCardHtml(n)).join('');
-    }
-
-    function renderNoteCardHtml(n) {
-      const tag = sharedTags.find(x => x.id === n.tagId);
-      const canEdit = canModifyItem(n);
-      return `
-        <div onclick="openNoteModal('${n.id}')" class="group bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between relative shadow-sm hover:shadow-md transition cursor-pointer">
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="font-bold text-sm">${n.title}</h4>
-              <button onclick="event.stopPropagation(); toggleStarNote('${n.id}')" class="text-xs p-1">${n.starred ? '⭐' : '☆'}</button>
-            </div>
-            <p class="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap mb-3">${n.content}</p>
-          </div>
-          <div class="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-800">
-            <div class="flex items-center space-x-1">
-              ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
-              ${n.assignees ? n.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded-full">${a}</span>`).join('') : ''}
-            </div>
-            ${canEdit ? `
-              <div class="flex space-x-2">
-                <button onclick="event.stopPropagation(); openNoteModal('${n.id}')" class="text-gray-400 hover:text-white p-1"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                <button onclick="event.stopPropagation(); deleteNote('${n.id}')" class="text-gray-400 hover:text-red-400 p-1"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
-              </div>
-            ` : ''}
-          </div>
+      const filtered = notes.filter(n => (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser));
+      grid.innerHTML = filtered.map(n => `
+        <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+          <h4 class="font-bold text-sm mb-1">${n.title}</h4>
+          <p class="text-xs text-gray-400 whitespace-pre-wrap">${n.content}</p>
+          <button onclick="deleteNote('${n.id}')" class="self-end text-gray-500 hover:text-red-400 mt-2"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
-      `;
-    }
-
-    function toggleStarNote(id) {
-      const n = notes.find(x => x.id === id);
-      if (n) { n.starred = !n.starred; saveData(); }
-    }
-
-    function deleteNote(id) {
-      notes = notes.filter(x => x.id !== id);
-      saveData();
-    }
-
-    function canModifyItem(item) {
-      if (item.owner === activeUser) return true;
-      if (item.restricted) return false;
-      const u = users.find(x => x.name === activeUser);
-      return u && (u.role === "admin" || u.role === "master_admin");
-    }
-
-    function openTaskDetailModal(id) {
-      const t = tasks.find(x => x.id === id);
-      if (!t) return;
-      document.getElementById("detailTitle").innerText = t.title;
-      document.getElementById("detailNotes").innerText = t.notes || "No description provided.";
-      document.getElementById("detailPriority").innerText = t.priority || "Medium";
-      
-      const sec = sharedSections.find(s => s.id === t.sectionId);
-      document.getElementById("detailSection").innerText = sec ? sec.title : "General";
-      document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone";
-      document.getElementById("detailDueDate").innerText = t.dueDate || "No Date";
-      document.getElementById("detailOwner").innerText = t.owner || "System";
-
-      const statusBadge = document.getElementById("detailStatusBadge");
-      if (t.completed) {
-        statusBadge.innerText = "Completed";
-        statusBadge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-        statusBadge.classList.remove("hidden");
-      } else {
-        statusBadge.classList.add("hidden");
-      }
-
-      const logContainer = document.getElementById("detailHistoryLog");
-      if (Array.isArray(t.history) && t.history.length > 0) {
-        logContainer.innerHTML = t.history.map(h => `
-          <div class="border-b border-gray-200 dark:border-gray-800/80 pb-1 last:border-none">
-            <span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span>
-            <div class="text-[10px] text-gray-400">${h.date} by <span class="font-semibold text-emerald-400">${h.user}</span></div>
-          </div>
-        `).join('');
-      } else {
-        logContainer.innerHTML = `<div class="text-gray-500 italic text-[10px]">No edit history recorded.</div>`;
-      }
-
-      document.getElementById("detailEditBtn").onclick = () => {
-        closeTaskDetailModal();
-        openEditTaskModal(id);
-      };
-      document.getElementById("taskDetailModal").classList.remove("hidden");
-    }
-
-    function closeTaskDetailModal() {
-      document.getElementById("taskDetailModal").classList.add("hidden");
-    }
-
-    function openEditTaskModal(id) {
-      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-
-      const t = tasks.find(x => x.id === id);
-      if (t) {
-        document.getElementById("taskIdInput").value = t.id;
-        document.getElementById("taskTitleInput").value = t.title;
-        document.getElementById("taskSectionInput").value = t.sectionId;
-        document.getElementById("taskPriorityInput").value = t.priority || "Medium";
-        document.getElementById("taskTagInput").value = t.tagId || "";
-        document.getElementById("taskDueDateInput").value = t.dueDate || "";
-        document.getElementById("taskNotesInput").value = t.notes || "";
-        document.getElementById("taskStarInput").checked = t.starred || false;
-        renderAssigneesCheckboxes("taskAssigneesContainer", t.assignees || []);
-      }
-      document.getElementById("taskModalHeading").innerText = "Edit Task Details";
-      document.getElementById("taskModal").classList.remove("hidden");
-    }
-
-    function openNewTaskModal() {
-      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-      document.getElementById("taskTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-      document.getElementById("taskIdInput").value = "";
-      document.getElementById("taskTitleInput").value = "";
-      document.getElementById("taskNotesInput").value = "";
-      document.getElementById("taskDueDateInput").value = "";
-      
-      const firstSecId = sharedSections[0]?.id;
-      if (firstSecId) {
-        document.getElementById("taskSectionInput").value = firstSecId;
-        autoSyncPriorityWithSection(firstSecId);
-      } else {
-        document.getElementById("taskPriorityInput").value = "Medium";
-      }
-
-      document.getElementById("taskStarInput").checked = false;
-      renderAssigneesCheckboxes("taskAssigneesContainer", [activeUser]);
-      document.getElementById("taskModalHeading").innerText = "Create New Task";
-      document.getElementById("taskModal").classList.remove("hidden");
-    }
-
-    function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); }
-
-    function saveTask(e) {
-      e.preventDefault();
-      const id = document.getElementById("taskIdInput").value;
-      const title = document.getElementById("taskTitleInput").value;
-      const sectionId = document.getElementById("taskSectionInput").value;
-      const priority = document.getElementById("taskPriorityInput").value;
-      const tagId = document.getElementById("taskTagInput").value;
-      const dueDate = document.getElementById("taskDueDateInput").value;
-      const notesText = document.getElementById("taskNotesInput").value;
-      const starred = document.getElementById("taskStarInput").checked;
-      const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
-
-      if (id) {
-        const t = tasks.find(x => x.id === id);
-        if (t) {
-          t.title = title; 
-          t.sectionId = sectionId; 
-          t.priority = priority; 
-          t.tagId = tagId;
-          t.dueDate = dueDate; 
-          t.notes = notesText; 
-          t.starred = starred; 
-          t.assignees = assignees;
-          if (!Array.isArray(t.history)) t.history = [];
-          t.history.unshift({
-            action: `Edited details`,
-            user: activeUser || "User",
-            date: new Date().toLocaleString()
-          });
-        }
-      } else {
-        tasks.push({
-          id: Date.now().toString(),
-          title, sectionId, priority, tagId, dueDate, notes: notesText, assignees, starred,
-          completed: false, owner: activeUser,
-          history: [{
-            action: "Created task",
-            user: activeUser || "User",
-            date: new Date().toLocaleString()
-          }]
-        });
-      }
-      closeTaskModal();
-      saveData();
-    }
-
-    function renderAssigneesCheckboxes(containerId, selected = []) {
-      const c = document.getElementById(containerId);
-      if (!c) return;
-      c.innerHTML = users.map(u => `
-        <label class="flex items-center space-x-1.5 cursor-pointer bg-white dark:bg-[#1A1A1A] px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800">
-          <input type="checkbox" value="${u.name}" ${selected.includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]">
-          <span class="text-xs">${u.name}</span>
-        </label>
       `).join('');
     }
 
-    function openNoteModal(id = null) {
-      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-      if (id) {
-        const n = notes.find(x => x.id === id);
-        document.getElementById("noteId").value = n.id;
-        document.getElementById("noteTitleInput").value = n.title;
-        document.getElementById("noteContentInput").value = n.content;
-        document.getElementById("noteTagInput").value = n.tagId || "";
-        document.getElementById("noteStarInput").checked = n.starred;
-        renderAssigneesCheckboxes("noteAssigneesContainer", n.assignees || []);
-      } else {
-        document.getElementById("noteId").value = "";
-        document.getElementById("noteTitleInput").value = "";
-        document.getElementById("noteContentInput").value = "";
-        document.getElementById("noteStarInput").checked = false;
-        renderAssigneesCheckboxes("noteAssigneesContainer", [activeUser]);
-      }
-      document.getElementById("noteModal").classList.remove("hidden");
-    }
-
-    function closeNoteModal() { document.getElementById("noteModal").classList.add("hidden"); }
-
-    function saveNote(e) {
-      e.preventDefault();
-      const id = document.getElementById("noteId").value;
-      const title = document.getElementById("noteTitleInput").value;
-      const content = document.getElementById("noteContentInput").value;
-      const tagId = document.getElementById("noteTagInput").value;
-      const starred = document.getElementById("noteStarInput").checked;
-      const assignees = Array.from(document.querySelectorAll("#noteAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
-
-      if (id) {
-        const n = notes.find(x => x.id === id);
-        n.title = title; n.content = content; n.tagId = tagId; n.starred = starred; n.assignees = assignees;
-      } else {
-        notes.push({
-          id: Date.now().toString(),
-          title, content, tagId, starred, assignees, owner: activeUser
-        });
-      }
-      closeNoteModal();
-      saveData();
-    }
-
-    function openNewSectionModal() {
-      const name = prompt("Enter section name:");
-      if (name && name.trim()) {
-        sharedSections.push({ id: "s_" + Date.now(), title: name.trim() });
-        saveData();
-      }
-    }
-
-    function openNewTagModal(idToEdit = null) {
-      if (idToEdit) {
-        const t = sharedTags.find(x => x.id === idToEdit);
-        if (t) {
-          document.getElementById("tagIdInput").value = t.id;
-          document.getElementById("tagTitleInput").value = t.title;
-          document.getElementById("tagColorInput").value = t.color;
-          document.getElementById("tagModalTitle").innerText = "Edit Custom Tag";
-        }
-      } else {
-        document.getElementById("tagIdInput").value = "";
-        document.getElementById("tagTitleInput").value = "";
-        document.getElementById("tagColorInput").value = "#A6192E";
-        document.getElementById("tagModalTitle").innerText = "Create Custom Tag";
-      }
-      document.getElementById("tagModal").classList.remove("hidden");
-    }
-
-    function closeTagModal() { document.getElementById("tagModal").classList.add("hidden"); }
-
-    function saveCustomTag() {
-      const id = document.getElementById("tagIdInput").value;
-      const title = document.getElementById("tagTitleInput").value.trim();
-      const color = document.getElementById("tagColorInput").value;
-
-      if (title) {
-        if (id) {
-          const t = sharedTags.find(x => x.id === id);
-          if (t) { t.title = title; t.color = color; }
-        } else {
-          sharedTags.push({ id: "t_" + Date.now(), title, color });
-        }
-        closeTagModal();
-        saveData();
-      }
-    }
-
-    function deleteTag(id) {
-      if (confirm("Delete custom tag?")) {
-        sharedTags = sharedTags.filter(t => t.id !== id);
-        saveData();
-      }
-    }
-
-    /* --- SMART ITEM CLEANER & FORMATTER --- */
     function formatItemDescription(rawText) {
       const trimmed = rawText.trim();
-      if (!trimmed) return "";
-
+      if (!trimmed || trimmed.includes("(")) return trimmed;
       let text = trimmed.toLowerCase();
-
       let qty = "";
       const qtyMatch = text.match(/(?:x\s*(\d+)|(\d+)\s*x|\bqty:?\s*(\d+)\b)/i);
-      if (qtyMatch) {
-        qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]);
-      }
-
-      let size = "";
-      if (/\b(xxl|2xl)\b/i.test(text)) size = "XXL";
-      else if (/\b(xl|extra\s*large)\b/i.test(text)) size = "XL";
-      else if (/\b(l\b|large)/i.test(text) && !/\bl\/s\b/i.test(text)) size = "Large";
-      else if (/\b(m\b|med\b|medium)/i.test(text)) size = "Medium";
-      else if (/\b(s\b|sml\b|small)/i.test(text) && !/\bs\/s\b/i.test(text)) size = "Small";
-      else if (/\b(xs|extra\s*small)\b/i.test(text)) size = "XS";
-
-      let itemType = "";
-      if (text.includes("l/s") || text.includes("long sleeve") || text.includes("longsleeve")) {
-        itemType = "Long Sleeve T-Shirt";
-      } else if (text.includes("tshirt") || text.includes("t-shirt") || text.includes("t shirt") || text.includes("shirth")) {
-        itemType = "Work T-Shirt";
-      } else if (text.includes("polo")) {
-        itemType = "Polo Shirt";
-      } else if (text.includes("hoodie") || text.includes("hoody")) {
-        itemType = "Work Hoodie";
-      } else if (text.includes("jumper") || text.includes("sweatshirt")) {
-        itemType = "Sweatshirt";
-      } else if (text.includes("jacket") || text.includes("coat")) {
-        itemType = "Work Jacket";
-      } else if (text.includes("trouser") || text.includes("pants")) {
-        itemType = "Work Trousers";
-      } else if (text.includes("boot") || text.includes("shoe")) {
-        itemType = "Safety Boots";
-      } else if (text.includes("glove")) {
-        itemType = "Safety Gloves";
-      } else {
-        itemType = trimmed
-          .replace(/(?:x\s*\d+|\d+\s*x|\bqty:?\s*\d+\b)/gi, '')
-          .replace(/\b(small|medium|large|xl|xxl|2xl|xs|sml|med)\b/gi, '')
-          .trim();
-        itemType = itemType.charAt(0).toUpperCase() + itemType.slice(1);
-      }
-
-      const parts = [itemType];
-      if (size) parts.push(size);
-      if (qty) parts.push(qty);
-      const cleanBracket = `(${parts.join(" - ")})`;
-
-      if (trimmed.includes("(") && trimmed.includes(")")) {
-        return trimmed;
-      }
-
-      return `${trimmed} ${cleanBracket}`;
+      if (qtyMatch) qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]);
+      return `${trimmed} ${qty ? `(${qty})` : ''}`.trim();
     }
 
-    /* --- CLIPBOARD & FILE ATTACHMENT LOGIC --- */
-    function handleFilePaste(e) {
-      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].kind === 'file') {
-          const file = items[i].getAsFile();
-          processUploadedFile(file);
-          break;
-        }
-      }
-    }
-
-    function handleFileSelect(e) {
-      if (e.target.files && e.target.files[0]) {
-        processUploadedFile(e.target.files[0]);
-      }
-    }
-
-    function processUploadedFile(file) {
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        attachedFileBase64 = evt.target.result;
-        attachedFileName = file.name || "Pasted file";
-        document.getElementById("fileNameLabel").innerText = attachedFileName;
-        document.getElementById("filePreviewContainer").classList.remove("hidden");
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function removeAttachedFile() {
-      attachedFileBase64 = null;
-      attachedFileName = "";
-      document.getElementById("orderScreenshotInput").value = "";
-      document.getElementById("filePreviewContainer").classList.add("hidden");
-    }
-
-    /* --- ORDER TRACKER LOGIC --- */
     function openNewOrderModal() {
       document.getElementById("orderIdInput").value = "";
       document.getElementById("orderPoInput").value = "";
-      
-      const todayStr = new Date().toISOString().split('T')[0];
-      const dateEl = document.getElementById("orderDateInput");
-      dateEl.value = todayStr;
-      
+      document.getElementById("orderDateInput").value = new Date().toISOString().split('T')[0];
       document.getElementById("orderTypeInput").value = "";
       document.getElementById("orderPlacedByInput").value = activeUser || "";
       document.getElementById("orderFreeformItemsInput").value = "";
       document.getElementById("orderNotesInput").value = "";
-      removeAttachedFile();
-      
-      document.getElementById("orderModalHeading").innerHTML = `
-        <i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i>
-        <span>Create Purchase Order</span>
-      `;
       document.getElementById("orderModal").classList.remove("hidden");
-      lucide.createIcons();
     }
 
-    function openEditOrderModal(orderId) {
-      const ord = orders.find(x => x.id === orderId);
-      if (!ord) return;
-
-      document.getElementById("orderIdInput").value = ord.id;
-      document.getElementById("orderPoInput").value = ord.poNumber || "";
-      document.getElementById("orderDateInput").value = ord.dateOrdered || "";
-      document.getElementById("orderTypeInput").value = ord.orderType || "";
-      document.getElementById("orderPlacedByInput").value = ord.placedBy || "";
-      document.getElementById("orderNotesInput").value = ord.notes || "";
-
-      if (ord.items && ord.items.length > 0) {
-        document.getElementById("orderFreeformItemsInput").value = ord.items.map(i => i.desc).join("\n");
-      } else {
-        document.getElementById("orderFreeformItemsInput").value = "";
-      }
-
-      if (ord.image) {
-        attachedFileBase64 = ord.image;
-        attachedFileName = "Attached receipt/file";
-        document.getElementById("fileNameLabel").innerText = attachedFileName;
-        document.getElementById("filePreviewContainer").classList.remove("hidden");
-      } else {
-        removeAttachedFile();
-      }
-
-      document.getElementById("orderModalHeading").innerHTML = `
-        <i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i>
-        <span>Edit Purchase Order</span>
-      `;
-      document.getElementById("orderModal").classList.remove("hidden");
-      lucide.createIcons();
-    }
-
-    function closeOrderModal() {
-      document.getElementById("orderModal").classList.add("hidden");
-      removeAttachedFile();
-    }
+    function closeOrderModal() { document.getElementById("orderModal").classList.add("hidden"); }
 
     function saveOrder(e) {
       e.preventDefault();
@@ -1908,81 +1208,41 @@
       const dateOrdered = document.getElementById("orderDateInput").value;
       const orderType = document.getElementById("orderTypeInput").value.trim();
       const placedBy = document.getElementById("orderPlacedByInput").value.trim();
-      const freeformText = document.getElementById("orderFreeformItemsInput").value;
+      const rawLines = document.getElementById("orderFreeformItemsInput").value.split(/\r?\n|,/);
       const notes = document.getElementById("orderNotesInput").value.trim();
 
-      const rawLines = freeformText.split(/\r?\n|,/);
-      const items = [];
-      rawLines.forEach(line => {
-        const trimmed = line.trim();
-        if (trimmed) {
-          items.push({
-            id: "it_" + Date.now() + "_" + Math.floor(Math.random()*10000),
-            desc: formatItemDescription(trimmed),
-            received: false,
-            stocked: false
-          });
-        }
-      });
+      const items = rawLines.map(line => line.trim()).filter(Boolean).map(desc => ({
+        id: "it_" + Math.random().toString(36).substr(2, 9),
+        desc: formatItemDescription(desc),
+        received: false,
+        receivedPartial: false,
+        partialQty: "",
+        stocked: false
+      }));
 
-      if (id) {
-        const ord = orders.find(x => x.id === id);
-        if (ord) {
-          ord.poNumber = poNumber;
-          ord.dateOrdered = dateOrdered;
-          ord.orderType = orderType;
-          ord.placedBy = placedBy;
-          
-          ord.placedMeta = `Placed by ${placedBy} on ${dateOrdered}`;
-          if (items.length > 0) ord.items = items;
-          ord.notes = notes;
-          if (attachedFileBase64) ord.image = attachedFileBase64;
-        }
-      } else {
+      if (!id) {
         orders.push({
           id: "ord_" + Date.now(),
-          poNumber,
-          dateOrdered,
-          orderType,
-          placedBy,
-          items,
-          notes,
-          image: attachedFileBase64,
-          placed: true,
-          placedMeta: `Placed by ${placedBy} on ${dateOrdered}`,
-          vbop: false,
-          vbopMeta: null,
-          receivedPartial: false,
-          received: false,
-          receivedMeta: null,
-          emailed: false,
-          emailedMeta: null,
-          stocked: false,
-          stockedMeta: null,
-          completed: false,
-          completedMeta: null
+          poNumber, dateOrdered, orderType, placedBy, items, notes,
+          placed: true, placedMeta: `Placed by ${placedBy} on ${dateOrdered}`,
+          vbop: false, received: false, emailed: false, stocked: false, completed: false,
+          workspace: currentWorkspace, owner: activeUser
         });
       }
-
       closeOrderModal();
       saveData();
     }
 
     function toggleOrderItemsAccordion(orderId) {
-      const container = document.getElementById(`itemsAccordion_${orderId}`);
-      const chevron = document.getElementById(`itemsChevron_${orderId}`);
-      if (!container || !chevron) return;
+      openAccordionsMap[orderId] = !openAccordionsMap[orderId];
+      renderOrders();
+    }
 
-      const isHidden = container.classList.contains("hidden");
-      if (isHidden) {
-        container.classList.remove("hidden");
-        chevron.classList.add("rotate-180");
-        openAccordionsMap[orderId] = true;
-      } else {
-        container.classList.add("hidden");
-        chevron.classList.remove("rotate-180");
-        delete openAccordionsMap[orderId];
-      }
+    function updateItemPartialQty(orderId, itemId, qty) {
+      const ord = orders.find(x => x.id === orderId);
+      if (!ord || !ord.items) return;
+      const it = ord.items.find(x => x.id === itemId);
+      if (it) { it.partialQty = qty; saveData(); }
     }
 
     function renderOrders() {
@@ -1990,354 +1250,110 @@
       const completedContainer = document.getElementById("completedOrdersList");
       if (!activeContainer || !completedContainer) return;
 
-      const query = (document.getElementById("orderSearchInput")?.value || "").toLowerCase().trim();
-
-      const sortedOrders = [...orders].sort((a, b) => {
-        const dateA = new Date(a.dateOrdered || 0).getTime();
-        const dateB = new Date(b.dateOrdered || 0).getTime();
-        return dateB - dateA;
-      });
-
-      let filtered = sortedOrders;
-      if (query) {
-        filtered = sortedOrders.filter(ord => {
-          const matchPo = ord.poNumber && ord.poNumber.toLowerCase().includes(query);
-          const matchType = ord.orderType && ord.orderType.toLowerCase().includes(query);
-          const matchBy = ord.placedBy && ord.placedBy.toLowerCase().includes(query);
-          const matchNotes = ord.notes && ord.notes.toLowerCase().includes(query);
-          const matchItems = ord.items && ord.items.some(i => i.desc && i.desc.toLowerCase().includes(query));
-          return matchPo || matchType || matchBy || matchNotes || matchItems;
-        });
-      }
-
+      const filtered = orders.filter(o => (o.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || o.owner === activeUser));
       const activeOrders = filtered.filter(o => !o.completed);
       const completedOrders = filtered.filter(o => o.completed);
 
       document.getElementById("activeOrdersBadge").innerText = activeOrders.length;
       document.getElementById("completedOrdersBadge").innerText = completedOrders.length;
 
-      if (activeOrders.length === 0) {
-        activeContainer.innerHTML = `
-          <div class="text-center py-8 bg-white dark:bg-[#181818] rounded-2xl border border-gray-200 dark:border-gray-800">
-            <i data-lucide="package-open" class="w-8 h-8 text-gray-400 mx-auto mb-1.5 opacity-50"></i>
-            <h4 class="font-bold text-xs text-gray-300">${query ? 'No matching orders found' : 'No active orders'}</h4>
-            <p class="text-[11px] text-gray-500">${query ? 'Check your search terms' : 'Click "+ Add Order" to start tracking.'}</p>
-          </div>
-        `;
-      } else {
-        activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join('');
-      }
-
-      if (completedOrders.length === 0) {
-        completedContainer.innerHTML = `
-          <div class="text-center py-4 text-xs text-gray-500 italic bg-white dark:bg-[#181818] rounded-xl border border-gray-200 dark:border-gray-800">
-            No completed orders archive entries.
-          </div>
-        `;
-      } else {
-        completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join('');
-      }
-
+      activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join('');
+      completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join('');
       lucide.createIcons();
     }
 
     function renderOrderCardHtml(ord) {
       const hasItems = ord.items && ord.items.length > 0;
-      
       const allReceived = hasItems ? ord.items.every(i => i.received) : !!ord.received;
-      const partialReceived = hasItems ? (ord.items.some(i => i.received) && !allReceived) : !!ord.receivedPartial;
-      const receivedCount = hasItems ? ord.items.filter(i => i.received).length : 0;
-      
-      const allStocked = hasItems && ord.items.every(i => i.stocked);
-      const stockedCount = hasItems ? ord.items.filter(i => i.stocked).length : 0;
-      
+      const partialReceived = hasItems ? (ord.items.some(i => i.received || i.receivedPartial) && !allReceived) : false;
       const isAccordionOpen = !!openAccordionsMap[ord.id];
 
-      // Parse multi-PO numbers (e.g., "1234, 5678" or "1234 / 5678" or "1234 and 5678")
-      const poList = (ord.poNumber || "").split(/[,/&;]|\band\b/i).map(p => p.trim()).filter(Boolean);
-      if (poList.length === 0) poList.push(ord.poNumber || "N/A");
-
       return `
-        <div class="bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-3xl p-3.5 md:p-5 shadow-sm space-y-3.5">
-          
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 border-b border-gray-200 dark:border-gray-800 gap-2">
-            
-            <div class="flex items-center flex-wrap gap-2">
-              <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-md bg-[#A6192E] text-white">PO#</span>
-              <div class="flex flex-wrap items-center gap-1.5">
-                ${poList.map(po => `
-                  <div class="flex items-center space-x-1.5 bg-gray-100 dark:bg-[#1E1E1E] pl-2 pr-1.5 py-0.5 rounded-md border border-gray-300 dark:border-gray-700">
-                    <span class="text-base font-black tracking-wide text-gray-900 dark:text-white">${po}</span>
-                    <a href="https://mail.google.com/mail/u/0/#search/${encodeURIComponent(po)}" target="_blank" onclick="event.stopPropagation()" class="p-1 hover:text-[#A6192E] text-gray-400 transition" title="Search '${po}' in Gmail">
-                      <i data-lucide="mail" class="w-4 h-4"></i>
-                    </a>
-                  </div>
-                `).join('')}
-              </div>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400">${ord.orderType}</span>
+        <div class="bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-3xl p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-800">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs uppercase font-extrabold px-2 py-0.5 rounded bg-[#A6192E] text-white">PO#</span>
+              <span class="text-base font-black">${ord.poNumber}</span>
+              <a href="https://mail.google.com/mail/u/0/#search/${encodeURIComponent(ord.poNumber)}" target="_blank" class="text-gray-400 hover:text-white"><i data-lucide="mail" class="w-4 h-4"></i></a>
             </div>
-
-            <div class="flex items-center justify-between sm:justify-end space-x-2 text-xs text-gray-400">
-              <div class="bg-gray-200 dark:bg-[#252525] px-2.5 py-1 rounded-lg text-gray-300 font-bold flex items-center space-x-1.5 border border-gray-300 dark:border-gray-700/60">
-                <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#A6192E]"></i>
-                <span>Ordered: <strong class="text-white">${ord.dateOrdered}</strong></span>
-              </div>
-              <span class="text-emerald-400 font-semibold">${ord.placedBy}</span>
-              
-              <!-- EDIT ORDER BUTTON -->
-              <button onclick="openEditOrderModal('${ord.id}')" class="p-1 hover:text-white transition" title="Edit Order Details">
-                <i data-lucide="pencil" class="w-4 h-4 text-gray-400 hover:text-white"></i>
-              </button>
-
-              ${ord.completed ? `
-                <button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold ml-1">Re-open</button>
-              ` : `
-                <button onclick="openOrderCompleteVerification('${ord.id}')" class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold active:scale-95 transition flex items-center space-x-1">
-                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
-                  <span>Complete</span>
-                </button>
-              `}
-              <button onclick="deleteOrder('${ord.id}')" class="p-1 hover:text-red-400" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            <div class="flex items-center space-x-2 text-xs">
+              <span class="text-gray-400">Ordered: ${ord.dateOrdered}</span>
+              <button onclick="deleteOrder('${ord.id}')" class="text-gray-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
             </div>
           </div>
 
-          <!-- STATUS STEPS GRID -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
-            <!-- 1. PLACED -->
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
-              <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]">
-              <div>
-                <div class="text-xs font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div>
-                <div class="text-[10px] text-gray-500">${ord.placedMeta || `Placed by ${ord.placedBy} on ${ord.dateOrdered}`}</div>
-              </div>
+          <!-- CHECKLIST STAGES (1 to 5) -->
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
+              <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="accent-[#A6192E]">
+              <span>1. Placed</span>
             </label>
-
-            <!-- 2. VBOP -->
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
-              <input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="mt-0.5 w-4 h-4 accent-purple-600">
-              <div>
-                <div class="text-xs font-bold ${ord.vbop ? 'text-purple-400' : 'text-gray-400'}">2. Added on VBOP</div>
-                <div class="text-[10px] text-gray-500">${ord.vbopMeta || '(If applicable)'}</div>
-              </div>
+            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
+              <input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="accent-purple-600">
+              <span>2. VBOP</span>
             </label>
-
-            <!-- 3. RECEIVED (DUAL: PARTIAL + FULL) -->
-            <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 space-y-1.5">
-              <div class="text-xs font-bold text-gray-200">3. Order Received</div>
-              <div class="flex flex-col space-y-1">
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" ${partialReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 accent-amber-500">
-                  <span class="text-[11px] ${partialReceived ? 'text-amber-400 font-semibold' : 'text-gray-400'}">Received (Partial)</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" ${allReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="w-3.5 h-3.5 accent-emerald-500">
-                  <span class="text-[11px] ${allReceived ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Received (Full)</span>
-                </label>
-              </div>
-              <div class="text-[9px] text-gray-500 truncate">${ord.receivedMeta || (allReceived ? 'All items received' : (partialReceived ? 'Partially arrived' : 'Awaiting delivery'))}</div>
-            </div>
-
-            <!-- 4. EMAILED -->
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
-              <input type="checkbox" ${ord.emailed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'emailed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600">
-              <div>
-                <div class="text-xs font-bold ${ord.emailed ? 'text-blue-400' : 'text-gray-400'}">4. Emailed & Complete</div>
-                <div class="text-[10px] text-gray-500">${ord.emailedMeta || 'Not emailed'}</div>
-              </div>
+            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
+              <input type="checkbox" ${allReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="accent-emerald-500">
+              <span>3. Received</span>
             </label>
-
-            <!-- 5. STOCKED -->
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
-              <input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="mt-0.5 w-4 h-4 accent-amber-500">
-              <div>
-                <div class="text-xs font-bold ${ord.stocked ? 'text-amber-400' : 'text-gray-400'}">5. Added to Stock</div>
-                <div class="text-[10px] text-gray-500">${ord.stockedMeta || 'Not stocked'}</div>
-              </div>
+            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
+              <input type="checkbox" ${ord.emailed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'emailed', this.checked)" class="accent-blue-500">
+              <span>4. Emailed</span>
+            </label>
+            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
+              <input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="accent-amber-500">
+              <span>5. Stocked</span>
             </label>
           </div>
 
-          ${ord.notes ? `
-            <div class="bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-gray-800/80 rounded-xl p-2.5 flex items-start space-x-2">
-              <i data-lucide="info" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
-              <div class="text-xs text-gray-300 whitespace-pre-wrap"><strong class="text-gray-400 font-semibold uppercase text-[10px] block mb-0.5">Order Notes:</strong>${ord.notes}</div>
-            </div>
-          ` : ''}
-
-          <!-- NATURALLY CLOSED COLLAPSIBLE ORDER CONTENTS ACCORDION (PERSISTENT STATE) -->
+          <!-- COLLAPSIBLE ITEMS WITH INLINE PARTIAL / ARRIVED / STOCKED -->
           <div class="bg-gray-50 dark:bg-[#151515] rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <button onclick="toggleOrderItemsAccordion('${ord.id}')" class="w-full flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#1B1B1B] transition">
-              <div class="flex items-center space-x-2">
-                <i id="itemsChevron_${ord.id}" data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180' : ''}"></i>
-                <i data-lucide="clipboard-list" class="w-4 h-4 text-[#A6192E]"></i>
-                <span class="text-xs font-bold text-gray-200">Order Contents (${hasItems ? ord.items.length : 0})</span>
-              </div>
-              <div class="flex items-center space-x-2 text-[10px]">
-                <span class="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-semibold border border-emerald-500/20">Arrived: ${receivedCount}/${hasItems ? ord.items.length : 0}</span>
-                <span class="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-semibold border border-amber-500/20">Stocked: ${stockedCount}/${hasItems ? ord.items.length : 0}</span>
-              </div>
+            <button onclick="toggleOrderItemsAccordion('${ord.id}')" class="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-[#1B1B1B]">
+              <span class="text-xs font-bold flex items-center space-x-1.5">
+                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180' : ''}"></i>
+                <span>Order Items (${hasItems ? ord.items.length : 0})</span>
+              </span>
+              <span class="text-[10px] text-gray-400">${partialReceived ? 'Partially Arrived' : (allReceived ? 'All Arrived' : 'Awaiting Delivery')}</span>
             </button>
 
-            <!-- COLLAPSIBLE ACCORDION CONTAINER -->
-            <div id="itemsAccordion_${ord.id}" class="${isAccordionOpen ? '' : 'hidden'} p-3 pt-0 border-t border-gray-200/50 dark:border-gray-800/60 space-y-2 mt-2">
-              <div class="space-y-1.5 pt-1">
-                ${hasItems ? ord.items.map(item => `
-                  <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2">
-                    <span class="text-xs text-gray-200 font-medium break-words">${item.desc}</span>
-                    
-                    <div class="flex items-center space-x-4 shrink-0 text-xs justify-end">
-                      <label class="flex items-center space-x-1.5 cursor-pointer">
-                        <input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'received', this.checked)" class="w-4 h-4 rounded accent-emerald-500">
-                        <span class="${item.received ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Arrived</span>
-                      </label>
+            <div class="${isAccordionOpen ? '' : 'hidden'} p-3 pt-0 border-t border-gray-200 dark:border-gray-800 space-y-2 mt-2">
+              ${hasItems ? ord.items.map(item => `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2">
+                  <span class="text-xs break-words">${item.desc}</span>
+                  
+                  <div class="flex items-center space-x-3 shrink-0 text-xs">
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                      <input type="checkbox" ${item.receivedPartial ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 accent-amber-500">
+                      <span class="text-[10px] text-amber-400">Partial</span>
+                    </label>
+                    <input type="text" placeholder="Qty (e.g. 3/7)" value="${item.partialQty || ''}" onchange="updateItemPartialQty('${ord.id}', '${item.id}', this.value)" class="w-20 px-1.5 py-0.5 text-[10px] bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded focus:outline-none focus:border-[#A6192E]">
 
-                      <label class="flex items-center space-x-1.5 cursor-pointer">
-                        <input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-4 h-4 rounded accent-amber-500">
-                        <span class="${item.stocked ? 'text-amber-400 font-bold' : 'text-gray-400'}">Stocked</span>
-                      </label>
-                    </div>
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                      <input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'received', this.checked)" class="w-3.5 h-3.5 accent-emerald-500">
+                      <span class="text-[10px] text-emerald-400">Arrived</span>
+                    </label>
+
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                      <input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-3.5 h-3.5 accent-blue-500">
+                      <span class="text-[10px] text-blue-400">Stocked</span>
+                    </label>
                   </div>
-                `).join('') : '<div class="text-xs text-gray-500 italic py-1">No items listed.</div>'}
-              </div>
-
-              ${ord.image ? `
-                <div class="pt-2 border-t border-gray-200 dark:border-gray-800">
-                  <div class="text-[10px] font-bold text-gray-400 uppercase mb-1">Attached Receipt / Invoice:</div>
-                  <img src="${ord.image}" onclick="openImageZoomModal(this.src)" class="h-28 object-contain rounded-xl border border-gray-700 cursor-zoom-in hover:opacity-90 transition">
                 </div>
-              ` : ''}
+              `).join('') : '<div class="text-xs text-gray-500 italic py-1">No items listed.</div>'}
             </div>
           </div>
-
         </div>
       `;
-    }
-
-    function openOrderCompleteVerification(orderId) {
-      const ord = orders.find(x => x.id === orderId);
-      if (!ord) return;
-
-      activeVerifyingOrderId = orderId;
-      document.getElementById("verifyModalPo").innerText = ord.poNumber;
-      document.getElementById("verifyStagePlaced").checked = !!ord.placed;
-      document.getElementById("verifyStageVbop").checked = !!ord.vbop;
-      
-      const allRec = ord.items && ord.items.length > 0 ? ord.items.every(i => i.received) : !!ord.received;
-      document.getElementById("verifyStageReceived").checked = allRec;
-      
-      document.getElementById("verifyStageEmailed").checked = !!ord.emailed;
-      document.getElementById("verifyStageStocked").checked = !!ord.stocked;
-      document.getElementById("verifyMissingNotes").value = "";
-
-      const missingSection = document.getElementById("verifyMissingItemsSection");
-      const missingList = document.getElementById("verifyMissingItemsList");
-
-      if (ord.items && ord.items.length > 0) {
-        missingList.innerHTML = ord.items.map(item => `
-          <label class="flex items-center space-x-2 text-xs cursor-pointer">
-            <input type="checkbox" value="${item.desc}" ${!item.received ? 'checked' : ''} class="verifyMissingItemCheck accent-amber-500">
-            <span class="${!item.received ? 'text-amber-300 font-bold' : 'text-gray-400'}">${item.desc}</span>
-          </label>
-        `).join('');
-      } else {
-        missingList.innerHTML = `<span class="text-[10px] text-gray-500 italic">No specific items listed.</span>`;
-      }
-
-      toggleVerifyReceivedMissing(allRec);
-      document.getElementById("orderCompleteModal").classList.remove("hidden");
-      lucide.createIcons();
-    }
-
-    function toggleVerifyReceivedMissing(isAllReceived) {
-      const missingSec = document.getElementById("verifyMissingItemsSection");
-      if (isAllReceived) missingSec.classList.add("hidden");
-      else missingSec.classList.remove("hidden");
-    }
-
-    function closeOrderCompleteModal() {
-      document.getElementById("orderCompleteModal").classList.add("hidden");
-      activeVerifyingOrderId = null;
-    }
-
-    function confirmOrderCompletion() {
-      const ord = orders.find(x => x.id === activeVerifyingOrderId);
-      if (!ord) return;
-
-      const placed = document.getElementById("verifyStagePlaced").checked;
-      const vbop = document.getElementById("verifyStageVbop").checked;
-      const allReceived = document.getElementById("verifyStageReceived").checked;
-      const emailed = document.getElementById("verifyStageEmailed").checked;
-      const allStocked = document.getElementById("verifyStageStocked").checked;
-
-      ord.placed = placed;
-      ord.vbop = vbop;
-      ord.received = allReceived;
-      if (allReceived) ord.receivedPartial = false;
-      ord.emailed = emailed;
-      ord.stocked = allStocked;
-      ord.completed = true;
-      ord.completedMeta = `Completed by ${activeUser || 'User'} on ${new Date().toLocaleDateString()}`;
-
-      if (!allReceived && ord.items) {
-        const checkedMissingBoxes = Array.from(document.querySelectorAll(".verifyMissingItemCheck:checked")).map(cb => cb.value);
-        const additionalNote = document.getElementById("verifyMissingNotes").value.trim();
-
-        if (checkedMissingBoxes.length > 0 || additionalNote) {
-          const missingMsg = `[Missing upon completion: ${checkedMissingBoxes.join(', ') || 'Partial delivery'}] ${additionalNote}`;
-          ord.notes = ord.notes ? `${ord.notes}\n${missingMsg}` : missingMsg;
-        }
-      }
-
-      closeOrderCompleteModal();
-      saveData();
-    }
-
-    function reopenOrder(id) {
-      const ord = orders.find(x => x.id === id);
-      if (ord) {
-        ord.completed = false;
-        ord.completedMeta = null;
-        saveData();
-      }
-    }
-
-    function clearAllCompletedOrders() {
-      const count = orders.filter(o => o.completed).length;
-      if (count === 0) return;
-      if (confirm(`Permanently delete all ${count} completed orders?`)) {
-        orders = orders.filter(o => !o.completed);
-        saveData();
-      }
     }
 
     function toggleOrderStage(orderId, stage, checked) {
       const ord = orders.find(x => x.id === orderId);
       if (!ord) return;
-
-      const meta = `${checked ? 'Confirmed' : 'Unchecked'} by ${activeUser || 'User'} on ${new Date().toLocaleString()}`;
-      
-      if (stage === 'placed') {
-        ord.placed = checked;
-      } else if (stage === 'vbop') {
-        ord.vbop = checked;
-        ord.vbopMeta = checked ? meta : null;
-      } else if (stage === 'receivedPartial') {
-        ord.receivedPartial = checked;
-        if (!checked) {
-          ord.received = false;
-          if (ord.items) ord.items.forEach(i => i.received = false);
-        }
-      } else if (stage === 'received') {
+      if (stage === 'received') {
         ord.received = checked;
-        ord.receivedPartial = false;
-        ord.receivedMeta = checked ? meta : null;
-        if (ord.items) ord.items.forEach(i => i.received = checked);
-      } else if (stage === 'emailed') {
-        ord.emailed = checked;
-        ord.emailedMeta = checked ? meta : null;
-      } else if (stage === 'stocked') {
-        ord.stocked = checked;
-        ord.stockedMeta = checked ? meta : null;
-        if (ord.items) ord.items.forEach(i => i.stocked = checked);
+        if (ord.items) ord.items.forEach(i => { i.received = checked; if (checked) i.receivedPartial = false; });
+      } else {
+        ord[stage] = checked;
       }
       saveData();
     }
@@ -2348,208 +1364,74 @@
       const it = ord.items.find(x => x.id === itemId);
       if (it) {
         it[field] = checked;
-
-        if (field === 'received') {
-          const anyReceived = ord.items.some(i => i.received);
-          const allRec = ord.items.every(i => i.received);
-          
-          if (allRec) {
-            ord.received = true;
-            ord.receivedPartial = false;
-            ord.receivedMeta = `All received (${new Date().toLocaleDateString()})`;
-          } else if (anyReceived) {
-            ord.received = false;
-            ord.receivedPartial = true;
-            ord.receivedMeta = `Partially arrived (${new Date().toLocaleDateString()})`;
-          } else {
-            ord.received = false;
-            ord.receivedPartial = false;
-            ord.receivedMeta = null;
-          }
-        } else if (field === 'stocked') {
-          if (ord.items.every(i => i.stocked)) {
-            ord.stocked = true;
-            ord.stockedMeta = `All stocked (${new Date().toLocaleDateString()})`;
-          } else {
-            ord.stocked = false;
-          }
-        }
+        if (field === 'received' && checked) it.receivedPartial = false;
+        if (field === 'receivedPartial' && checked) it.received = false;
+        ord.received = ord.items.every(i => i.received);
         saveData();
       }
     }
 
-    function deleteOrder(id) {
-      if (confirm("Delete this order?")) {
-        orders = orders.filter(x => x.id !== id);
-        saveData();
-      }
-    }
-
-    /* --- ADMIN USER CREATION --- */
-    function adminAddNewUser(e) {
+    function openNoteModal() { document.getElementById("noteModal").classList.remove("hidden"); }
+    function closeNoteModal() { document.getElementById("noteModal").classList.add("hidden"); }
+    function saveNote(e) {
       e.preventDefault();
-      const current = users.find(u => u.name === activeUser);
-      if (!current || (current.role !== "admin" && current.role !== "master_admin")) {
-        alert("Access Denied: Only Admins can create user profiles.");
-        return;
-      }
-
-      const name = document.getElementById("adminNewUserName").value.trim();
-      const role = document.getElementById("adminNewUserRole").value;
-      const pwd = document.getElementById("adminNewUserPassword").value.trim() || "AMADA";
-
-      if (!name) return;
-      if (users.some(u => u.name.toLowerCase() === name.toLowerCase())) {
-        alert("A user with this name already exists.");
-        return;
-      }
-
-      users.push({ name, role, password: pwd });
-      document.getElementById("adminNewUserName").value = "";
-      document.getElementById("adminNewUserPassword").value = "";
+      notes.push({
+        id: "nt_" + Date.now(),
+        title: document.getElementById("noteTitleInput").value.trim(),
+        content: document.getElementById("noteContentInput").value.trim(),
+        owner: activeUser, workspace: currentWorkspace
+      });
+      closeNoteModal();
       saveData();
-      openSettingsModal();
-      alert(`User profile '${name}' (${role}) created!`);
     }
 
-    function changeMyPassword(e) {
+    function openNewTaskModal() {
+      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      const c = document.getElementById("taskAssigneesContainer");
+      c.innerHTML = users.map(u => `
+        <label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>
+      `).join('');
+      document.getElementById("taskModal").classList.remove("hidden");
+    }
+    function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); }
+    function saveTask(e) {
       e.preventDefault();
-      const newPwd = document.getElementById("newPasswordInput").value.trim();
-      const u = users.find(x => x.name === activeUser);
-      if (u && newPwd) {
-        u.password = newPwd;
-        document.getElementById("newPasswordInput").value = "";
-        saveData();
-        alert("Your password has been updated!");
-      }
+      const title = document.getElementById("taskTitleInput").value.trim();
+      const sectionId = document.getElementById("taskSectionInput").value;
+      const priority = document.getElementById("taskPriorityInput").value;
+      const notesText = document.getElementById("taskNotesInput").value.trim();
+      const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
+
+      tasks.push({
+        id: Date.now().toString(),
+        title, sectionId, priority, notes: notesText,
+        assignees: assignees.length ? assignees : [activeUser],
+        completed: false, owner: activeUser, workspace: currentWorkspace
+      });
+      closeTaskModal();
+      saveData();
     }
 
-    function resetAllPasswordsToDefault() {
-      if (confirm("Master Reset: Reset all passwords to 'AMADA'?")) {
-        users.forEach(u => u.password = "AMADA");
-        saveData();
-        alert("All passwords reset to AMADA!");
-      }
+    function openTaskDetailModal(id) {
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+      document.getElementById("detailTitle").innerText = t.title;
+      document.getElementById("detailNotes").innerText = t.notes || "No notes.";
+      document.getElementById("taskDetailModal").classList.remove("hidden");
     }
-
-    function openSettingsModal() {
-      const activeObj = users.find(u => u.name === activeUser);
-      const isMasterAdmin = activeObj && activeObj.role === "master_admin";
-      const isAdmin = activeObj && (activeObj.role === "admin" || isMasterAdmin);
-
-      const adminCreateSec = document.getElementById("adminCreateUserSection");
-      if (adminCreateSec) adminCreateSec.classList.toggle("hidden", !isAdmin);
-
-      const masterResetBtn = document.getElementById("btnMasterResetPasswords");
-      if (masterResetBtn) masterResetBtn.classList.toggle("hidden", !isMasterAdmin);
-
-      const container = document.getElementById("permissionsUserList");
-      if (container) {
-        container.innerHTML = users.map(u => {
-          const isTargetMaster = u.name === "Charlie" || u.role === "master_admin";
-          let canDeleteTarget = isMasterAdmin && !isTargetMaster;
-          let canEditRole = isMasterAdmin && !isTargetMaster;
-
-          return `
-            <div class="flex items-center justify-between bg-gray-100 dark:bg-[#121212] p-2.5 rounded-xl text-xs">
-              <span class="font-bold">${u.name} ${isTargetMaster ? '(Master Admin)' : `(${u.role.replace('_', ' ')})`}</span>
-              <div class="flex items-center space-x-2">
-                ${isTargetMaster ? '<span class="text-[10px] text-amber-500 font-semibold">Protected Master</span>' : `
-                  ${canEditRole ? `
-                    <select onchange="changeUserRole('${u.name}', this.value)" class="bg-gray-200 dark:bg-[#252525] border border-gray-700 rounded-lg p-1 text-xs">
-                      <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Viewer</option>
-                      <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
-                      <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-                    </select>
-                  ` : `<span class="text-[9px] text-gray-500 capitalize">${u.role.replace('_', ' ')}</span>`}
-                  ${canDeleteTarget ? `
-                    <button onclick="deleteUserProfile('${u.name}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                  ` : ''}
-                `}
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-      document.getElementById("settingsModal").classList.remove("hidden");
-      lucide.createIcons();
-    }
-
-    function closeSettingsModal() { document.getElementById("settingsModal").classList.add("hidden"); }
-
-    function changeUserRole(name, role) {
-      const u = users.find(x => x.name === name);
-      if (u && u.name !== "Charlie") { u.role = role; saveData(); }
-    }
-
-    function deleteUserProfile(name) {
-      if (name === "Charlie") {
-        alert("The Master Admin profile cannot be deleted.");
-        return;
-      }
-      if (confirm(`Delete user '${name}'?`)) {
-        users = users.filter(x => x.name !== name);
-        renderUserProfiles();
-        openSettingsModal();
-        saveData();
-      }
-    }
+    function closeTaskDetailModal() { document.getElementById("taskDetailModal").classList.add("hidden"); }
 
     function switchMainTab(tab) {
       currentMainTab = tab;
-      
-      const tasksWrapper = document.getElementById("tasksWrapper");
-      const notesView = document.getElementById("notesView");
-      const ordersView = document.getElementById("ordersView");
-      const mainSidebar = document.getElementById("mainSidebar");
-
-      tasksWrapper.classList.toggle("hidden", tab !== 'tasks');
-      notesView.classList.toggle("hidden", tab !== 'notes');
-      ordersView.classList.toggle("hidden", tab !== 'orders');
-
-      if (tab === 'orders') mainSidebar.classList.add("md:hidden");
-      else mainSidebar.classList.remove("md:hidden");
-
-      const btnTasksD = document.getElementById("tabTasksDesktop");
-      const btnNotesD = document.getElementById("tabNotesDesktop");
-      const btnOrdersD = document.getElementById("tabOrdersDesktop");
-
-      const activeD = "px-4 py-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all";
-      const inactiveD = "px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all";
-
-      if (btnTasksD) btnTasksD.className = tab === 'tasks' ? activeD : inactiveD;
-      if (btnNotesD) btnNotesD.className = tab === 'notes' ? activeD : inactiveD;
-      if (btnOrdersD) btnOrdersD.className = tab === 'orders' ? activeD : inactiveD;
-
-      const mTasks = document.getElementById("mobileNavTasks");
-      const mNotes = document.getElementById("mobileNavNotes");
-      const mOrders = document.getElementById("mobileNavOrders");
-
-      if (mTasks && mNotes && mOrders) {
-        mTasks.className = tab === 'tasks' ? "flex flex-col items-center justify-center flex-1 py-1 text-[#A6192E]" : "flex flex-col items-center justify-center flex-1 py-1 text-gray-400";
-        mNotes.className = tab === 'notes' ? "flex flex-col items-center justify-center flex-1 py-1 text-[#A6192E]" : "flex flex-col items-center justify-center flex-1 py-1 text-gray-400";
-        mOrders.className = tab === 'orders' ? "flex flex-col items-center justify-center flex-1 py-1 text-[#A6192E]" : "flex flex-col items-center justify-center flex-1 py-1 text-gray-400";
-      }
-
+      document.getElementById("tasksWrapper").classList.toggle("hidden", tab !== 'tasks');
+      document.getElementById("notesView").classList.toggle("hidden", tab !== 'notes');
+      document.getElementById("ordersView").classList.toggle("hidden", tab !== 'orders');
       renderAll();
     }
 
-    function toggleActiveUsersPopover() {
-      updatePresenceUI();
-      document.getElementById("activeUsersPopover").classList.toggle("hidden");
-    }
-
-    function toggleDarkMode() {
-      document.documentElement.classList.toggle("dark");
-    }
-
-    function openImageZoomModal(src) {
-      const modal = document.createElement("div");
-      modal.className = "fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-zoom-out";
-      modal.onclick = () => modal.remove();
-      modal.innerHTML = `<img src="${src}" class="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl">`;
-      document.body.appendChild(modal);
-    }
+    function toggleDarkMode() { document.documentElement.classList.toggle("dark"); }
+    function openSettingsModal() { document.getElementById("settingsModal").classList.remove("hidden"); updatePushUI(); }
+    function closeSettingsModal() { document.getElementById("settingsModal").classList.add("hidden"); }
   </script>
 </body>
 </html>
