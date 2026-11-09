@@ -261,7 +261,7 @@
           <div class="flex justify-between items-center gap-2">
             <div>
               <h2 class="text-base font-bold flex items-center space-x-2">
-                <i data-lucide="package" class="w-4 h-4 text-[#A6192E]"></i>
+                <i data-lucide="package" class="w-5 h-5 text-[#A6192E]"></i>
                 <span>Order Tracker</span>
               </h2>
             </div>
@@ -288,7 +288,7 @@
           <div id="ordersListContainer" class="space-y-3"></div>
         </div>
 
-        <!-- COMPLETED ORDERS ARCHIVE -->
+        <!-- COMPLETED ORDERS -->
         <div class="mt-6 border-t border-gray-200 dark:border-gray-800 pt-3">
           <div class="flex items-center justify-between bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl px-3.5 py-2.5 cursor-pointer shadow-sm" onclick="toggleCompletedOrdersDropdown()">
             <div class="flex items-center space-x-2">
@@ -384,7 +384,7 @@
     </div>
   </div>
 
-  <!-- ORDER MODAL (WITH PASTEABLE FILE ZONE) -->
+  <!-- ORDER MODAL (WITH PASTEABLE FILE ZONE & EDIT CAPABILITY) -->
   <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
@@ -1343,7 +1343,7 @@
 
             <div class="flex flex-wrap items-center justify-between gap-1 pt-1.5 border-t border-gray-200/40 dark:border-gray-800">
               <div class="flex flex-wrap items-center gap-1">
-                ${section ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold truncate max-w-[110px]">${section.title}</span>` : ''}
+                ${section ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold truncate max-w-[110px]">Orig: ${section.title}</span>` : ''}
                 ${tag ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full text-white font-bold opacity-80" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
               </div>
               <span class="text-[9px] text-emerald-500 font-semibold flex items-center space-x-1">
@@ -1822,7 +1822,7 @@
       const reader = new FileReader();
       reader.onload = (evt) => {
         attachedFileBase64 = evt.target.result;
-        attachedFileName = file.name || "Pasted screenshot";
+        attachedFileName = file.name || "Pasted file";
         document.getElementById("fileNameLabel").innerText = attachedFileName;
         document.getElementById("filePreviewContainer").classList.remove("hidden");
       };
@@ -1854,6 +1854,40 @@
       document.getElementById("orderModalHeading").innerHTML = `
         <i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i>
         <span>Create Purchase Order</span>
+      `;
+      document.getElementById("orderModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function openEditOrderModal(orderId) {
+      const ord = orders.find(x => x.id === orderId);
+      if (!ord) return;
+
+      document.getElementById("orderIdInput").value = ord.id;
+      document.getElementById("orderPoInput").value = ord.poNumber || "";
+      document.getElementById("orderDateInput").value = ord.dateOrdered || "";
+      document.getElementById("orderTypeInput").value = ord.orderType || "";
+      document.getElementById("orderPlacedByInput").value = ord.placedBy || "";
+      document.getElementById("orderNotesInput").value = ord.notes || "";
+
+      if (ord.items && ord.items.length > 0) {
+        document.getElementById("orderFreeformItemsInput").value = ord.items.map(i => i.desc).join("\n");
+      } else {
+        document.getElementById("orderFreeformItemsInput").value = "";
+      }
+
+      if (ord.image) {
+        attachedFileBase64 = ord.image;
+        attachedFileName = "Attached receipt/file";
+        document.getElementById("fileNameLabel").innerText = attachedFileName;
+        document.getElementById("filePreviewContainer").classList.remove("hidden");
+      } else {
+        removeAttachedFile();
+      }
+
+      document.getElementById("orderModalHeading").innerHTML = `
+        <i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i>
+        <span>Edit Purchase Order</span>
       `;
       document.getElementById("orderModal").classList.remove("hidden");
       lucide.createIcons();
@@ -1895,6 +1929,7 @@
           ord.dateOrdered = dateOrdered;
           ord.orderType = orderType;
           ord.placedBy = placedBy;
+          ord.placedMeta = `Placed by ${placedBy} on ${dateOrdered}`;
           if (items.length > 0) ord.items = items;
           ord.notes = notes;
           if (attachedFileBase64) ord.image = attachedFileBase64;
@@ -1910,7 +1945,7 @@
           notes,
           image: attachedFileBase64,
           placed: true,
-          placedMeta: `Placed by ${activeUser || placedBy} on ${new Date().toLocaleDateString()}`,
+          placedMeta: `Placed by ${placedBy} on ${dateOrdered}`,
           vbop: false,
           vbopMeta: null,
           received: false,
@@ -1950,7 +1985,6 @@
 
       const query = (document.getElementById("orderSearchInput")?.value || "").toLowerCase().trim();
 
-      // Sort chronological: Newest at top, Oldest at bottom
       const sortedOrders = [...orders].sort((a, b) => {
         const dateA = new Date(a.dateOrdered || 0).getTime();
         const dateB = new Date(b.dateOrdered || 0).getTime();
@@ -2023,8 +2057,14 @@
                 <span>Ordered: <strong class="text-white">${ord.dateOrdered}</strong></span>
               </div>
               <span class="text-emerald-400 font-semibold">${ord.placedBy}</span>
+              
+              <!-- EDIT ORDER BUTTON -->
+              <button onclick="openEditOrderModal('${ord.id}')" class="p-1 hover:text-white transition" title="Edit Order Details">
+                <i data-lucide="pencil" class="w-4 h-4 text-gray-400 hover:text-white"></i>
+              </button>
+
               ${ord.completed ? `
-                <button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold ml-2">Re-open</button>
+                <button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold ml-1">Re-open</button>
               ` : `
                 <button onclick="openOrderCompleteVerification('${ord.id}')" class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold active:scale-95 transition flex items-center space-x-1">
                   <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
@@ -2035,13 +2075,13 @@
             </div>
           </div>
 
-          <!-- STATUS STEPS GRID (STAGE 4 IS EMAILED, NOT ARCHIVED) -->
+          <!-- STATUS STEPS GRID -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
             <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
               <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]">
               <div>
                 <div class="text-xs font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div>
-                <div class="text-[10px] text-gray-500">${ord.placedMeta || 'Pending'}</div>
+                <div class="text-[10px] text-gray-500">${ord.placedMeta || `Placed by ${ord.placedBy} on ${ord.dateOrdered}`}</div>
               </div>
             </label>
 
@@ -2234,7 +2274,7 @@
       const meta = `${checked ? 'Confirmed' : 'Unchecked'} by ${activeUser || 'User'} on ${new Date().toLocaleString()}`;
       if (stage === 'placed') {
         ord.placed = checked;
-        ord.placedMeta = checked ? meta : null;
+        ord.placedMeta = checked ? `Placed by ${ord.placedBy} on ${ord.dateOrdered}` : null;
       } else if (stage === 'vbop') {
         ord.vbop = checked;
         ord.vbopMeta = checked ? meta : null;
