@@ -261,7 +261,7 @@
           <div class="flex justify-between items-center gap-2">
             <div>
               <h2 class="text-base font-bold flex items-center space-x-2">
-                <i data-lucide="package" class="w-5 h-5 text-[#A6192E]"></i>
+                <i data-lucide="package" class="w-4 h-4 text-[#A6192E]"></i>
                 <span>Order Tracker</span>
               </h2>
             </div>
@@ -1932,7 +1932,7 @@
           ord.dateOrdered = dateOrdered;
           ord.orderType = orderType;
           ord.placedBy = placedBy;
-          ord.placedMeta = `Placed by ${placedBy} on ${dateOrdered}`;
+          
           if (items.length > 0) ord.items = items;
           ord.notes = notes;
           if (attachedFileBase64) ord.image = attachedFileBase64;
@@ -1948,7 +1948,6 @@
           notes,
           image: attachedFileBase64,
           placed: true,
-          placedMeta: `Placed by ${placedBy} on ${dateOrdered}`,
           vbop: false,
           vbopMeta: null,
           receivedPartial: false,
@@ -2042,8 +2041,9 @@
 
     function renderOrderCardHtml(ord) {
       const hasItems = ord.items && ord.items.length > 0;
-      const allReceived = hasItems && ord.items.every(i => i.received);
-      const partialReceived = hasItems && ord.items.some(i => i.received);
+      
+      const allReceived = hasItems ? ord.items.every(i => i.received) : !!ord.received;
+      const partialReceived = hasItems ? (ord.items.some(i => i.received) && !allReceived) : !!ord.receivedPartial;
       const receivedCount = hasItems ? ord.items.filter(i => i.received).length : 0;
       
       const allStocked = hasItems && ord.items.every(i => i.stocked);
@@ -2091,7 +2091,7 @@
               <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]">
               <div>
                 <div class="text-xs font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div>
-                <div class="text-[10px] text-gray-500">${ord.placedMeta || `Placed by ${ord.placedBy} on ${ord.dateOrdered}`}</div>
+                <div class="text-[10px] text-gray-500">${ord.placed ? `Placed by ${ord.placedBy} on ${ord.dateOrdered}` : 'Pending'}</div>
               </div>
             </label>
 
@@ -2109,12 +2109,12 @@
               <div class="text-xs font-bold text-gray-200">3. Order Received</div>
               <div class="flex flex-col space-y-1">
                 <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" ${partialReceived || ord.receivedPartial ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 accent-amber-500">
-                  <span class="text-[11px] ${partialReceived || ord.receivedPartial ? 'text-amber-400 font-semibold' : 'text-gray-400'}">Received (Partial)</span>
+                  <input type="checkbox" ${partialReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 accent-amber-500">
+                  <span class="text-[11px] ${partialReceived ? 'text-amber-400 font-semibold' : 'text-gray-400'}">Received (Partial)</span>
                 </label>
                 <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" ${allReceived || ord.received ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="w-3.5 h-3.5 accent-emerald-500">
-                  <span class="text-[11px] ${allReceived || ord.received ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Received (Full)</span>
+                  <input type="checkbox" ${allReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="w-3.5 h-3.5 accent-emerald-500">
+                  <span class="text-[11px] ${allReceived ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Received (Full)</span>
                 </label>
               </div>
               <div class="text-[9px] text-gray-500 truncate">${ord.receivedMeta || (allReceived ? 'All items received' : (partialReceived ? 'Partially arrived' : 'Awaiting delivery'))}</div>
@@ -2142,7 +2142,7 @@
           ${ord.notes ? `
             <div class="bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-gray-800/80 rounded-xl p-2.5 flex items-start space-x-2">
               <i data-lucide="info" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
-              <div class="text-xs text-gray-300 whitespace-pre-wrap"><strong class="text-gray-400 font-semibold uppercase text-[10px] block">Order Notes:</strong>${ord.notes}</div>
+              <div class="text-xs text-gray-300 whitespace-pre-wrap"><strong class="text-gray-400 font-semibold uppercase text-[10px] block mb-0.5">Order Notes:</strong>${ord.notes}</div>
             </div>
           ` : ''}
 
@@ -2295,29 +2295,27 @@
       const meta = `${checked ? 'Confirmed' : 'Unchecked'} by ${activeUser || 'User'} on ${new Date().toLocaleString()}`;
       if (stage === 'placed') {
         ord.placed = checked;
-        ord.placedMeta = checked ? `Placed by ${ord.placedBy} on ${ord.dateOrdered}` : null;
       } else if (stage === 'vbop') {
         ord.vbop = checked;
         ord.vbopMeta = checked ? meta : null;
       } else if (stage === 'receivedPartial') {
         ord.receivedPartial = checked;
+        if (!checked) {
+          ord.received = false;
+          if (ord.items) ord.items.forEach(i => i.received = false);
+        }
       } else if (stage === 'received') {
         ord.received = checked;
+        ord.receivedPartial = false;
         ord.receivedMeta = checked ? meta : null;
-        if (checked && ord.items) {
-          ord.items.forEach(i => i.received = true);
-          ord.receivedPartial = false;
-        }
+        if (ord.items) ord.items.forEach(i => i.received = checked);
       } else if (stage === 'emailed') {
         ord.emailed = checked;
         ord.emailedMeta = checked ? meta : null;
       } else if (stage === 'stocked') {
         ord.stocked = checked;
         ord.stockedMeta = checked ? meta : null;
-        if (checked && ord.items) ord.items.forEach(i => i.stocked = true);
-      } else if (stage === 'completed') {
-        ord.completed = checked;
-        ord.completedMeta = checked ? meta : null;
+        if (ord.items) ord.items.forEach(i => i.stocked = checked);
       }
       saveData();
     }
@@ -2336,7 +2334,7 @@
           if (allRec) {
             ord.received = true;
             ord.receivedPartial = false;
-            ord.receivedMeta = `All items received (${new Date().toLocaleDateString()})`;
+            ord.receivedMeta = `All received (${new Date().toLocaleDateString()})`;
           } else if (anyReceived) {
             ord.received = false;
             ord.receivedPartial = true;
