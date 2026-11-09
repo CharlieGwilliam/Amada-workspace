@@ -1,0 +1,16 @@
+{
+  "name": "Amada Workspace",
+  "short_name": "Amada",
+  "start_url": "/Amada-workspace/index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#A6192E",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
