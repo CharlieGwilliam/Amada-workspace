@@ -11,6 +11,7 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
   <script>
@@ -86,13 +87,13 @@
     </div>
 
     <nav class="hidden md:flex items-center space-x-2 bg-gray-200/80 dark:bg-[#121212] p-1.5 rounded-2xl border border-gray-300 dark:border-gray-800 shadow-inner mx-2">
-      <button id="tabTasksDesktop" onclick="switchMainTab('tasks')" class="px-4 py-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all">
+      <button id="tabTasksDesktop" onclick="switchMainTab('tasks')" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all">
         <i data-lucide="check-square" class="w-4 h-4"></i><span>Tasks Board</span>
       </button>
-      <button id="tabNotesDesktop" onclick="switchMainTab('notes')" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all">
+      <button id="tabNotesDesktop" onclick="switchMainTab('notes')" class="nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all">
         <i data-lucide="sticky-note" class="w-4 h-4"></i><span>Keep Notes</span>
       </button>
-      <button id="tabOrdersDesktop" onclick="switchMainTab('orders')" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all">
+      <button id="tabOrdersDesktop" onclick="switchMainTab('orders')" class="nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all">
         <i data-lucide="package" class="w-4 h-4"></i><span>Order Tracker</span>
       </button>
     </nav>
@@ -125,6 +126,7 @@
   <div class="flex-1 flex overflow-hidden relative pb-14 md:pb-0">
     <div id="sidebarBackdrop" onclick="toggleMobileSidebar(false)" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-30 md:hidden transition-opacity"></div>
 
+    <!-- SIDEBAR -->
     <aside id="mainSidebar" class="w-72 bg-gray-50 dark:bg-[#181818] border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 p-4 h-full overflow-y-auto z-40 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out shadow-2xl md:shadow-none">
       <div class="flex space-x-2 mb-3">
         <button onclick="openNewTaskModal(); toggleMobileSidebar(false);" class="flex-1 bg-[#A6192E] active:scale-95 text-white rounded-xl py-2.5 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow">
@@ -222,6 +224,8 @@
           </div>
           <div id="ordersListContainer" class="space-y-3"></div>
         </div>
+        
+        <!-- COMPLETED ORDERS ARCHIVE -->
         <div class="mt-6 border-t border-gray-200 dark:border-gray-800 pt-3">
           <div class="flex items-center justify-between bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl px-3.5 py-2.5 cursor-pointer shadow-sm" onclick="toggleCompletedOrdersDropdown()">
             <div class="flex items-center space-x-2">
@@ -240,9 +244,9 @@
 
   <!-- MOBILE NAV -->
   <nav class="md:hidden fixed bottom-0 inset-x-0 h-14 bg-white dark:bg-[#181818] border-t border-gray-200 dark:border-gray-800 flex items-center justify-around z-30 px-2 safe-area-pb">
-    <button onclick="switchMainTab('tasks')" id="mobileNavTasks" class="flex flex-col items-center justify-center flex-1 py-1 text-[#A6192E]"><i data-lucide="check-square" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-bold">Tasks</span></button>
-    <button onclick="switchMainTab('notes')" id="mobileNavNotes" class="flex flex-col items-center justify-center flex-1 py-1 text-gray-400"><i data-lucide="sticky-note" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-semibold">Notes</span></button>
-    <button onclick="switchMainTab('orders')" id="mobileNavOrders" class="flex flex-col items-center justify-center flex-1 py-1 text-gray-400"><i data-lucide="package" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-semibold">Orders</span></button>
+    <button onclick="switchMainTab('tasks')" id="mobileNavTasks" class="nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-[#A6192E]"><i data-lucide="check-square" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-bold">Tasks</span></button>
+    <button onclick="switchMainTab('notes')" id="mobileNavNotes" class="nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-gray-400"><i data-lucide="sticky-note" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-semibold">Notes</span></button>
+    <button onclick="switchMainTab('orders')" id="mobileNavOrders" class="nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-gray-400"><i data-lucide="package" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-semibold">Orders</span></button>
   </nav>
 
   <!-- SETTINGS MODAL -->
@@ -260,12 +264,39 @@
         </div>
         <p class="text-[11px] text-gray-500 mb-3">Push notifications are disabled by default on every device. Enable below to turn on alerts for your account.</p>
         <button id="enablePushBtn" onclick="requestNotificationPermission()" class="w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Enable Device Push Notifications</button>
+        
         <div id="notificationPreferencesList" class="space-y-3 border-t border-gray-200 dark:border-gray-800 pt-3">
           <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">New Task Assignments</span><span class="text-[10px] text-gray-500">When you are assigned a task</span></div><input type="checkbox" id="prefNotifyAssigned" onchange="saveNotificationPref('notifyAssigned', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
           <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Task Completions</span><span class="text-[10px] text-gray-500">When your tasks are completed</span></div><input type="checkbox" id="prefNotifyCompleted" onchange="saveNotificationPref('notifyCompleted', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
           <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Order Tracking Updates</span><span class="text-[10px] text-gray-500">When an order status changes</span></div><input type="checkbox" id="prefNotifyOrders" onchange="saveNotificationPref('notifyOrders', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
           <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Note Updates</span><span class="text-[10px] text-gray-500">When someone adds a note</span></div><input type="checkbox" id="prefNotifyNotes" onchange="saveNotificationPref('notifyNotes', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
         </div>
+      </div>
+
+      <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800">
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">Live Multi-User Sync Status</h4>
+        <p class="text-[10px] text-emerald-400 font-semibold">✓ Connected to real-time storage.</p>
+      </div>
+
+      <div id="adminCreateUserSection" class="hidden mb-6 bg-gray-100 dark:bg-[#121212] p-3.5 rounded-2xl border border-gray-300 dark:border-gray-800">
+        <h4 class="text-xs font-bold text-[#A6192E] uppercase mb-2 flex items-center space-x-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i><span>Create New User Profile</span></h4>
+        <form onsubmit="adminAddNewUser(event)" class="space-y-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input type="text" id="adminNewUserName" placeholder="Name (e.g. Alex)" required class="bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs">
+            <select id="adminNewUserRole" class="bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs">
+              <option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input type="password" id="adminNewUserPassword" placeholder="Default: AMADA" class="bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs">
+            <button type="submit" class="bg-[#A6192E] text-white text-xs font-bold rounded-xl px-3 py-2.5 hover:opacity-90 transition">Add User Profile</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800">
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Personal Layout Settings</h4>
+        <button onclick="resetPersonalOrder()" class="px-3 py-2 bg-gray-200 dark:bg-[#252525] text-gray-300 hover:text-white rounded-xl text-xs font-semibold border border-gray-700">Reset Category Order</button>
       </div>
 
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800">
@@ -283,6 +314,21 @@
     </div>
   </div>
 
+  <!-- TAG MODAL -->
+  <div id="tagModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl">
+      <h3 id="tagModalTitle" class="text-base font-bold mb-3">Create Custom Tag</h3>
+      <input type="hidden" id="tagIdInput">
+      <input type="text" id="tagTitleInput" placeholder="Tag Name" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm mb-3 focus:outline-none">
+      <label class="block text-xs text-gray-400 mb-1">Custom Tag Color</label>
+      <input type="color" id="tagColorInput" value="#A6192E" class="w-full h-9 rounded-xl border-none cursor-pointer mb-4">
+      <div class="flex justify-end space-x-2">
+        <button onclick="closeTagModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button>
+        <button onclick="saveCustomTag()" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save Tag</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ORDER COMPLETION MODAL -->
   <div id="orderCompleteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
@@ -295,9 +341,14 @@
         <div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-2xl border border-gray-200 dark:border-gray-800">
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]"><span class="font-bold">1. Order Placed / Created</span></label>
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600"><span class="font-bold">2. Order PO added on VBOP (if applicable)</span></label>
-          <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageReceived" class="w-4 h-4 accent-emerald-600"><span class="font-bold">3. Items All Received</span></label>
+          <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageReceived" onchange="toggleVerifyReceivedMissing(this.checked)" class="w-4 h-4 accent-emerald-600"><span class="font-bold">3. Items All Received</span></label>
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600"><span class="font-bold">4. Emailed & Marked Order as Complete</span></label>
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500"><span class="font-bold">5. Items Added to Stock</span></label>
+        </div>
+        <div id="verifyMissingItemsSection" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
+          <div class="font-bold text-amber-400 text-xs flex items-center space-x-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i><span>Missing / Unreceived Items Tracker:</span></div>
+          <div id="verifyMissingItemsList" class="space-y-1.5 max-h-28 overflow-y-auto"></div>
+          <textarea id="verifyMissingNotes" rows="2" placeholder="Add specific note regarding missing items..." class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none"></textarea>
         </div>
         <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
           <button type="button" onclick="closeOrderCompleteModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
@@ -312,7 +363,7 @@
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
         <h3 id="orderModalHeading" class="text-base font-bold flex items-center space-x-2"><i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i><span>Create New Order</span></h3>
-        <button onclick="closeOrderModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button type="button" onclick="closeOrderModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="saveOrder(event)" class="space-y-3">
         <input type="hidden" id="orderIdInput">
@@ -325,20 +376,12 @@
           <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Ordered By</label><input type="text" id="orderPlacedByInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none"></div>
         </div>
         <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Contents</label>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Contents (Items)</label>
           <textarea id="orderFreeformItemsInput" rows="3" placeholder="M-tshirt x10" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
         </div>
         <div>
           <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Notes</label>
           <textarea id="orderNotesInput" rows="2" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
-        </div>
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File</label>
-          <div id="fileDropZone" tabindex="0" onpaste="handleFilePaste(event)" class="border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#A6192E] rounded-2xl p-4 text-center cursor-pointer transition bg-gray-50 dark:bg-[#141414]">
-            <input type="file" id="orderScreenshotInput" accept="image/*,.pdf" onchange="handleFileSelect(event)" class="hidden">
-            <div onclick="document.getElementById('orderScreenshotInput').click()"><i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click or Paste File Here</div></div>
-            <div id="filePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs"><span id="fileNameLabel" class="text-emerald-400 truncate max-w-[240px] font-semibold"></span><button type="button" onclick="removeAttachedFile()" class="text-red-400 hover:text-red-300 font-bold ml-2">Remove</button></div>
-          </div>
         </div>
         <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
           <button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
@@ -348,6 +391,7 @@
     </div>
   </div>
 
+  <!-- TASK MODAL -->
   <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
       <h3 id="taskModalHeading" class="text-base font-bold mb-3">Create / Edit Task</h3>
@@ -371,6 +415,7 @@
     </div>
   </div>
 
+  <!-- NOTE MODAL -->
   <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
       <h3 id="noteModalTitle" class="text-base font-bold mb-3">Add Keep Note</h3>
@@ -386,6 +431,7 @@
     </div>
   </div>
 
+  <!-- TASK DETAIL MODAL -->
   <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto">
       <button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -396,16 +442,19 @@
       </div>
       <h3 id="detailTitle" class="text-lg font-bold mb-2 break-words">Task Title</h3>
       <div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div>
+      
       <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border border-gray-200 dark:border-gray-800">
         <div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate">General</div></div>
         <div><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate">Anyone</div></div>
         <div><span class="font-bold text-gray-400">Due Date:</span> <div id="detailDueDate" class="text-gray-800 dark:text-gray-200 font-semibold truncate">No Date</div></div>
         <div><span class="font-bold text-gray-400">Owner:</span> <div id="detailOwner" class="text-gray-800 dark:text-gray-200 font-semibold truncate">System</div></div>
       </div>
+
       <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mb-4">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center space-x-1"><i data-lucide="history" class="w-3.5 h-3.5"></i><span>Edit History</span></div>
         <div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-gray-100 dark:bg-[#121212] p-2.5 rounded-xl border border-gray-300 dark:border-gray-800"></div>
       </div>
+
       <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200 dark:border-gray-800">
         <button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl flex items-center space-x-1.5 shadow">
           <i data-lucide="pencil" class="w-3.5 h-3.5"></i> <span>Edit Task</span>
@@ -419,6 +468,7 @@
     const JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS";
     const JSONBIN_BIN_ID = "6ae0b445ffd5d160538fff26";
 
+    // --- ONESIGNAL NOTIFICATION LOGIC ---
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       if (ONESIGNAL_APP_ID && !ONESIGNAL_APP_ID.includes("PASTE_")) {
@@ -428,105 +478,17 @@
     });
 
     function getNotificationPrefs(username) {
-      const saved = localStorage.getItem(`amada_notify_${username}`);
-      if (!saved) return { enabled: false, notifyAssigned: false, notifyCompleted: false, notifyOrders: false, notifyNotes: false };
-      return JSON.parse(saved);
+      const saved = localStorage.getItem(`amada_notify_${username}`); if (!saved) return { enabled: false, notifyAssigned: false, notifyCompleted: false, notifyOrders: false, notifyNotes: false }; return JSON.parse(saved); }  function saveNotificationPref(key, value) { if (!activeUser) return; const prefs = getNotificationPrefs(activeUser); prefs[key] = value; localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs));
     }
-    function saveNotificationPref(key, value) {
-      if (!activeUser) return;
-      const prefs = getNotificationPrefs(activeUser);
-      prefs[key] = value;
-      localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs));
-    }
+
     async function requestNotificationPermission() {
       if (!window.OneSignalDeferred) return;
       OneSignalDeferred.push(async function(OneSignal) {
         try {
-          await OneSignal.Slidedown.promptPush();
+          await OneSignal.Notifications.requestPermission(); 
           const prefs = getNotificationPrefs(activeUser);
           prefs.enabled = true; prefs.notifyAssigned = true; prefs.notifyCompleted = true; prefs.notifyOrders = true; prefs.notifyNotes = true;
-          localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs));
-          updatePushUI();
-        } catch(e) { alert("Notification permission denied or unavailable."); }
-      });
-    }
-
-    function updatePushUI() {
-      if (!activeUser) return;
-      const prefs = getNotificationPrefs(activeUser);
-      const badge = document.getElementById("pushStatusBadge");
-      const btn = document.getElementById("enablePushBtn");
-      if (document.getElementById("prefNotifyAssigned")) document.getElementById("prefNotifyAssigned").checked = !!prefs.notifyAssigned;
-      if (document.getElementById("prefNotifyCompleted")) document.getElementById("prefNotifyCompleted").checked = !!prefs.notifyCompleted;
-      if (document.getElementById("prefNotifyOrders")) document.getElementById("prefNotifyOrders").checked = !!prefs.notifyOrders;
-      if (document.getElementById("prefNotifyNotes")) document.getElementById("prefNotifyNotes").checked = !!prefs.notifyNotes;
-
-      if (prefs.enabled) {
-        if (badge) { badge.innerText = "ACTIVE"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400"; }
-        if (btn) { btn.innerText = "Push Notifications Active"; btn.disabled = true; btn.className = "w-full py-2 px-3 rounded-xl bg-gray-700 text-gray-400 text-xs font-bold cursor-default mb-3"; }
-      } else {
-        if (badge) { badge.innerText = "OFF"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400"; }
-        if (btn) { btn.innerText = "Enable Device Push Notifications"; btn.disabled = false; btn.className = "w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3"; }
-      }
-    }
-
-    function triggerLocalNotification(title, message) {
-      if (Notification && Notification.permission === "granted") {
-        new Notification(title, { body: message, icon: "icon.png" });
-      }
-    }
-
-    const BASELINE_USERS = [
-      { name: "Charlie", role: "master_admin", password: "AMADA" },
-      { name: "Jacob", role: "admin", password: "AMADA" }
-    ];
-
-    function ensureProfiles(userList) {
-      if (!Array.isArray(userList) || userList.length === 0) return JSON.parse(JSON.stringify(BASELINE_USERS));
-      let charlie = userList.find(u => u && u.name === "Charlie");
-      if (!charlie) userList.unshift({ name: "Charlie", role: "master_admin", password: "AMADA" });
-      let jacob = userList.find(u => u && u.name === "Jacob");
-      if (!jacob) userList.push({ name: "Jacob", role: "admin", password: "AMADA" });
-      return userList;
-    }
-
-    let users = ensureProfiles(JSON.parse(localStorage.getItem("amada_users")));
-    let activeUser = localStorage.getItem("amada_active_user") || "";
-    let currentWorkspace = 'shared'; 
-
-    let currentMainTab = "tasks";
-    let activeFilterType = null;
-    let activeFilterId = null;
-    let mobileSelectedSectionId = null;
-    let selectedUserForAuth = "";
-    let presenceMap = {};
-    let isCompletedOpen = false;
-    let isCompletedOrdersOpen = false;
-    let activeVerifyingOrderId = null;
-    let openAccordionsMap = {};
-
-    let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) || [
-      { id: "t_urgent", title: "Urgent", color: "#ef4444" },
-      { id: "t_cnc", title: "Machining", color: "#3b82f6" }
-    ];
-    let sharedSections = JSON.parse(localStorage.getItem("amada_shared_sections")) || [
-      { id: "s1", title: "High Priority" },
-      { id: "s2", title: "Medium Priority" }
-    ];
-    let tasks = JSON.parse(localStorage.getItem("amada_tasks")) || [];
-    let notes = JSON.parse(localStorage.getItem("amada_notes")) || [];
-    let orders = JSON.parse(localStorage.getItem("amada_orders")) || [];
-
-    function canModifyItem(item) {
-      if (item.owner === activeUser) return true;
-      if (item.restricted) return false;
-      const u = users.find(x => x.name === activeUser);
-      return u && (u.role === "admin" || u.role === "master_admin");
-    }
-
-    function getPersonalOrderedSections() {
-      if (!activeUser) return sharedSections;
-      const key = `amada_order_${activeUser}`;
+          localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs)); updatePushUI(); } catch(e) { alert("Notification permission request denied. Please check your browser or iOS settings."); } }); }  function updatePushUI() { if (!activeUser) return; const prefs = getNotificationPrefs(activeUser); const badge = document.getElementById("pushStatusBadge"); const btn = document.getElementById("enablePushBtn");  if (document.getElementById("prefNotifyAssigned")) document.getElementById("prefNotifyAssigned").checked = !!prefs.notifyAssigned; if (document.getElementById("prefNotifyCompleted")) document.getElementById("prefNotifyCompleted").checked = !!prefs.notifyCompleted; if (document.getElementById("prefNotifyOrders")) document.getElementById("prefNotifyOrders").checked = !!prefs.notifyOrders; if (document.getElementById("prefNotifyNotes")) document.getElementById("prefNotifyNotes").checked = !!prefs.notifyNotes;  if (prefs.enabled) { if (badge) { badge.innerText = "ACTIVE"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400"; } if (btn) { btn.innerText = "Push Notifications Active"; btn.disabled = true; btn.className = "w-full py-2 px-3 rounded-xl bg-gray-700 text-gray-400 text-xs font-bold cursor-default mb-3"; } } else { if (badge) { badge.innerText = "OFF"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400"; } if (btn) { btn.innerText = "Enable Device Push Notifications"; btn.disabled = false; btn.className = "w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3"; } } }  function triggerLocalNotification(title, message) { if (Notification && Notification.permission === "granted") { new Notification(title, { body: message, icon: "icon.png" }); } }  // --- BASE APP LOGIC --- const BASELINE_USERS = [ { name: "Charlie", role: "master_admin", password: "AMADA" }, { name: "Jacob", role: "admin", password: "AMADA" } ];  function ensureProfiles(userList) { if (!Array.isArray(userList) \vert{}\vert{} userList.length === 0) return JSON.parse(JSON.stringify(BASELINE_USERS)); let charlie = userList.find(u => u && u.name === "Charlie"); if (!charlie) userList.unshift({ name: "Charlie", role: "master_admin", password: "AMADA" }); let jacob = userList.find(u => u && u.name === "Jacob"); if (!jacob) userList.push({ name: "Jacob", role: "admin", password: "AMADA" }); return userList; }  let users = ensureProfiles(JSON.parse(localStorage.getItem("amada_users"))); let activeUser = localStorage.getItem("amada_active_user") \vert{}\vert{} ""; let currentWorkspace = 'shared';  let currentMainTab = "tasks"; let activeFilterType = null; let activeFilterId = null; let mobileSelectedSectionId = null; let selectedUserForAuth = ""; let presenceMap = {}; let isCompletedOpen = false; let isCompletedOrdersOpen = false; let activeVerifyingOrderId = null; let openAccordionsMap = {};  let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) \vert{}\vert{} [ { id: "t_urgent", title: "Urgent", color: "#ef4444" }, { id: "t_cnc", title: "Machining", color: "#3b82f6" } ]; let sharedSections = JSON.parse(localStorage.getItem("amada_shared_sections")) \vert{}\vert{} [ { id: "s1", title: "High Priority" }, { id: "s2", title: "Medium Priority" } ]; let tasks = JSON.parse(localStorage.getItem("amada_tasks")) \vert{}\vert{} []; let notes = JSON.parse(localStorage.getItem("amada_notes")) \vert{}\vert{} []; let orders = JSON.parse(localStorage.getItem("amada_orders")) \vert{}\vert{} [];  function canModifyItem(item) { if (item.owner === activeUser) return true; if (item.restricted) return false; const u = users.find(x => x.name === activeUser); return u && (u.role === "admin" \vert{}\vert{} u.role === "master_admin"); }  function getPersonalOrderedSections() { if (!activeUser) return sharedSections; const key = `amada_order_${activeUser}`;
       const savedOrder = JSON.parse(localStorage.getItem(key));
       if (!Array.isArray(savedOrder) || savedOrder.length === 0) return sharedSections;
       const ordered = [];
@@ -542,13 +504,7 @@
 
     function savePersonalSectionOrder(newIdArray) {
       if (!activeUser) return;
-      localStorage.setItem(`amada_order_${activeUser}`, JSON.stringify(newIdArray));
-      renderAll();
-    }
-
-    function resetPersonalOrder() {
-      if (!activeUser) return;
-      localStorage.removeItem(`amada_order_${activeUser}`);
+      localStorage.setItem(`amada_order_${activeUser}`, JSON.stringify(newIdArray)); renderAll(); }  function resetPersonalOrder() { if (!activeUser) return; localStorage.removeItem(`amada_order_${activeUser}`);
       renderAll();
       alert("Layout order reset to default!");
     }
@@ -639,72 +595,7 @@
 
     async function fetchFromRemoteBin() {
       try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, { method: "GET", headers: { "X-Master-Key": JSONBIN_KEY } });
-        if (res.ok) {
-          const json = await res.json();
-          const content = json.record || {};
-          
-          if (content.tasks && content.tasks.length > tasks.length) {
-            const prefs = getNotificationPrefs(activeUser);
-            if (prefs.enabled && prefs.notifyAssigned) {
-              const latest = content.tasks[content.tasks.length - 1];
-              if (latest.assignees && latest.assignees.includes(activeUser) && latest.owner !== activeUser) {
-                triggerLocalNotification("New Task", `${latest.owner} assigned you: ${latest.title}`);
-              }
-            }
-          }
-
-          if (content.orders && content.orders.length > orders.length) {
-            const prefs = getNotificationPrefs(activeUser);
-            if (prefs.enabled && prefs.notifyOrders) {
-              const latest = content.orders[content.orders.length - 1];
-              if (latest.placedBy !== activeUser) {
-                triggerLocalNotification("New Order Placed", `PO# ${latest.poNumber} added by ${latest.placedBy}`);
-              }
-            }
-          }
-
-          if (content.users) users = ensureProfiles(content.users);
-          if (content.sharedTags) sharedTags = content.sharedTags;
-          if (content.sharedSections) sharedSections = content.sharedSections;
-          if (content.tasks) tasks = content.tasks;
-          if (content.notes) notes = content.notes;
-          if (content.orders) orders = content.orders;
-          if (content.presence) presenceMap = content.presence;
-          if (activeUser) presenceMap[activeUser] = Date.now();
-
-          localStorage.setItem("amada_users", JSON.stringify(users));
-          localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
-          localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
-          localStorage.setItem("amada_tasks", JSON.stringify(tasks));
-          localStorage.setItem("amada_notes", JSON.stringify(notes));
-          localStorage.setItem("amada_orders", JSON.stringify(orders));
-
-          updateSyncUI("ok");
-          updatePresenceUI();
-          renderUserProfiles();
-          const el = document.activeElement;
-          if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' && el.tagName !== 'SELECT')) {
-            renderAll();
-          }
-        } else { updateSyncUI("error"); }
-      } catch (e) { updateSyncUI("error"); }
-    }
-
-    async function saveData() {
-      if (activeUser) presenceMap[activeUser] = Date.now();
-      localStorage.setItem("amada_users", JSON.stringify(users));
-      localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags));
-      localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections));
-      localStorage.setItem("amada_tasks", JSON.stringify(tasks));
-      localStorage.setItem("amada_notes", JSON.stringify(notes));
-      localStorage.setItem("amada_orders", JSON.stringify(orders));
-
-      renderAll();
-      updatePresenceUI();
-
-      try {
-        await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, { method: "GET", headers: { "X-Master-Key": JSONBIN_KEY } }); if (res.ok) { const json = await res.json(); const content = json.record \vert{}\vert{} {};  if (content.tasks && content.tasks.length > tasks.length) { const prefs = getNotificationPrefs(activeUser); if (prefs.enabled && prefs.notifyAssigned) { const latest = content.tasks[content.tasks.length - 1]; if (latest.assignees && latest.assignees.includes(activeUser) && latest.owner !== activeUser) { triggerLocalNotification("New Task", `${latest.owner} assigned you: ${latest.title}`); } } }  if (content.orders && content.orders.length > orders.length) { const prefs = getNotificationPrefs(activeUser); if (prefs.enabled && prefs.notifyOrders) { const latest = content.orders[content.orders.length - 1]; if (latest.placedBy !== activeUser) { triggerLocalNotification("New Order Placed", `PO# ${latest.poNumber} added by ${latest.placedBy}`); } } }  if (content.users) users = ensureProfiles(content.users); if (content.sharedTags) sharedTags = content.sharedTags; if (content.sharedSections) sharedSections = content.sharedSections; if (content.tasks) tasks = content.tasks; if (content.notes) notes = content.notes; if (content.orders) orders = content.orders; if (content.presence) presenceMap = content.presence; if (activeUser) presenceMap[activeUser] = Date.now();  localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders));  updateSyncUI("ok"); updatePresenceUI(); renderUserProfiles(); const el = document.activeElement; if (!el \vert{}\vert{} (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' && el.tagName !== 'SELECT')) { renderAll(); } } else { updateSyncUI("error"); } } catch (e) { updateSyncUI("error"); } }  async function saveData() { if (activeUser) presenceMap[activeUser] = Date.now(); localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders));  renderAll(); updatePresenceUI();  try { await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
           body: JSON.stringify({ users, sharedTags, sharedSections, tasks, notes, orders, presence: presenceMap })
@@ -759,7 +650,7 @@
         
         switchWorkspace('shared');
         checkAuth();
-        fetchFromRemoteBin();
+        fetchFromRemoteBin(); 
       } else {
         document.getElementById("authError").classList.remove("hidden");
       }
@@ -787,6 +678,7 @@
       location.reload();
     }
 
+    // --- RENDER FUNCTIONS ---
     function renderAll() {
       renderAssigneesSidebar();
       renderTagsSidebar();
@@ -879,8 +771,7 @@
             </div>
             <input type="text" placeholder="+ Add task (Press Enter)" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded-xl px-3 py-2 text-xs mb-3 focus:outline-none focus:border-[#A6192E]">
             <div class="space-y-2.5 overflow-y-auto flex-1">
-              ${listTasks.map(t => renderTaskCardHtml(t)).join('')}
-              ${listTasks.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs italic">No active tasks</div>` : ''}
+              ${listTasks.map(t => renderTaskCardHtml(t)).join('')}${listTasks.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs italic">No active tasks</div>` : ''}
             </div>
           </div>
         `;
@@ -897,8 +788,7 @@
           <div class="flex items-start space-x-2.5">
             <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); handleTaskCheckAnimation('${t.id}', this)" class="mt-0.5 w-5 h-5 rounded-lg accent-green-600 cursor-pointer shrink-0">
             <div class="flex-1 min-w-0">
-              <span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>
-              ${t.notes ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-tight">${t.notes}</div>` : ''}
+              <span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>${t.notes ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-tight">${t.notes}</div>` : ''}
             </div>
             <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${t.starred ? '⭐' : '☆'}</button>
           </div>
@@ -949,7 +839,7 @@
           
           const prefs = getNotificationPrefs(t.owner);
           if (prefs.enabled && prefs.notifyCompleted && t.owner !== activeUser) {
-            triggerLocalNotification("Task Completed", `${activeUser} finished: ${t.title}`);
+            triggerLocalNotification("Task Completed", `${activeUser} finished:${t.title}`);
           }
           saveData();
         }
@@ -1017,7 +907,7 @@
       let qty = "";
       const qtyMatch = text.match(/(?:x\s*(\d+)|(\d+)\s*x|\bqty:?\s*(\d+)\b)/i);
       if (qtyMatch) qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]);
-      return `${trimmed} ${qty ? `(${qty})` : ''}`.trim();
+      return `${trimmed}${qty ? `(${qty})` : ''}`.trim();
     }
 
     function openNewOrderModal() {
@@ -1068,13 +958,13 @@
         const ord = orders.find(x => x.id === id);
         if (ord) {
           ord.poNumber = poNumber; ord.dateOrdered = dateOrdered; ord.orderType = orderType; ord.placedBy = placedBy;
-          ord.placedMeta = `Placed by ${placedBy} on ${dateOrdered}`; ord.notes = notesInput;
+          ord.placedMeta = `Placed by ${placedBy} on${dateOrdered}`; ord.notes = notesInput;
           if (items.length > 0) ord.items = items;
         }
       } else {
         orders.push({
           id: "ord_" + Date.now(), poNumber, dateOrdered, orderType, placedBy, items, notes: notesInput,
-          placed: true, placedMeta: `Placed by ${placedBy} on ${dateOrdered}`,
+          placed: true, placedMeta: `Placed by ${placedBy} on${dateOrdered}`,
           vbop: false, received: false, emailed: false, stocked: false, completed: false,
           workspace: currentWorkspace, owner: activeUser
         });
@@ -1143,8 +1033,7 @@
             </div>
             <div class="flex items-center justify-between sm:justify-end space-x-2 text-xs text-gray-400">
               <span class="bg-gray-200 dark:bg-[#252525] px-2.5 py-1 rounded-lg text-gray-300 font-bold border border-gray-300 dark:border-gray-700/60">Ordered: <strong class="text-white">${ord.dateOrdered}</strong></span>
-              <span class="text-emerald-400 font-semibold">${ord.placedBy}</span>
-              ${canModifyItem(ord) ? `
+              <span class="text-emerald-400 font-semibold">${ord.placedBy}</span>${canModifyItem(ord) ? `
                 <button onclick="openEditOrderModal('${ord.id}')" class="p-1 hover:text-white transition"><i data-lucide="pencil" class="w-4 h-4"></i></button>
                 ${ord.completed ? `<button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold ml-1">Re-open</button>` : `<button onclick="openOrderCompleteVerification('${ord.id}')" class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold active:scale-95 transition flex items-center space-x-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>Complete</span></button>`}
                 <button onclick="deleteOrder('${ord.id}')" class="p-1 hover:text-red-400 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -1216,7 +1105,7 @@
     function toggleOrderStage(orderId, stage, checked) {
       const ord = orders.find(x => x.id === orderId);
       if (!ord) return;
-      const meta = `${checked ? 'Confirmed' : 'Unchecked'} by ${activeUser || 'User'} on ${new Date().toLocaleString()}`;
+      const meta = `${checked ? 'Confirmed' : 'Unchecked'} by ${activeUser \vert{}\vert{} 'User'} on${new Date().toLocaleString()}`;
       if (stage === 'received') {
         ord.received = checked;
         if (ord.items) ord.items.forEach(i => { i.received = checked; if (checked) i.receivedPartial = false; });
@@ -1320,47 +1209,4 @@
     }
 
     function openEditTaskModal(id) {
-      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-      const t = tasks.find(x => x.id === id);
-      if (t) {
-        document.getElementById("taskIdInput").value = t.id;
-        document.getElementById("taskTitleInput").value = t.title;
-        document.getElementById("taskSectionInput").value = t.sectionId;
-        document.getElementById("taskPriorityInput").value = t.priority || "Medium";
-        document.getElementById("taskNotesInput").value = t.notes || "";
-        const c = document.getElementById("taskAssigneesContainer");
-        c.innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(t.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
-      }
-      document.getElementById("taskModalHeading").innerText = "Edit Task Details";
-      document.getElementById("taskModal").classList.remove("hidden");
-    }
-
-    function saveTask(e) {
-      e.preventDefault();
-      const id = document.getElementById("taskIdInput").value;
-      const title = document.getElementById("taskTitleInput").value.trim();
-      const sectionId = document.getElementById("taskSectionInput").value;
-      const priority = document.getElementById("taskPriorityInput").value;
-      const notesText = document.getElementById("taskNotesInput").value.trim();
-      const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
-
-      if (id) {
-        const t = tasks.find(x => x.id === id);
-        if (t) {
-          t.title = title; t.sectionId = sectionId; t.priority = priority; t.notes = notesText; t.assignees = assignees;
-          if (!Array.isArray(t.history)) t.history = [];
-          t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() });
-        }
-      } else {
-        tasks.push({
-          id: Date.now().toString(), title, sectionId, priority, notes: notesText,
-          assignees: assignees.length ? assignees : [activeUser], completed: false, owner: activeUser, workspace: currentWorkspace,
-          history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }]
-        });
-      }
-      closeTaskModal();
-      saveData();
-    }
-  </script>
-</body>
-</html>
+      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option
