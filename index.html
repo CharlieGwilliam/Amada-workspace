@@ -295,14 +295,9 @@
         <div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-2xl border border-gray-200 dark:border-gray-800">
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]"><span class="font-bold">1. Order Placed / Created</span></label>
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600"><span class="font-bold">2. Order PO added on VBOP (if applicable)</span></label>
-          <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageReceived" onchange="toggleVerifyReceivedMissing(this.checked)" class="w-4 h-4 accent-emerald-600"><span class="font-bold">3. Items All Received</span></label>
+          <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageReceived" class="w-4 h-4 accent-emerald-600"><span class="font-bold">3. Items All Received</span></label>
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600"><span class="font-bold">4. Emailed & Marked Order as Complete</span></label>
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500"><span class="font-bold">5. Items Added to Stock</span></label>
-        </div>
-        <div id="verifyMissingItemsSection" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
-          <div class="font-bold text-amber-400 text-xs flex items-center space-x-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i><span>Missing / Unreceived Items Tracker:</span></div>
-          <div id="verifyMissingItemsList" class="space-y-1.5 max-h-28 overflow-y-auto"></div>
-          <textarea id="verifyMissingNotes" rows="2" placeholder="Add specific note regarding missing items..." class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none"></textarea>
         </div>
         <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
           <button type="button" onclick="closeOrderCompleteModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
@@ -322,7 +317,7 @@
       <form onsubmit="saveOrder(event)" class="space-y-3">
         <input type="hidden" id="orderIdInput">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">PO #</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div>
+          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Purchase Order # (PO)</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div>
           <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Date Ordered</label><input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs text-gray-800 dark:text-gray-100 cursor-pointer focus:outline-none focus:border-[#A6192E]"></div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -649,6 +644,26 @@
           const json = await res.json();
           const content = json.record || {};
           
+          if (content.tasks && content.tasks.length > tasks.length) {
+            const prefs = getNotificationPrefs(activeUser);
+            if (prefs.enabled && prefs.notifyAssigned) {
+              const latest = content.tasks[content.tasks.length - 1];
+              if (latest.assignees && latest.assignees.includes(activeUser) && latest.owner !== activeUser) {
+                triggerLocalNotification("New Task", `${latest.owner} assigned you: ${latest.title}`);
+              }
+            }
+          }
+
+          if (content.orders && content.orders.length > orders.length) {
+            const prefs = getNotificationPrefs(activeUser);
+            if (prefs.enabled && prefs.notifyOrders) {
+              const latest = content.orders[content.orders.length - 1];
+              if (latest.placedBy !== activeUser) {
+                triggerLocalNotification("New Order Placed", `PO# ${latest.poNumber} added by ${latest.placedBy}`);
+              }
+            }
+          }
+
           if (content.users) users = ensureProfiles(content.users);
           if (content.sharedTags) sharedTags = content.sharedTags;
           if (content.sharedSections) sharedSections = content.sharedSections;
@@ -783,6 +798,7 @@
 
       const activeList = tasks.filter(t => !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
       document.getElementById("allTasksCountBadge").innerText = activeList.length;
+
       const completedList = tasks.filter(t => t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
       document.getElementById("completedCountBadge").innerText = completedList.length;
 
@@ -877,11 +893,11 @@
       const canEdit = canModifyItem(t);
 
       return `
-        <div onclick="openTaskDetailModal('${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 cursor-pointer shadow-sm">
+        <div onclick="openTaskDetailModal('${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 cursor-pointer shadow-sm relative transition">
           <div class="flex items-start space-x-2.5">
             <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); handleTaskCheckAnimation('${t.id}', this)" class="mt-0.5 w-5 h-5 rounded-lg accent-green-600 cursor-pointer shrink-0">
             <div class="flex-1 min-w-0">
-              <span class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>
+              <span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>
               ${t.notes ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-tight">${t.notes}</div>` : ''}
             </div>
             <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${t.starred ? '⭐' : '☆'}</button>
@@ -909,26 +925,45 @@
       if (!container) return;
       const completed = tasks.filter(t => t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
       container.innerHTML = completed.map(t => `
-        <div class="bg-gray-50 dark:bg-[#1C1C1C] border border-gray-200 dark:border-gray-800 rounded-2xl p-3 flex items-center justify-between text-xs">
-          <span class="line-through text-gray-400">${t.title}</span>
-          <button onclick="deleteTask('${t.id}')" class="text-gray-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        <div onclick="openTaskDetailModal('${t.id}')" class="bg-gray-50 dark:bg-[#1C1C1C] border border-gray-200 dark:border-gray-800/80 rounded-2xl p-3 flex flex-col space-y-2 cursor-pointer shadow-sm hover:border-gray-700 transition">
+          <div class="flex items-start justify-between space-x-2">
+            <div class="flex items-start space-x-2 flex-1 min-w-0">
+              <input type="checkbox" checked onclick="event.stopPropagation(); restoreTask('${t.id}')" class="mt-0.5 w-4 h-4 rounded accent-green-600 cursor-pointer shrink-0">
+              <span class="text-xs font-medium line-through text-gray-400 break-words">${t.title}</span>
+            </div>
+            <button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="text-gray-500 hover:text-red-400 p-1" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
         </div>
       `).join('');
     }
 
     function handleTaskCheckAnimation(id, checkboxEl) {
+      const titleEl = document.getElementById(`task_title_${id}`);
+      if (titleEl) titleEl.classList.add('strikethrough-active');
       setTimeout(() => {
         const t = tasks.find(x => x.id === id);
         if (t) {
           t.completed = true;
+          if (!Array.isArray(t.history)) t.history = [];
+          t.history.unshift({ action: `Marked completed`, user: activeUser || "User", date: new Date().toLocaleString() });
+          
+          const prefs = getNotificationPrefs(t.owner);
+          if (prefs.enabled && prefs.notifyCompleted && t.owner !== activeUser) {
+            triggerLocalNotification("Task Completed", `${activeUser} finished: ${t.title}`);
+          }
           saveData();
         }
-      }, 250);
+      }, 350);
     }
 
     function restoreTask(id) {
       const t = tasks.find(x => x.id === id);
-      if (t) { t.completed = false; saveData(); }
+      if (t) { 
+        t.completed = false; 
+        if (!Array.isArray(t.history)) t.history = [];
+        t.history.unshift({ action: `Restored to active board`, user: activeUser || "User", date: new Date().toLocaleString() });
+        saveData(); 
+      }
     }
 
     function clearAllCompletedTasks() {
@@ -938,21 +973,24 @@
 
     function handleQuickTask(e, sectionId) {
       if (e.key === 'Enter' && e.target.value.trim()) {
+        const title = e.target.value.trim();
+        const sec = sharedSections.find(s => s.id === sectionId);
+        let derivedPriority = "Medium";
+        if (sec && sec.title.toLowerCase().includes("high")) derivedPriority = "High";
+        else if (sec && sec.title.toLowerCase().includes("low")) derivedPriority = "Low";
+
         tasks.push({
           id: Date.now().toString(),
-          title: e.target.value.trim(), sectionId, priority: "Medium", assignees: [activeUser],
-          completed: false, owner: activeUser, workspace: currentWorkspace
+          title, sectionId, priority: derivedPriority, assignees: [activeUser],
+          completed: false, owner: activeUser, workspace: currentWorkspace,
+          history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }]
         });
         e.target.value = "";
         saveData();
       }
     }
 
-    function toggleStarTask(id) {
-      const t = tasks.find(x => x.id === id);
-      if (t) { t.starred = !t.starred; saveData(); }
-    }
-
+    function toggleStarTask(id) { const t = tasks.find(x => x.id === id); if (t) { t.starred = !t.starred; saveData(); } }
     function deleteTask(id) { tasks = tasks.filter(x => x.id !== id); saveData(); }
     function deleteNote(id) { notes = notes.filter(x => x.id !== id); saveData(); }
     function deleteOrder(id) { orders = orders.filter(x => x.id !== id); saveData(); }
@@ -962,15 +1000,24 @@
       if (!grid) return;
       const filtered = notes.filter(n => (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser));
       grid.innerHTML = filtered.map(n => `
-        <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+        <div onclick="openNoteModal('${n.id}')" class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between cursor-pointer shadow-sm hover:shadow-md transition">
           <h4 class="font-bold text-sm mb-1">${n.title}</h4>
           <p class="text-xs text-gray-400 whitespace-pre-wrap">${n.content}</p>
-          <div class="flex items-center space-x-2 mt-3 pt-2 border-t border-gray-800">
-             <button onclick="openNoteModal('${n.id}')" class="text-gray-400 hover:text-white p-1"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-             <button onclick="deleteNote('${n.id}')" class="text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          <div class="flex items-center space-x-2 mt-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+             <button onclick="event.stopPropagation(); deleteNote('${n.id}')" class="text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
           </div>
         </div>
       `).join('');
+    }
+
+    function formatItemDescription(rawText) {
+      const trimmed = rawText.trim();
+      if (!trimmed || trimmed.includes("(")) return trimmed;
+      let text = trimmed.toLowerCase();
+      let qty = "";
+      const qtyMatch = text.match(/(?:x\s*(\d+)|(\d+)\s*x|\bqty:?\s*(\d+)\b)/i);
+      if (qtyMatch) qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]);
+      return `${trimmed} ${qty ? `(${qty})` : ''}`.trim();
     }
 
     function openNewOrderModal() {
@@ -981,7 +1028,9 @@
       document.getElementById("orderPlacedByInput").value = activeUser || "";
       document.getElementById("orderFreeformItemsInput").value = "";
       document.getElementById("orderNotesInput").value = "";
+      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i><span>Create New Order</span>`;
       document.getElementById("orderModal").classList.remove("hidden");
+      lucide.createIcons();
     }
 
     function openEditOrderModal(orderId) {
@@ -994,7 +1043,9 @@
       document.getElementById("orderPlacedByInput").value = ord.placedBy || "";
       document.getElementById("orderNotesInput").value = ord.notes || "";
       document.getElementById("orderFreeformItemsInput").value = ord.items && ord.items.length > 0 ? ord.items.map(i => i.desc).join("\n") : "";
+      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Purchase Order</span>`;
       document.getElementById("orderModal").classList.remove("hidden");
+      lucide.createIcons();
     }
 
     function closeOrderModal() { document.getElementById("orderModal").classList.add("hidden"); }
@@ -1010,7 +1061,7 @@
       const notesInput = document.getElementById("orderNotesInput").value.trim();
 
       const items = rawLines.map(line => line.trim()).filter(Boolean).map(desc => ({
-        id: "it_" + Math.random().toString(36).substr(2, 9), desc, received: false, receivedPartial: false, partialQty: "", stocked: false
+        id: "it_" + Math.random().toString(36).substr(2, 9), desc: formatItemDescription(desc), received: false, receivedPartial: false, partialQty: "", stocked: false
       }));
 
       if (id) {
@@ -1053,8 +1104,8 @@
       if (!activeContainer || !completedContainer) return;
 
       const filtered = orders.filter(o => (o.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || o.owner === activeUser));
-      const activeOrders = filtered.filter(o => !o.completed);
-      const completedOrders = filtered.filter(o => o.completed);
+      const activeOrders = filtered.filter(o => !o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime());
+      const completedOrders = filtered.filter(o => o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime());
 
       document.getElementById("activeOrdersBadge").innerText = activeOrders.length;
       document.getElementById("completedOrdersBadge").innerText = completedOrders.length;
@@ -1068,14 +1119,15 @@
       const hasItems = ord.items && ord.items.length > 0;
       const allReceived = hasItems ? ord.items.every(i => i.received) : !!ord.received;
       const partialReceived = hasItems ? (ord.items.some(i => i.received || i.receivedPartial) && !allReceived) : false;
+      const receivedCount = hasItems ? ord.items.filter(i => i.received).length : 0;
+      const stockedCount = hasItems ? ord.items.filter(i => i.stocked).length : 0;
       const isAccordionOpen = !!openAccordionsMap[ord.id];
 
       const poList = (ord.poNumber || "").split(/[,/&;]|\band\b/i).map(p => p.trim()).filter(Boolean);
       if (poList.length === 0) poList.push(ord.poNumber || "N/A");
 
       return `
-        <div class="bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-3xl p-4 shadow-sm space-y-3">
-          
+        <div class="bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-3xl p-3.5 md:p-5 shadow-sm space-y-3.5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 border-b border-gray-200 dark:border-gray-800 gap-2">
             <div class="flex items-center flex-wrap gap-2">
               <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-md bg-[#A6192E] text-white">PO#</span>
@@ -1089,31 +1141,41 @@
               </div>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400">${ord.orderType}</span>
             </div>
-            <div class="flex items-center space-x-2 text-xs text-gray-400">
+            <div class="flex items-center justify-between sm:justify-end space-x-2 text-xs text-gray-400">
               <span class="bg-gray-200 dark:bg-[#252525] px-2.5 py-1 rounded-lg text-gray-300 font-bold border border-gray-300 dark:border-gray-700/60">Ordered: <strong class="text-white">${ord.dateOrdered}</strong></span>
               <span class="text-emerald-400 font-semibold">${ord.placedBy}</span>
               ${canModifyItem(ord) ? `
                 <button onclick="openEditOrderModal('${ord.id}')" class="p-1 hover:text-white transition"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                ${ord.completed ? `<button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold ml-1">Re-open</button>` : `<button onclick="openOrderCompleteVerification('${ord.id}')" class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold active:scale-95 transition flex items-center space-x-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>Complete</span></button>`}
                 <button onclick="deleteOrder('${ord.id}')" class="p-1 hover:text-red-400 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
               ` : ''}
             </div>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
-              <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="accent-[#A6192E]"><span>1. Placed</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]">
+              <div><div class="font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div><div class="text-[9px] text-gray-500">${ord.placedMeta || ''}</div></div>
             </label>
-            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
-              <input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="accent-purple-600"><span>2. VBOP</span>
+            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="mt-0.5 w-4 h-4 accent-purple-600">
+              <div><div class="font-bold ${ord.vbop ? 'text-purple-400' : 'text-gray-400'}">2. Added on VBOP</div><div class="text-[9px] text-gray-500">${ord.vbopMeta || ''}</div></div>
             </label>
-            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
-              <input type="checkbox" ${allReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="accent-emerald-500"><span>3. Received</span>
+            <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 space-y-1.5">
+              <div class="font-bold text-gray-200">3. Order Received</div>
+              <div class="flex flex-col space-y-1">
+                <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${partialReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 accent-amber-500"><span class="text-[10px] ${partialReceived ? 'text-amber-400 font-semibold' : 'text-gray-400'}">Received (Partial)</span></label>
+                <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${allReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="w-3.5 h-3.5 accent-emerald-500"><span class="text-[10px] ${allReceived ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Received (Full)</span></label>
+              </div>
+              <div class="text-[9px] text-gray-500 truncate">${ord.receivedMeta || (allReceived ? 'All items received' : (partialReceived ? 'Partially arrived' : 'Awaiting delivery'))}</div>
+            </div>
+            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.emailed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'emailed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600">
+              <div><div class="font-bold ${ord.emailed ? 'text-blue-400' : 'text-gray-400'}">4. Emailed & Complete</div><div class="text-[9px] text-gray-500">${ord.emailedMeta || ''}</div></div>
             </label>
-            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
-              <input type="checkbox" ${ord.emailed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'emailed', this.checked)" class="accent-blue-500"><span>4. Emailed</span>
-            </label>
-            <label class="p-2 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 flex items-center space-x-2">
-              <input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="accent-amber-500"><span>5. Stocked</span>
+            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
+              <input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="mt-0.5 w-4 h-4 accent-amber-500">
+              <div><div class="font-bold ${ord.stocked ? 'text-amber-400' : 'text-gray-400'}">5. Added to Stock</div><div class="text-[9px] text-gray-500">${ord.stockedMeta || ''}</div></div>
             </label>
           </div>
 
@@ -1121,9 +1183,13 @@
 
           <div class="bg-gray-50 dark:bg-[#151515] rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
             <button onclick="toggleOrderItemsAccordion('${ord.id}')" class="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-[#1B1B1B]">
-              <span class="text-xs font-bold flex items-center space-x-1.5"><i data-lucide="chevron-down" class="w-4 h-4 transition-transform ${isAccordionOpen ? 'rotate-180' : ''}"></i><span>Order Items (${hasItems ? ord.items.length : 0})</span></span>
-              <span class="text-[10px] text-gray-400">${partialReceived ? 'Partially Arrived' : (allReceived ? 'All Arrived' : 'Awaiting Delivery')}</span>
+              <span class="text-xs font-bold flex items-center space-x-1.5"><i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180' : ''}"></i><span>Order Items (${hasItems ? ord.items.length : 0})</span></span>
+              <div class="flex items-center space-x-2 text-[10px]">
+                <span class="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-semibold border border-emerald-500/20">Arrived: ${receivedCount}/${hasItems ? ord.items.length : 0}</span>
+                <span class="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-semibold border border-amber-500/20">Stocked: ${stockedCount}/${hasItems ? ord.items.length : 0}</span>
+              </div>
             </button>
+
             <div class="${isAccordionOpen ? '' : 'hidden'} p-3 pt-0 border-t border-gray-200 dark:border-gray-800 space-y-2 mt-2">
               ${hasItems ? ord.items.map(item => `
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2">
@@ -1140,7 +1206,7 @@
                     <label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-4 h-4 rounded accent-blue-500"><span class="${item.stocked ? 'text-blue-400 font-bold' : 'text-gray-400'} text-[11px]">Stocked</span></label>
                   </div>
                 </div>
-              `).join('') : ''}
+              `).join('') : '<div class="text-xs text-gray-500 italic py-1">No items listed.</div>'}
             </div>
           </div>
         </div>
@@ -1150,10 +1216,20 @@
     function toggleOrderStage(orderId, stage, checked) {
       const ord = orders.find(x => x.id === orderId);
       if (!ord) return;
+      const meta = `${checked ? 'Confirmed' : 'Unchecked'} by ${activeUser || 'User'} on ${new Date().toLocaleString()}`;
       if (stage === 'received') {
         ord.received = checked;
         if (ord.items) ord.items.forEach(i => { i.received = checked; if (checked) i.receivedPartial = false; });
-      } else { ord[stage] = checked; }
+      } else if (stage === 'vbop') {
+        ord.vbop = checked; ord.vbopMeta = checked ? meta : null;
+      } else if (stage === 'emailed') {
+        ord.emailed = checked; ord.emailedMeta = checked ? meta : null;
+      } else if (stage === 'stocked') {
+        ord.stocked = checked; ord.stockedMeta = checked ? meta : null;
+        if (ord.items) ord.items.forEach(i => i.stocked = checked);
+      } else {
+        ord[stage] = checked;
+      }
       saveData();
     }
 
@@ -1177,26 +1253,20 @@
       document.getElementById("notesView").classList.toggle("hidden", tab !== 'notes');
       document.getElementById("ordersView").classList.toggle("hidden", tab !== 'orders');
 
-      // Desktop Nav highlighting fix
-      const dActive = "px-4 py-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all";
-      const dInactive = "px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all";
-      
+      const dActive = "nav-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all";
+      const dInactive = "nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all";
       const btnT = document.getElementById("tabTasksDesktop");
       const btnN = document.getElementById("tabNotesDesktop");
       const btnO = document.getElementById("tabOrdersDesktop");
-      
       if(btnT) btnT.className = tab === 'tasks' ? dActive : dInactive;
       if(btnN) btnN.className = tab === 'notes' ? dActive : dInactive;
       if(btnO) btnO.className = tab === 'orders' ? dActive : dInactive;
 
-      // Mobile Nav highlighting fix
-      const mActive = "flex flex-col items-center justify-center flex-1 py-1 text-[#A6192E]";
-      const mInactive = "flex flex-col items-center justify-center flex-1 py-1 text-gray-400";
-
+      const mActive = "nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-[#A6192E]";
+      const mInactive = "nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-gray-400";
       const mbT = document.getElementById("mobileNavTasks");
       const mbN = document.getElementById("mobileNavNotes");
       const mbO = document.getElementById("mobileNavOrders");
-
       if(mbT) mbT.className = tab === 'tasks' ? mActive : mInactive;
       if(mbN) mbN.className = tab === 'notes' ? mActive : mInactive;
       if(mbO) mbO.className = tab === 'orders' ? mActive : mInactive;
@@ -1207,6 +1277,90 @@
     function toggleDarkMode() { document.documentElement.classList.toggle("dark"); }
     function openSettingsModal() { document.getElementById("settingsModal").classList.remove("hidden"); updatePushUI(); }
     function closeSettingsModal() { document.getElementById("settingsModal").classList.add("hidden"); }
+
+    function openNoteModal(id = null) {
+      if (id) {
+        const n = notes.find(x => x.id === id);
+        document.getElementById("noteId").value = n.id;
+        document.getElementById("noteTitleInput").value = n.title;
+        document.getElementById("noteContentInput").value = n.content;
+      } else {
+        document.getElementById("noteId").value = "";
+        document.getElementById("noteTitleInput").value = "";
+        document.getElementById("noteContentInput").value = "";
+      }
+      document.getElementById("noteModal").classList.remove("hidden");
+    }
+    
+    function saveNote(e) {
+      e.preventDefault();
+      const id = document.getElementById("noteId").value;
+      const title = document.getElementById("noteTitleInput").value;
+      const content = document.getElementById("noteContentInput").value;
+
+      if (id) {
+        const n = notes.find(x => x.id === id);
+        if (n) { n.title = title; n.content = content; }
+      } else {
+        notes.push({ id: "nt_" + Date.now(), title, content, owner: activeUser, workspace: currentWorkspace });
+      }
+      closeNoteModal();
+      saveData();
+    }
+    
+    function openNewTaskModal() {
+      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      const c = document.getElementById("taskAssigneesContainer");
+      c.innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
+      document.getElementById("taskIdInput").value = "";
+      document.getElementById("taskTitleInput").value = "";
+      document.getElementById("taskNotesInput").value = "";
+      document.getElementById("taskModalHeading").innerText = "Create New Task";
+      document.getElementById("taskModal").classList.remove("hidden");
+    }
+
+    function openEditTaskModal(id) {
+      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      const t = tasks.find(x => x.id === id);
+      if (t) {
+        document.getElementById("taskIdInput").value = t.id;
+        document.getElementById("taskTitleInput").value = t.title;
+        document.getElementById("taskSectionInput").value = t.sectionId;
+        document.getElementById("taskPriorityInput").value = t.priority || "Medium";
+        document.getElementById("taskNotesInput").value = t.notes || "";
+        const c = document.getElementById("taskAssigneesContainer");
+        c.innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(t.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
+      }
+      document.getElementById("taskModalHeading").innerText = "Edit Task Details";
+      document.getElementById("taskModal").classList.remove("hidden");
+    }
+
+    function saveTask(e) {
+      e.preventDefault();
+      const id = document.getElementById("taskIdInput").value;
+      const title = document.getElementById("taskTitleInput").value.trim();
+      const sectionId = document.getElementById("taskSectionInput").value;
+      const priority = document.getElementById("taskPriorityInput").value;
+      const notesText = document.getElementById("taskNotesInput").value.trim();
+      const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
+
+      if (id) {
+        const t = tasks.find(x => x.id === id);
+        if (t) {
+          t.title = title; t.sectionId = sectionId; t.priority = priority; t.notes = notesText; t.assignees = assignees;
+          if (!Array.isArray(t.history)) t.history = [];
+          t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() });
+        }
+      } else {
+        tasks.push({
+          id: Date.now().toString(), title, sectionId, priority, notes: notesText,
+          assignees: assignees.length ? assignees : [activeUser], completed: false, owner: activeUser, workspace: currentWorkspace,
+          history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }]
+        });
+      }
+      closeTaskModal();
+      saveData();
+    }
   </script>
 </body>
 </html>
