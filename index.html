@@ -86,13 +86,13 @@
     </div>
 
     <nav class="hidden md:flex items-center space-x-2 bg-gray-200/80 dark:bg-[#121212] p-1.5 rounded-2xl border border-gray-300 dark:border-gray-800 shadow-inner mx-2">
-      <button id="tabTasksDesktop" onclick="switchMainTab('tasks')" class="px-4 py-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all">
+      <button id="tabTasksDesktop" onclick="switchMainTab('tasks')" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all">
         <i data-lucide="check-square" class="w-4 h-4"></i><span>Tasks Board</span>
       </button>
-      <button id="tabNotesDesktop" onclick="switchMainTab('notes')" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all">
+      <button id="tabNotesDesktop" onclick="switchMainTab('notes')" class="nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all">
         <i data-lucide="sticky-note" class="w-4 h-4"></i><span>Keep Notes</span>
       </button>
-      <button id="tabOrdersDesktop" onclick="switchMainTab('orders')" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all">
+      <button id="tabOrdersDesktop" onclick="switchMainTab('orders')" class="nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all">
         <i data-lucide="package" class="w-4 h-4"></i><span>Order Tracker</span>
       </button>
     </nav>
@@ -490,16 +490,32 @@
     }
 
     async function requestNotificationPermission() {
-      if (!window.OneSignalDeferred) return;
-      OneSignalDeferred.push(async function(OneSignal) {
+      // Direct Apple Native Request to bypass Safari slidedown block
+      if (typeof window.Notification !== 'undefined') {
         try {
-          await OneSignal.Notifications.requestPermission(); 
-          const prefs = getNotificationPrefs(activeUser);
-          prefs.enabled = true; prefs.notifyAssigned = true; prefs.notifyCompleted = true; prefs.notifyOrders = true; prefs.notifyNotes = true;
-          localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs));
-          updatePushUI();
-        } catch(e) { alert("Notification permission request denied. Please check your browser or iOS settings."); }
-      });
+          const permission = await window.Notification.requestPermission();
+          if (permission === 'granted') {
+            
+            if (window.OneSignalDeferred) {
+              OneSignalDeferred.push(function(OneSignal) {
+                OneSignal.User.PushSubscription.optIn();
+              });
+            }
+
+            const prefs = getNotificationPrefs(activeUser);
+            prefs.enabled = true; prefs.notifyAssigned = true; prefs.notifyCompleted = true; prefs.notifyOrders = true; prefs.notifyNotes = true;
+            localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs));
+            updatePushUI();
+            
+          } else {
+            alert("Notifications denied. To fix this, go to your iPhone Settings > Amada (or Safari) and enable notifications.");
+          }
+        } catch (e) {
+          alert("Could not request permissions. Make sure your iPhone is updated to iOS 16.4+.");
+        }
+      } else {
+        alert("Web Push is not supported on this device/browser. Must be iOS 16.4+ added to Home Screen.");
+      }
     }
 
     function updatePushUI() {
@@ -1207,7 +1223,6 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
             
-            <!-- FIXED PLACED LABEL: Now explicitly pulls ord.placedBy and ord.dateOrdered if checked -->
             <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer">
               <input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]">
               <div>
