@@ -13,8 +13,6 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  
-  <!-- Mobile Drag and Drop Polyfill -->
   <script src="https://bernardo-castilho.github.io/DragDropTouch/DragDropTouch.js"></script>
 
   <script>
@@ -37,9 +35,7 @@
   <!-- AUTH OVERLAY -->
   <div id="authOverlay" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center my-auto">
-      <svg class="w-16 h-16 mx-auto mb-4 drop-shadow-lg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100" height="100" rx="22" fill="#A6192E"/><text x="50%" y="74%" font-family="Arial, sans-serif" font-size="68" font-weight="900" fill="white" text-anchor="middle">A</text>
-      </svg>
+      <svg class="w-16 h-16 mx-auto mb-4 drop-shadow-lg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="22" fill="#A6192E"/><text x="50%" y="74%" font-family="Arial, sans-serif" font-size="68" font-weight="900" fill="white" text-anchor="middle">A</text></svg>
       <h2 class="text-2xl font-bold mb-1">Amada Workspace</h2>
       <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Select your profile to continue</p>
       <div id="userSelectionStep" class="space-y-3"><div id="userProfilesList" class="grid grid-cols-2 gap-3 mb-4"></div></div>
@@ -105,7 +101,10 @@
       <div id="assigneeFilterSection" class="mb-4"><div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Filter by Assignee</div><div id="assigneesSidebar" class="space-y-1"></div></div>
       <div class="mb-4"><div class="flex items-center justify-between mb-2"><span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Tags</span><button onclick="openNewTagModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="plus-circle" class="w-4 h-4"></i></button></div><div id="tagsSidebar" class="space-y-1 max-h-32 overflow-y-auto"></div></div>
       
+      <!-- TASK SECTIONS -->
       <div id="taskSectionsSidebarBlock" class="flex-1 overflow-y-auto min-h-[120px]"><div class="flex items-center justify-between mb-2"><span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Task Sections</span><button onclick="openNewSectionModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="folder-plus" class="w-4 h-4"></i></button></div><div id="sectionsSidebar" class="space-y-1"></div></div>
+
+      <!-- NOTE FOLDERS -->
       <div id="noteFoldersSidebarBlock" class="flex-1 overflow-y-auto min-h-[120px] hidden border-t border-gray-200 dark:border-gray-800 pt-3 mt-3"><div class="flex items-center justify-between mb-2"><span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Note Folders</span><button onclick="openNewNoteFolderModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="folder-plus" class="w-4 h-4"></i></button></div><div id="noteFoldersSidebar" class="space-y-1"></div></div>
     </aside>
 
@@ -136,61 +135,37 @@
     </main>
   </div>
 
-  <!-- MOBILE NAV -->
   <nav class="md:hidden fixed bottom-0 inset-x-0 h-14 bg-white dark:bg-[#181818] border-t border-gray-200 dark:border-gray-800 flex items-center justify-around z-30 px-2 safe-area-pb">
     <button onclick="switchMainTab('tasks')" id="mobileNavTasks" class="nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-[#A6192E]"><i data-lucide="check-square" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-bold">Tasks</span></button>
     <button onclick="switchMainTab('notes')" id="mobileNavNotes" class="nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-gray-400"><i data-lucide="sticky-note" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-semibold">Notes</span></button>
     <button onclick="switchMainTab('orders')" id="mobileNavOrders" class="nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-gray-400"><i data-lucide="package" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-semibold">Orders</span></button>
   </nav>
 
-  <!-- 1. SETTINGS MODAL -->
+  <!-- MODALS -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 my-auto max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2"><h3 class="text-base font-bold flex items-center space-x-2"><i data-lucide="settings" class="w-5 h-5 text-[#A6192E]"></i><span>Workspace Settings</span></h3><button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button></div>
-      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-4 rounded-2xl border border-gray-300 dark:border-gray-800"><div class="flex items-center justify-between mb-2"><h4 class="text-xs font-bold text-gray-400 uppercase flex items-center space-x-1.5"><i data-lucide="bell" class="w-4 h-4 text-[#A6192E]"></i><span>Notification Centre</span></h4><span id="pushStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400">OFF</span></div><p class="text-[11px] text-gray-500 mb-3">Push notifications are disabled by default.</p><button id="enablePushBtn" onclick="requestNotificationPermission()" class="w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Enable Device Notifications</button><div id="notificationPreferencesList" class="space-y-3 border-t border-gray-200 dark:border-gray-800 pt-3"><label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">New Task Assignments</span></div><input type="checkbox" id="prefNotifyAssigned" onchange="saveNotificationPref('notifyAssigned', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label><label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Task Completions</span></div><input type="checkbox" id="prefNotifyCompleted" onchange="saveNotificationPref('notifyCompleted', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label><label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Order Tracking Updates</span></div><input type="checkbox" id="prefNotifyOrders" onchange="saveNotificationPref('notifyOrders', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label><label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Note Updates</span></div><input type="checkbox" id="prefNotifyNotes" onchange="saveNotificationPref('notifyNotes', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label></div></div>
+      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-4 rounded-2xl border border-gray-300 dark:border-gray-800"><div class="flex items-center justify-between mb-2"><h4 class="text-xs font-bold text-gray-400 uppercase flex items-center space-x-1.5"><i data-lucide="bell" class="w-4 h-4 text-[#A6192E]"></i><span>Notification Centre</span></h4><span id="pushStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400">OFF</span></div><p class="text-[11px] text-gray-500 mb-3">Push notifications disabled by default.</p><button id="enablePushBtn" onclick="requestNotificationPermission()" class="w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Enable Device Notifications</button><div id="notificationPreferencesList" class="space-y-3 border-t border-gray-200 dark:border-gray-800 pt-3"><label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">New Task Assignments</span></div><input type="checkbox" id="prefNotifyAssigned" onchange="saveNotificationPref('notifyAssigned', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label><label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Task Completions</span></div><input type="checkbox" id="prefNotifyCompleted" onchange="saveNotificationPref('notifyCompleted', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label><label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Order Updates</span></div><input type="checkbox" id="prefNotifyOrders" onchange="saveNotificationPref('notifyOrders', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label><label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Note Updates</span></div><input type="checkbox" id="prefNotifyNotes" onchange="saveNotificationPref('notifyNotes', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label></div></div>
       <div id="adminCreateUserSection" class="hidden mb-6 bg-gray-100 dark:bg-[#121212] p-3.5 rounded-2xl border border-gray-300 dark:border-gray-800"><h4 class="text-xs font-bold text-[#A6192E] uppercase mb-2 flex items-center space-x-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i><span>Create New User</span></h4><form onsubmit="adminAddNewUser(event)" class="space-y-2"><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><input type="text" id="adminNewUserName" placeholder="Name" required class="bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"><select id="adminNewUserRole" class="bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><input type="password" id="adminNewUserPassword" placeholder="Default: AMADA" class="bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"><button type="submit" class="bg-[#A6192E] text-white text-xs font-bold rounded-xl px-3 py-2.5 transition">Add User</button></div></form></div>
-      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800"><h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Personal Layout Settings</h4><button onclick="resetPersonalOrder()" class="px-3 py-2 bg-gray-200 dark:bg-[#252525] text-gray-300 hover:text-white rounded-xl text-xs font-semibold border border-gray-700">Reset Category Order</button></div>
-      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800"><h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Change My Password</h4><form onsubmit="changeMyPassword(event)" class="space-y-2"><input type="password" id="newPasswordInput" placeholder="New Password" required class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"><button type="submit" class="px-3 py-2 bg-[#A6192E] text-white text-xs font-bold rounded-xl">Update</button></form></div>
+      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800"><h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Change Password</h4><form onsubmit="changeMyPassword(event)" class="space-y-2"><input type="password" id="newPasswordInput" placeholder="New Password" required class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"><button type="submit" class="px-3 py-2 bg-[#A6192E] text-white text-xs font-bold rounded-xl">Update</button></form></div>
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800"><h4 class="text-xs font-bold text-gray-400 uppercase mb-2">User Accounts</h4><div id="permissionsUserList" class="max-h-48 overflow-y-auto pr-1"></div><button id="btnMasterResetPasswords" onclick="resetAllPasswordsToDefault()" class="hidden mt-3 w-full bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-400 py-2 rounded-xl text-xs font-bold transition">Master Reset All Passwords</button></div>
     </div>
   </div>
 
-  <!-- 2. TAG MODAL -->
-  <div id="tagModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl"><h3 class="text-base font-bold mb-3">Create Tag</h3><input type="hidden" id="tagIdInput"><input type="text" id="tagTitleInput" placeholder="Tag Name" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm mb-3 focus:outline-none"><label class="block text-xs text-gray-400 mb-1">Color</label><input type="color" id="tagColorInput" value="#A6192E" class="w-full h-9 rounded-xl border-none cursor-pointer mb-4"><div class="flex justify-end space-x-2"><button onclick="closeTagModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button><button onclick="saveCustomTag()" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></div>
-  </div>
+  <div id="tagModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl"><h3 class="text-base font-bold mb-3">Create Tag</h3><input type="hidden" id="tagIdInput"><input type="text" id="tagTitleInput" placeholder="Tag Name" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm mb-3 focus:outline-none"><label class="block text-xs text-gray-400 mb-1">Color</label><input type="color" id="tagColorInput" value="#A6192E" class="w-full h-9 rounded-xl border-none cursor-pointer mb-4"><div class="flex justify-end space-x-2"><button onclick="closeTagModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button><button onclick="saveCustomTag()" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></div></div>
 
-  <!-- 3. ORDER COMPLETION MODAL -->
-  <div id="orderCompleteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 class="text-base font-bold text-emerald-500">Verify Completion</h3><button onclick="closeOrderCompleteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="space-y-4 text-xs"><div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-2xl"><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]"><span class="font-bold">1. Placed</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600"><span class="font-bold">2. VBOP</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageReceived" onchange="toggleVerifyReceivedMissing(this.checked)" class="w-4 h-4 accent-emerald-600"><span class="font-bold">3. Received</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600"><span class="font-bold">4. Emailed</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500"><span class="font-bold">5. Stocked</span></label></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderCompleteModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="button" onclick="confirmOrderCompletion()" class="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow">Confirm</button></div></div></div>
-  </div>
+  <div id="orderCompleteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 class="text-base font-bold text-emerald-500">Verify Completion</h3><button onclick="closeOrderCompleteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="space-y-4 text-xs"><div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-2xl"><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]"><span class="font-bold">1. Placed</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600"><span class="font-bold">2. VBOP</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageReceived" onchange="toggleVerifyReceivedMissing(this.checked)" class="w-4 h-4 accent-emerald-600"><span class="font-bold">3. Received</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600"><span class="font-bold">4. Emailed</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500"><span class="font-bold">5. Stocked</span></label></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderCompleteModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="button" onclick="confirmOrderCompletion()" class="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow">Confirm</button></div></div></div></div>
 
-  <!-- 4. ORDER MODAL -->
-  <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 id="orderModalHeading" class="text-base font-bold">New Order</h3><button type="button" onclick="closeOrderModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveOrder(event)" class="space-y-3"><input type="hidden" id="orderIdInput"><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">PO</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Date</label><input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Type</label><input type="text" id="orderTypeInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Ordered By</label><input type="text" id="orderPlacedByInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Items</label><textarea id="orderFreeformItemsInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Notes</label><textarea id="orderNotesInput" rows="2" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></textarea></div><div tabindex="0" onpaste="handleUniversalPaste(event, 'order')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="orderFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'order')" class="hidden"><div onclick="document.getElementById('orderFileInput').click()"><i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="orderFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="orderFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('order')" class="text-red-400">Remove</button></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save Order</button></div></form></div>
-  </div>
+  <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 id="orderModalHeading" class="text-base font-bold">New Order</h3><button type="button" onclick="closeOrderModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveOrder(event)" class="space-y-3"><input type="hidden" id="orderIdInput"><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">PO</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Date</label><input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Type</label><input type="text" id="orderTypeInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Ordered By</label><input type="text" id="orderPlacedByInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Items</label><textarea id="orderFreeformItemsInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Notes</label><textarea id="orderNotesInput" rows="2" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></textarea></div><div tabindex="0" onpaste="handleUniversalPaste(event, 'order')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="orderFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'order')" class="hidden"><div onclick="document.getElementById('orderFileInput').click()"><i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="orderFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="orderFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('order')" class="text-red-400">Remove</button></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save Order</button></div></form></div></div>
 
-  <!-- 5. TASK MODAL -->
-  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="taskModalHeading" class="text-base font-bold">Edit Task</h3><button type="button" onclick="closeTaskModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveTask(event)" class="space-y-3"><input type="hidden" id="taskIdInput"><input type="text" id="taskTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div><textarea id="taskNotesInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'task')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'task')" class="hidden"><div onclick="document.getElementById('taskFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="taskFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="taskFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('task')" class="text-red-400">Remove</button></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border-gray-700 text-xs"></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div>
-  </div>
+  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="taskModalHeading" class="text-base font-bold">Edit Task</h3><button type="button" onclick="closeTaskModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveTask(event)" class="space-y-3"><input type="hidden" id="taskIdInput"><input type="text" id="taskTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div><textarea id="taskNotesInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'task')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'task')" class="hidden"><div onclick="document.getElementById('taskFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="taskFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="taskFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('task')" class="text-red-400">Remove</button></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border-gray-700 text-xs"></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
-  <!-- 6. NOTE MODAL -->
-  <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="noteModalTitle" class="text-base font-bold">Edit Note</h3><button type="button" onclick="closeNoteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveNote(event)" class="space-y-3"><input type="hidden" id="noteId"><input type="text" id="noteTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="noteFolderInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="noteTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select></div><textarea id="noteContentInput" rows="4" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'note')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="noteFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'note')" class="hidden"><div onclick="document.getElementById('noteFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="noteFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="noteFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('note')" class="text-red-400">Remove</button></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl text-xs"></div></div><div class="flex items-center space-x-2 pt-1"><input type="checkbox" id="noteStarInput" class="w-4 h-4"><label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label></div><div class="flex justify-end space-x-2 pt-2 border-t border-gray-800"><button type="button" onclick="closeNoteModal()" class="px-4 py-2 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div>
-  </div>
+  <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="noteModalTitle" class="text-base font-bold">Edit Note</h3><button type="button" onclick="closeNoteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveNote(event)" class="space-y-3"><input type="hidden" id="noteId"><input type="text" id="noteTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="noteFolderInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="noteTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select></div><textarea id="noteContentInput" rows="4" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'note')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="noteFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'note')" class="hidden"><div onclick="document.getElementById('noteFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="noteFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="noteFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('note')" class="text-red-400">Remove</button></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl text-xs"></div></div><div class="flex items-center space-x-2 pt-1"><input type="checkbox" id="noteStarInput" class="w-4 h-4"><label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label></div><div class="flex justify-end space-x-2 pt-2 border-t border-gray-800"><button type="button" onclick="closeNoteModal()" class="px-4 py-2 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
-  <!-- 7. TASK DETAIL MODAL -->
-  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK</span><span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800"></span><span id="detailStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded hidden"></span></div><h3 id="detailTitle" class="text-lg font-bold mb-2 break-words"></h3><div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="detailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border-gray-800"><div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Task</button></div></div>
-  </div>
+  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK</span><span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800"></span><span id="detailStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded hidden"></span></div><h3 id="detailTitle" class="text-lg font-bold mb-2 break-words"></h3><div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="detailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border-gray-800"><div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Task</button></div></div></div>
 
-  <!-- 8. NOTE DETAIL MODAL -->
-  <div id="noteDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeNoteDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">NOTE</span><span id="noteDetailFolder" class="text-[10px] font-bold text-gray-400"></span></div><h3 id="noteDetailTitle" class="text-lg font-bold mb-2"></h3><div id="noteDetailContent" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="noteDetailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl"><div class="col-span-2"><span class="font-bold text-gray-400">Assignees:</span> <div id="noteDetailAssignees" class="text-gray-200 font-semibold truncate"></div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="noteDetailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="noteDetailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Note</button></div></div>
-  </div>
+  <div id="noteDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeNoteDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">NOTE</span><span id="noteDetailFolder" class="text-[10px] font-bold text-gray-400"></span></div><h3 id="noteDetailTitle" class="text-lg font-bold mb-2"></h3><div id="noteDetailContent" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="noteDetailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl"><div class="col-span-2"><span class="font-bold text-gray-400">Assignees:</span> <div id="noteDetailAssignees" class="text-gray-200 font-semibold truncate"></div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="noteDetailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="noteDetailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Note</button></div></div></div>
 
-  <!-- 9. ANNOTATION MODAL -->
   <div id="annotationModal" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col w-full h-full overflow-hidden">
     <div class="h-16 bg-[#181818] border-b border-gray-800 flex items-center justify-between px-2 sm:px-4 shrink-0 shadow-lg overflow-x-auto">
       <div class="flex items-center space-x-2 shrink-0"><button onclick="closeAnnotationModal()" class="text-gray-400 hover:text-white p-2"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><button onclick="annotFitToScreen()" class="p-2 text-gray-400 hover:text-white"><i data-lucide="maximize" class="w-5 h-5"></i></button><div class="flex items-center space-x-1 bg-[#252525] p-1 rounded-xl"><button id="btnModeView" onclick="setAnnotMode('view')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#A6192E] text-white">View</button><button id="btnModeAnnotate" onclick="setAnnotMode('annotate')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400">Annotate</button></div></div>
@@ -199,3 +174,544 @@
     </div>
     <div class="flex-1 overflow-hidden flex items-center justify-center bg-black relative" id="canvasScrollWrapper"><div id="pdfLoadingIndicator" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-10"><div class="w-8 h-8 border-4 border-[#A6192E] border-t-transparent rounded-full animate-spin mb-3"></div><p class="text-white text-xs font-bold">Rendering...</p></div><canvas id="annotationCanvas" class="shadow-2xl bg-white"></canvas><div id="unsupportedPreview" class="hidden text-center"><i data-lucide="file-text" class="w-16 h-16 text-gray-500 mx-auto mb-3"></i><p class="text-white text-sm font-bold mb-1">Preview Not Supported</p><button onclick="downloadOriginalFile()" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-bold rounded-xl">Download File</button></div></div>
   </div>
+
+  <script>
+    // --- NOTIFICATIONS ---
+    const ONESIGNAL_APP_ID = "40ee1473-8e3b-4e29-b08e-e424b0e35e39";
+    const JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS";
+    const JSONBIN_BIN_ID = "6ae0b445ffd5d160538fff26";
+
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      if (ONESIGNAL_APP_ID && !ONESIGNAL_APP_ID.includes("PASTE_")) { await OneSignal.init({ appId: ONESIGNAL_APP_ID, notifyButton: { enable: false } }); updatePushUI(); }
+    });
+
+    function getNotificationPrefs(username) { const saved = localStorage.getItem(`amada_notify_${username}`); if (!saved) return { enabled: false, notifyAssigned: false, notifyCompleted: false, notifyOrders: false, notifyNotes: false }; return JSON.parse(saved); }
+    function saveNotificationPref(key, value) { if (!activeUser) return; const prefs = getNotificationPrefs(activeUser); prefs[key] = value; localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs)); }
+
+    async function requestNotificationPermission() {
+      if (typeof window.Notification !== 'undefined') {
+        try {
+          const permission = await window.Notification.requestPermission();
+          if (permission === 'granted') {
+            if (window.OneSignalDeferred) OneSignalDeferred.push(function(OneSignal) { OneSignal.User.PushSubscription.optIn(); });
+            const prefs = getNotificationPrefs(activeUser); prefs.enabled = true; prefs.notifyAssigned = true; prefs.notifyCompleted = true; prefs.notifyOrders = true; prefs.notifyNotes = true;
+            localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs)); updatePushUI();
+          } else { alert("Notifications denied. Check iOS Settings > Safari (or Amada App) and allow Notifications."); }
+        } catch (e) { alert("Could not request permissions. Make sure your iPhone is updated to iOS 16.4+."); }
+      } else { alert("Web Push is not supported here. Make sure you added this to your Home Screen on iOS 16.4+."); }
+    }
+
+    function updatePushUI() {
+      if (!activeUser) return; const prefs = getNotificationPrefs(activeUser); const badge = document.getElementById("pushStatusBadge"); const btn = document.getElementById("enablePushBtn");
+      ['prefNotifyAssigned', 'prefNotifyCompleted', 'prefNotifyOrders', 'prefNotifyNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = !!prefs[id.replace('prefN', 'n')]; });
+      if (prefs.enabled) { if (badge) { badge.innerText = "ACTIVE"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400"; } if (btn) { btn.innerText = "Push Notifications Active"; btn.disabled = true; btn.className = "w-full py-2 px-3 rounded-xl bg-gray-700 text-gray-400 text-xs font-bold cursor-default mb-3"; } } 
+      else { if (badge) { badge.innerText = "OFF"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400"; } if (btn) { btn.innerText = "Enable Device Push Notifications"; btn.disabled = false; btn.className = "w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3"; } }
+    }
+
+    function triggerLocalNotification(title, message) {
+      if (typeof window.Notification !== 'undefined' && Notification.permission === "granted") {
+        if (navigator.serviceWorker) { navigator.serviceWorker.ready.then(reg => { reg.showNotification(title, { body: message, icon: "icon.png" }); }).catch(() => { new Notification(title, { body: message, icon: "icon.png" }); }); } 
+        else { new Notification(title, { body: message, icon: "icon.png" }); }
+      }
+    }
+
+    // --- CORE LOGIC ---
+    const BASELINE_USERS = [{ name: "Charlie", role: "master_admin", password: "AMADA" }, { name: "Jacob", role: "admin", password: "AMADA" }];
+    function ensureProfiles(userList) {
+      if (!Array.isArray(userList) || userList.length === 0) return JSON.parse(JSON.stringify(BASELINE_USERS));
+      if (!userList.find(u => u && u.name === "Charlie")) userList.unshift({ name: "Charlie", role: "master_admin", password: "AMADA" });
+      if (!userList.find(u => u && u.name === "Jacob")) userList.push({ name: "Jacob", role: "admin", password: "AMADA" });
+      return userList;
+    }
+
+    let users = ensureProfiles(JSON.parse(localStorage.getItem("amada_users")));
+    let activeUser = localStorage.getItem("amada_active_user") || "";
+    let currentWorkspace = 'shared', currentMainTab = "tasks", currentNoteFolderId = null, activeFilterType = null, activeFilterId = null, selectedUserForAuth = "", presenceMap = {}, isCompletedOpen = false, isCompletedOrdersOpen = false, openAccordionsMap = {};
+    let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) || [{ id: "t_urgent", title: "Urgent", color: "#ef4444" }, { id: "t_cnc", title: "Machining", color: "#3b82f6" }];
+    let sharedSections = JSON.parse(localStorage.getItem("amada_shared_sections")) || [{ id: "s1", title: "High Priority" }, { id: "s2", title: "Medium Priority" }];
+    let noteFolders = JSON.parse(localStorage.getItem("amada_note_folders")) || [{ id: "nf1", title: "General Guidelines", parentId: null }];
+    let tasks = JSON.parse(localStorage.getItem("amada_tasks")) || [];
+    let notes = JSON.parse(localStorage.getItem("amada_notes")) || [];
+    let orders = JSON.parse(localStorage.getItem("amada_orders")) || [];
+    let globalActivity = JSON.parse(localStorage.getItem("amada_recent_activity")) || { id: "", msg: "", user: "" };
+    let tempFileState = { note: null, task: null, order: null }; 
+
+    function canModifyItem(item) { if (item.owner === activeUser) return true; if (item.restricted) return false; const u = users.find(x => x.name === activeUser); return u && (u.role === "admin" || u.role === "master_admin"); }
+    function getPersonalOrderedSections() {
+      if (!activeUser) return sharedSections; const savedOrder = JSON.parse(localStorage.getItem(`amada_order_${activeUser}`)); if (!Array.isArray(savedOrder) || savedOrder.length === 0) return sharedSections;
+      const ordered = []; savedOrder.forEach(id => { const found = sharedSections.find(s => s.id === id); if (found) ordered.push(found); });
+      sharedSections.forEach(s => { if (!ordered.some(o => o.id === s.id)) ordered.push(s); }); return ordered;
+    }
+    function savePersonalSectionOrder(newIdArray) { if (!activeUser) return; localStorage.setItem(`amada_order_${activeUser}`, JSON.stringify(newIdArray)); renderAll(); }
+    function resetPersonalOrder() { if (!activeUser) return; localStorage.removeItem(`amada_order_${activeUser}`); renderAll(); alert("Layout reset to default!"); }
+
+    window.onload = () => { users = ensureProfiles(users); noteFolders.forEach(f => { if(f.parentId === undefined) f.parentId = null; }); renderUserProfiles(); checkAuth(); renderAll(); fetchFromRemoteBin(); setInterval(fetchFromRemoteBin, 3500); setupCanvasEvents(); };
+
+    function switchWorkspace(ws) {
+      currentWorkspace = ws; const btnS = document.getElementById("wsBtnShared"); const btnP = document.getElementById("wsBtnPersonal");
+      const activeClass = "px-2.5 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold bg-[#A6192E] text-white shadow transition-all whitespace-nowrap";
+      const inactiveClass = "px-2.5 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold text-gray-500 hover:text-gray-800 dark:text-gray-400 hover:text-white transition-all whitespace-nowrap";
+      if (ws === 'shared') { btnS.className = activeClass; btnP.className = inactiveClass; } else { btnP.className = activeClass; btnS.className = inactiveClass; }
+      renderAll();
+    }
+    function toggleMobileSidebar(force) {
+      const sidebar = document.getElementById("mainSidebar"); const backdrop = document.getElementById("sidebarBackdrop"); const shouldOpen = force !== undefined ? force : sidebar.classList.contains("-translate-x-full");
+      if (shouldOpen) { sidebar.classList.remove("-translate-x-full"); backdrop.classList.remove("hidden"); } else { sidebar.classList.add("-translate-x-full"); backdrop.classList.add("hidden"); }
+    }
+    function toggleCompletedDropdown() { isCompletedOpen = !isCompletedOpen; document.getElementById("completedDropdownContainer").classList.toggle("hidden", !isCompletedOpen); document.getElementById("completedChevron").classList.toggle("rotate-90", isCompletedOpen); }
+    function toggleCompletedOrdersDropdown() { isCompletedOrdersOpen = !isCompletedOrdersOpen; document.getElementById("completedOrdersContainer").classList.toggle("hidden", !isCompletedOrdersOpen); document.getElementById("completedOrdersChevron").classList.toggle("rotate-90", isCompletedOrdersOpen); }
+    function updateSyncUI(status) {
+      const badge = document.getElementById("githubSyncBadge"); const pulse = document.getElementById("syncPulse"); if (!badge || !pulse) return;
+      if (status === "ok") { badge.innerText = "Live"; pulse.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse"; } else { badge.innerText = "Alert"; pulse.className = "w-2 h-2 rounded-full bg-red-500"; }
+    }
+    function updatePresenceUI() {
+      const container = document.getElementById("activeUsersList"); if (!container) return; const now = Date.now(); const activeList = [];
+      users.forEach(u => { const lastSeen = presenceMap[u.name] || 0; if ((now - lastSeen < 45000) || (u.name === activeUser)) activeList.push({ name: u.name, isMe: u.name === activeUser }); });
+      container.innerHTML = activeList.map(item => `<div class="flex items-center justify-between py-1 border-b border-gray-100 dark:border-gray-800/50 last:border-none"><div class="flex items-center space-x-2"><div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div><span class="font-bold text-gray-200">${item.name}</span></div><span class="text-[10px] text-emerald-400 font-semibold">${item.isMe ? '(You)' : 'Active'}</span></div>`).join('');
+    }
+
+    async function fetchFromRemoteBin() {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, { method: "GET", headers: { "X-Master-Key": JSONBIN_KEY } });
+        if (res.ok) {
+          const content = (await res.json()).record || {};
+          if (content.recentActivity && content.recentActivity.id !== globalActivity.id) { if (content.recentActivity.user !== activeUser) triggerLocalNotification("Workspace Update", content.recentActivity.msg); globalActivity = content.recentActivity; localStorage.setItem("amada_recent_activity", JSON.stringify(globalActivity)); }
+          if (content.users) users = ensureProfiles(content.users); if (content.sharedTags) sharedTags = content.sharedTags; if (content.sharedSections) sharedSections = content.sharedSections; if (content.noteFolders) noteFolders = content.noteFolders; if (content.tasks) tasks = content.tasks; if (content.notes) notes = content.notes; if (content.orders) orders = content.orders; if (content.presence) presenceMap = content.presence;
+          if (activeUser) presenceMap[activeUser] = Date.now();
+          localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_note_folders", JSON.stringify(noteFolders)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders));
+          updateSyncUI("ok"); updatePresenceUI(); renderUserProfiles(); renderPermissionsUserList();
+          const el = document.activeElement; if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' && el.tagName !== 'SELECT')) renderAll();
+        } else updateSyncUI("error");
+      } catch (e) { updateSyncUI("error"); }
+    }
+
+    async function saveData(actionMessage = "") {
+      if (activeUser) presenceMap[activeUser] = Date.now();
+      if (actionMessage) { globalActivity = { id: Date.now().toString(), msg: actionMessage, user: activeUser }; localStorage.setItem("amada_recent_activity", JSON.stringify(globalActivity)); }
+      localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_note_folders", JSON.stringify(noteFolders)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders));
+      renderAll(); updatePresenceUI(); renderPermissionsUserList();
+      try { await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, { method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY }, body: JSON.stringify({ users, sharedTags, sharedSections, noteFolders, tasks, notes, orders, presence: presenceMap, recentActivity: globalActivity }) }); updateSyncUI("ok"); } catch (e) { updateSyncUI("error"); }
+    }
+
+    function selectUserForLogin(name) { selectedUserForAuth = name; document.getElementById("loginUserLabel").innerText = `Password for ${name}`; document.getElementById("userSelectionStep").classList.add("hidden"); document.getElementById("passwordStep").classList.remove("hidden"); document.getElementById("loginPassword").focus(); }
+    function resetLoginStep() { document.getElementById("userSelectionStep").classList.remove("hidden"); document.getElementById("passwordStep").classList.add("hidden"); }
+    function verifyPassword(e) {
+      e.preventDefault(); const u = users.find(x => x.name === selectedUserForAuth); const targetPassword = (u && u.password) ? u.password : "AMADA";
+      if (document.getElementById("loginPassword").value === targetPassword) {
+        activeUser = selectedUserForAuth; presenceMap[activeUser] = Date.now(); localStorage.setItem("amada_active_user", activeUser);
+        document.getElementById("authOverlay").classList.add("hidden"); document.getElementById("loginPassword").value = "";
+        switchWorkspace('shared'); checkAuth(); fetchFromRemoteBin(); 
+      } else document.getElementById("authError").classList.remove("hidden");
+    }
+    function checkAuth() { if (activeUser && users.some(u => u.name === activeUser)) { document.getElementById("authOverlay").classList.add("hidden"); document.getElementById("userBadge").innerText = activeUser.charAt(0); document.getElementById("userBadge").title = activeUser; } else { document.getElementById("authOverlay").classList.remove("hidden"); renderUserProfiles(); } }
+    function handleLogout() { if (activeUser && presenceMap[activeUser]) delete presenceMap[activeUser]; localStorage.removeItem("amada_active_user"); activeUser = ""; location.reload(); }
+    function changeMyPassword(e) { e.preventDefault(); const pwd = document.getElementById("newPasswordInput").value.trim(); if(pwd && activeUser) { const u = users.find(x => x.name === activeUser); if(u) { u.password = pwd; saveData(); alert("Password updated."); document.getElementById("newPasswordInput").value = ""; } } }
+
+    let draggedTaskId = null, draggedNoteId = null, draggedSectionId = null;
+    function makeDraggable(id) { const el = document.getElementById(id); if(el) el.setAttribute('draggable', 'true'); }
+    function makeUndraggable(id) { const el = document.getElementById(id); if(el) el.setAttribute('draggable', 'false'); }
+    function dragTask(e, id) { draggedTaskId = id; e.dataTransfer.setData('text/plain', id); e.target.style.opacity = '0.5'; }
+    function endDragTask(e, id) { draggedTaskId = null; e.target.style.opacity = '1'; makeUndraggable('task_' + id); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); }
+    function dragNote(e, id) { draggedNoteId = id; e.dataTransfer.setData('text/plain', id); e.target.style.opacity = '0.5'; }
+    function endDragNote(e, id) { draggedNoteId = null; e.target.style.opacity = '1'; makeUndraggable('note_' + id); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); }
+    function dragSection(e, id) { if(e.target.id !== 'section_'+id) return; draggedSectionId = id; e.dataTransfer.setData('text/plain', id); e.target.classList.add('opacity-50'); }
+    function endDragSection(e, id) { draggedSectionId = null; e.target.classList.remove('opacity-50'); makeUndraggable('section_' + id); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); }
+    function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+    function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+    function dropTaskIntoSection(e, sectionId) { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); e.stopPropagation(); if (draggedTaskId) { const t = tasks.find(x => x.id === draggedTaskId); if (t && t.sectionId !== sectionId) { t.sectionId = sectionId; saveData(`Moved task`); } } }
+    function dropNoteIntoFolder(e, folderId) { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); if (draggedNoteId) { const n = notes.find(x => x.id === draggedNoteId); if (n && n.folderId !== folderId) { n.folderId = folderId; saveData(`Moved note`); } } }
+    function dropSection(e, targetSectionId) { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); if (draggedSectionId && draggedSectionId !== targetSectionId && !draggedTaskId) { let ordered = getPersonalOrderedSections(); const fromIdx = ordered.findIndex(s => s.id === draggedSectionId); const toIdx = ordered.findIndex(s => s.id === targetSectionId); const [moved] = ordered.splice(fromIdx, 1); ordered.splice(toIdx, 0, moved); savePersonalSectionOrder(ordered.map(s => s.id)); } }
+
+    function handleUniversalPaste(e, type) { const items = (e.clipboardData || e.originalEvent.clipboardData).items; for (let i=0; i<items.length; i++) { if (items[i].kind === 'file') { processUniversalFile(items[i].getAsFile(), type); break; } } }
+    function handleUniversalFileSelect(e, type) { if (e.target.files && e.target.files[0]) processUniversalFile(e.target.files[0], type); }
+    function processUniversalFile(file, type) { if (!file) return; const reader = new FileReader(); reader.onload = (evt) => { tempFileState[type] = { name: file.name || "Pasted_File", data: evt.target.result, mime: file.type, annotatedData: null }; document.getElementById(`${type}FileNameLabel`).innerText = tempFileState[type].name; document.getElementById(`${type}FilePreviewContainer`).classList.remove("hidden"); }; reader.readAsDataURL(file); }
+    function removeUniversalFile(type) { tempFileState[type] = null; const input = document.getElementById(`${type}FileInput`); if(input) input.value = ""; document.getElementById(`${type}FilePreviewContainer`).classList.add("hidden"); }
+    function getAttachmentBadgeHTML(itemType, item) {
+      if (!item.attachment || !item.attachment.data) return '';
+      const isPdf = item.attachment.mime && item.attachment.mime.includes("pdf"); const icon = isPdf ? 'file-text' : 'image'; const color = isPdf ? 'text-red-400' : 'text-blue-400';
+      return `<button onclick="event.stopPropagation(); openAnnotationModal('${itemType}', '${item.id}')" class="mt-2 w-full bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-between hover:border-[#A6192E] transition group"><div class="flex items-center space-x-2 truncate"><i data-lucide="${icon}" class="w-4 h-4 ${color}"></i><span class="text-[10px] font-semibold text-gray-600 dark:text-gray-300 truncate">${item.attachment.name}</span></div><span class="text-[9px] font-bold text-[#A6192E] opacity-0 group-hover:opacity-100 transition">View / Annotate</span></button>`;
+    }
+
+    let annotCtx = null, annotCanvas = null, annotOrigImg = new Image(), annotHistory = [], annotStep = -1, annotMode = 'view', annotTool = 'pan', isDrawing = false, isPanning = false, lastX = 0, lastY = 0, lastPanX = 0, lastPanY = 0, currentAnnotItemType = null, currentAnnotItemId = null, showingAnnotated = true, textStyle = { bold: false, italic: false }, annotScale = 1, annotPanOffsetX = 0, annotPanOffsetY = 0;
+    function setupCanvasEvents() {
+      annotCanvas = document.getElementById("annotationCanvas"); annotCtx = annotCanvas.getContext("2d"); const wrapper = document.getElementById("canvasScrollWrapper");
+      annotCanvas.addEventListener("pointerdown", startDraw); annotCanvas.addEventListener("pointermove", draw); window.addEventListener("pointerup", stopDraw); 
+      wrapper.addEventListener("wheel", (e) => {
+        if(!currentAnnotItemId) return; e.preventDefault(); const zoomIntensity = 0.1; const wheel = e.deltaY < 0 ? 1 : -1; const zoomFactor = Math.exp(wheel * zoomIntensity);
+        const rect = annotCanvas.getBoundingClientRect(); const mouseX = (e.clientX - rect.left) / annotScale; const mouseY = (e.clientY - rect.top) / annotScale;
+        const newScale = Math.min(Math.max(0.1, annotScale * zoomFactor), 10); annotPanOffsetX -= mouseX * (newScale - annotScale); annotPanOffsetY -= mouseY * (newScale - annotScale); annotScale = newScale; updateCanvasTransform();
+      }, {passive: false});
+    }
+    function updateCanvasTransform() { annotCanvas.style.transform = `translate(${annotPanOffsetX}px, ${annotPanOffsetY}px) scale(${annotScale})`; }
+    function annotFitToScreen() {
+      if(!annotOrigImg || !annotOrigImg.width) return; const wrapper = document.getElementById("canvasScrollWrapper"); const wW = wrapper.clientWidth; const wH = wrapper.clientHeight; const iW = annotCanvas.width; const iH = annotCanvas.height;
+      if(iW === 0 || iH === 0) return; const scale = Math.min(wW / iW, wH / iH) * 0.95; annotScale = scale; annotPanOffsetX = (wW - (iW * scale)) / 2; annotPanOffsetY = (wH - (iH * scale)) / 2; updateCanvasTransform();
+    }
+    function setAnnotMode(mode) {
+      annotMode = mode; const btnV = document.getElementById("btnModeView"), btnA = document.getElementById("btnModeAnnotate"), tools = document.getElementById("annotationTools");
+      if(mode === 'view') { btnV.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-[#A6192E] text-white shadow transition"; btnA.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition"; tools.classList.add("hidden"); tools.classList.remove("flex"); setDrawTool('pan'); } 
+      else { btnA.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-[#A6192E] text-white shadow transition"; btnV.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition"; tools.classList.remove("hidden"); tools.classList.add("flex"); if(!showingAnnotated) toggleAnnotView('annot'); setDrawTool('pen'); }
+    }
+    function setDrawTool(tool) {
+      annotTool = tool; document.querySelectorAll(".tool-btn").forEach(btn => btn.classList.remove("tool-active")); const btn = document.getElementById(`tool${tool.charAt(0).toUpperCase() + tool.slice(1)}`); if(btn) btn.classList.add("tool-active");
+      const txtControls = document.getElementById("textStyleControls"); if(tool === 'text') txtControls.classList.remove("hidden"); else txtControls.classList.add("hidden");
+      annotCanvas.style.cursor = tool === 'pan' ? 'grab' : 'crosshair';
+    }
+    function toggleTextStyle(style) {
+      textStyle[style] = !textStyle[style]; const btn = document.getElementById(style === 'bold' ? 'btnTextBold' : 'btnTextItalic');
+      if(textStyle[style]) btn.classList.add("bg-gray-700", "text-white"); else btn.classList.remove("bg-gray-700", "text-white");
+    }
+    function getCanvasCoords(e) { const rect = annotCanvas.getBoundingClientRect(); return { x: (e.clientX - rect.left) / annotScale, y: (e.clientY - rect.top) / annotScale }; }
+    function startDraw(e) {
+      if (annotTool === 'pan' || annotMode === 'view') { isPanning = true; lastPanX = e.clientX; lastPanY = e.clientY; annotCanvas.style.cursor = 'grabbing'; return; }
+      if (!showingAnnotated) return; isDrawing = true; const coords = getCanvasCoords(e); lastX = coords.x; lastY = coords.y;
+      if (annotTool === 'text') {
+        isDrawing = false; const txt = prompt("Enter text to place here:");
+        if (txt) { const color = document.getElementById("annotColor").value; const size = document.getElementById("annotSize").value * 3 + 10; annotCtx.fillStyle = color; let fontStr = `${size}px Arial`; if (textStyle.bold) fontStr = "bold " + fontStr; if (textStyle.italic) fontStr = "italic " + fontStr; annotCtx.font = fontStr; annotCtx.fillText(txt, lastX, lastY); saveAnnotState(); }
+      }
+    }
+    function draw(e) {
+      if (isPanning) { e.preventDefault(); annotPanOffsetX += e.clientX - lastPanX; annotPanOffsetY += e.clientY - lastPanY; lastPanX = e.clientX; lastPanY = e.clientY; updateCanvasTransform(); return; }
+      if (!isDrawing || annotTool === 'text' || !showingAnnotated) return; e.preventDefault(); const coords = getCanvasCoords(e); const color = document.getElementById("annotColor").value; const size = document.getElementById("annotSize").value;
+      annotCtx.strokeStyle = color; annotCtx.lineWidth = size; annotCtx.lineCap = "round"; annotCtx.lineJoin = "round";
+      if (annotTool === 'pen') { annotCtx.beginPath(); annotCtx.moveTo(lastX, lastY); annotCtx.lineTo(coords.x, coords.y); annotCtx.stroke(); lastX = coords.x; lastY = coords.y; }
+    }
+    function stopDraw(e) {
+      if (isPanning) { isPanning = false; annotCanvas.style.cursor = annotMode === 'view' ? 'grab' : (annotTool === 'pan' ? 'grab' : 'crosshair'); return; }
+      if (!isDrawing || !showingAnnotated) return; isDrawing = false;
+      if (annotTool === 'arrow') { const coords = getCanvasCoords(e); drawArrow(annotCtx, lastX, lastY, coords.x, coords.y, document.getElementById("annotColor").value, document.getElementById("annotSize").value); }
+      if (annotTool === 'pen' || annotTool === 'arrow') saveAnnotState();
+    }
+    function drawArrow(ctx, fromx, fromy, tox, toy, color, size) {
+      const headlen = size * 3 + 5; const angle = Math.atan2(toy - fromy, tox - fromx);
+      ctx.strokeStyle = color; ctx.lineWidth = size; ctx.beginPath(); ctx.moveTo(fromx, fromy); ctx.lineTo(tox, toy); ctx.stroke();
+      ctx.beginPath(); ctx.fillStyle = color; ctx.moveTo(tox, toy); ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6)); ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6)); ctx.fill();
+    }
+    function saveAnnotState() { annotStep++; if (annotStep < annotHistory.length) annotHistory.length = annotStep; annotHistory.push(annotCanvas.toDataURL()); }
+    function annotUndo() { if (annotStep > 0) { annotStep--; restoreAnnotState(annotHistory[annotStep]); } }
+    function annotRedo() { if (annotStep < annotHistory.length - 1) { annotStep++; restoreAnnotState(annotHistory[annotStep]); } }
+    function restoreAnnotState(dataUrl) { const img = new Image(); img.onload = () => { annotCtx.clearRect(0, 0, annotCanvas.width, annotCanvas.height); annotCtx.drawImage(img, 0, 0); }; img.src = dataUrl; }
+
+    async function openAnnotationModal(itemType, itemId) {
+      currentAnnotItemType = itemType; currentAnnotItemId = itemId;
+      let list = itemType === 'task' ? tasks : (itemType === 'order' ? orders : notes); const item = list.find(x => x.id === itemId);
+      if (!item || !item.attachment || !item.attachment.data) return;
+      const att = item.attachment;
+      document.getElementById("annotationModal").classList.remove("hidden"); document.getElementById("unsupportedPreview").classList.add("hidden"); annotCanvas.classList.add("hidden"); document.getElementById("pdfLoadingIndicator").classList.remove("hidden");
+      annotHistory = []; annotStep = -1; showingAnnotated = true; toggleAnnotView('annot', true); setAnnotMode('view');
+      annotScale = 1; annotPanOffsetX = 0; annotPanOffsetY = 0; updateCanvasTransform();
+
+      if (att.mime && (att.mime.includes("doc") || att.mime.includes("docx"))) { document.getElementById("pdfLoadingIndicator").classList.add("hidden"); document.getElementById("unsupportedPreview").classList.remove("hidden"); return; }
+
+      let sourceData = att.data;
+      if (att.mime && att.mime.includes("pdf")) {
+        try {
+          const pdfjsLib = window['pdfjs-dist/build/pdf']; pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+          const base64Marker = ';base64,'; const base64Index = sourceData.indexOf(base64Marker) + base64Marker.length;
+          const raw = window.atob(sourceData.substring(base64Index)); const uint8Array = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) uint8Array[i] = raw.charCodeAt(i);
+          const pdf = await pdfjsLib.getDocument(uint8Array).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.5 }); 
+          const tempCanvas = document.createElement("canvas"); tempCanvas.width = viewport.width; tempCanvas.height = viewport.height;
+          await page.render({ canvasContext: tempCanvas.getContext("2d"), viewport: viewport }).promise; sourceData = tempCanvas.toDataURL("image/png");
+        } catch(e) { document.getElementById("pdfLoadingIndicator").classList.add("hidden"); document.getElementById("unsupportedPreview").classList.remove("hidden"); return; }
+      }
+      annotOrigImg = new Image();
+      annotOrigImg.onload = () => {
+        document.getElementById("pdfLoadingIndicator").classList.add("hidden"); annotCanvas.classList.remove("hidden");
+        annotCanvas.width = annotOrigImg.width; annotCanvas.height = annotOrigImg.height;
+        if (att.annotatedData) { restoreAnnotState(att.annotatedData); annotHistory.push(att.annotatedData); annotStep = 0; } 
+        else { annotCtx.drawImage(annotOrigImg, 0, 0); saveAnnotState(); }
+        annotFitToScreen();
+      };
+      annotOrigImg.src = sourceData;
+    }
+
+    function toggleAnnotView(view, forceUiOnly = false) {
+      const btnOrig = document.getElementById("btnViewOrig"); const btnAnnot = document.getElementById("btnViewAnnot");
+      if (view === 'orig') {
+        showingAnnotated = false; btnOrig.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition"; btnAnnot.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition";
+        if (!forceUiOnly) { annotCtx.clearRect(0, 0, annotCanvas.width, annotCanvas.height); annotCtx.drawImage(annotOrigImg, 0, 0); }
+      } else {
+        showingAnnotated = true; btnAnnot.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition"; btnOrig.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition";
+        if (!forceUiOnly && annotHistory[annotStep]) restoreAnnotState(annotHistory[annotStep]);
+      }
+    }
+
+    function closeAnnotationModal() { document.getElementById("annotationModal").classList.add("hidden"); currentAnnotItemType = null; currentAnnotItemId = null; }
+    function downloadOriginalFile() { let list = currentAnnotItemType === 'task' ? tasks : (currentAnnotItemType === 'order' ? orders : notes); const item = list.find(x => x.id === currentAnnotItemId); if(item && item.attachment) triggerDownload(item.attachment.data, "original_" + item.attachment.name); }
+    function downloadAnnotatedFile() { if (!showingAnnotated) { downloadOriginalFile(); return; } let list = currentAnnotItemType === 'task' ? tasks : (currentAnnotItemType === 'order' ? orders : notes); const item = list.find(x => x.id === currentAnnotItemId); triggerDownload(annotCanvas.toDataURL("image/png"), "annotated_" + (item ? item.attachment.name : "file.png")); }
+    function triggerDownload(dataUrl, filename) { const a = document.createElement("a"); a.href = dataUrl; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    function saveAnnotationToItem() {
+      if (!showingAnnotated) { alert("Switch to Annotated view to save drawings."); return; }
+      let list = currentAnnotItemType === 'task' ? tasks : (currentAnnotItemType === 'order' ? orders : notes);
+      const item = list.find(x => x.id === currentAnnotItemId);
+      if (item && item.attachment) { item.attachment.annotatedData = annotCanvas.toDataURL("image/png"); saveData(`Annotated file on ${item.title || item.poNumber}`); closeAnnotationModal(); alert("Annotation saved successfully!"); }
+    }
+
+    function renderAll() {
+      renderAssigneesSidebar(); renderTagsSidebar(); renderSectionsSidebar(); renderNoteFoldersSidebar();
+      renderTasksBoard(); renderCompletedTasks(); renderNotesView(); renderOrders();
+      const activeList = tasks.filter(t => !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
+      document.getElementById("allTasksCountBadge").innerText = activeList.length;
+      const completedList = tasks.filter(t => t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
+      document.getElementById("completedCountBadge").innerText = completedList.length;
+      const starredList = tasks.filter(t => t.starred && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser)).length + notes.filter(n => n.starred && (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser)).length;
+      document.getElementById("starredCountBadge").innerText = starredList;
+      lucide.createIcons();
+    }
+
+    function renderAssigneesSidebar() { const container = document.getElementById("assigneesSidebar"); if (!container) return; container.innerHTML = users.map(u => `<div onclick="filterByAssignee('${u.name}'); toggleMobileSidebar(false);" class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs"><div class="flex items-center space-x-2"><div class="w-6 h-6 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div><span>${u.name}</span></div></div>`).join(''); }
+    function renderTagsSidebar() { const container = document.getElementById("tagsSidebar"); if (!container) return; container.innerHTML = sharedTags.map(t => `<div class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs"><div class="flex items-center space-x-2 flex-1 truncate" onclick="filterByTag('${t.id}'); toggleMobileSidebar(false);"><div class="w-3 h-3 rounded-full" style="background-color: ${t.color}"></div><span class="truncate">${t.title}</span></div><button onclick="event.stopPropagation(); deleteTag('${t.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>`).join(''); }
+    
+    function renderSectionsSidebar() {
+      const container = document.getElementById("sectionsSidebar"); if (!container) return; const orderedSections = getPersonalOrderedSections();
+      container.innerHTML = orderedSections.map(s => {
+        const count = tasks.filter(t => t.sectionId === s.id && !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser)).length;
+        return `<div id="section_sidebar_${s.id}" class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all"><div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);"><span class="truncate font-medium">${s.title}</span></div><span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span></div>`;
+      }).join('');
+    }
+    
+    function renderNoteFoldersSidebar() {
+      const container = document.getElementById("noteFoldersSidebar"); if (!container) return; const roots = noteFolders.filter(f => !f.parentId);
+      container.innerHTML = roots.map(f => {
+        const count = notes.filter(n => n.folderId === f.id && (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser)).length;
+        return `<div ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropNoteIntoFolder(event, '${f.id}')" class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all"><div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="enterNoteFolder('${f.id}'); toggleMobileSidebar(false);"><i data-lucide="folder" class="w-3.5 h-3.5 text-gray-400"></i><span class="truncate font-medium">${f.title}</span></div><div class="flex items-center space-x-2"><span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span><button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`;
+      }).join('');
+    }
+
+    function filterBySection(id) { activeFilterType = "section"; activeFilterId = id; switchMainTab('tasks'); }
+    function filterByAssignee(id) { activeFilterType = "assignee"; activeFilterId = id; renderAll(); }
+    function filterByTag(id) { activeFilterType = "tag"; activeFilterId = id; renderAll(); }
+    function filterByStarred() { activeFilterType = "starred"; activeFilterId = "starred"; renderAll(); }
+    function clearActiveFilter() { activeFilterType = null; activeFilterId = null; renderAll(); }
+
+    function openNewSectionModal() { const title = prompt("Section Title:"); if (title) { sharedSections.push({ id: "s_" + Date.now(), title }); saveData(); } }
+    function openNewNoteFolderModal() { const title = prompt("New Folder Name:"); if (title) { noteFolders.push({ id: "nf_" + Date.now(), title, parentId: currentNoteFolderId || null }); saveData(`Created note folder: ${title}`); } }
+    function deleteNoteFolder(id) { noteFolders = noteFolders.filter(f => f.id !== id); notes.forEach(n => { if(n.folderId === id) n.folderId = ""; }); if(currentNoteFolderId === id) currentNoteFolderId = null; saveData(); }
+
+    function renderTasksBoard() {
+      const view = document.getElementById("tasksView"); if (!view) return; let visibleSections = getPersonalOrderedSections();
+      if (activeFilterType === "section") visibleSections = visibleSections.filter(s => s.id === activeFilterId);
+
+      view.innerHTML = visibleSections.map(s => {
+        let listTasks = tasks.filter(t => t.sectionId === s.id && !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
+        if (activeFilterType === "assignee") listTasks = listTasks.filter(t => t.assignees && t.assignees.includes(activeFilterId));
+        else if (activeFilterType === "tag") listTasks = listTasks.filter(t => t.tagId === activeFilterId);
+        else if (activeFilterType === "starred") listTasks = listTasks.filter(t => t.starred);
+
+        return `
+          <div id="section_${s.id}" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropSection(event, '${s.id}')" class="task-column-card w-full md:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl p-3.5 flex flex-col shrink-0 shadow-sm transition">
+            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-gray-100 dark:border-gray-800/60 cursor-move">
+              <div class="flex items-center space-x-2">
+                <div class="drag-handle p-1 -ml-1 text-gray-500 cursor-grab hover:text-white" onmousedown="makeDraggable('section_${s.id}')" onmouseup="makeUndraggable('section_${s.id}')" ontouchstart="makeDraggable('section_${s.id}')" ontouchend="makeUndraggable('section_${s.id}')" ondragstart="dragSection(event, '${s.id}')" ondragend="endDragSection(event, '${s.id}')"><i data-lucide="grip-vertical" class="w-4 h-4 pointer-events-none"></i></div>
+                <h3 class="font-bold text-sm tracking-wide">${s.title}</h3>
+              </div>
+              <span class="text-[10px] bg-gray-100 dark:bg-[#252525] text-gray-400 px-2 py-0.5 rounded-full font-bold">${listTasks.length}</span>
+            </div>
+            <input type="text" placeholder="+ Add task (Press Enter)" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded-xl px-3 py-2 text-xs mb-3 focus:outline-none focus:border-[#A6192E]">
+            <div class="space-y-2.5 overflow-y-auto flex-1 pb-4 min-h-[50px]" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropTaskIntoSection(event, '${s.id}')">
+              ${listTasks.map(t => renderTaskCardHtml(t)).join('')}
+              ${listTasks.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs italic pointer-events-none">Drop tasks here</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTaskCardHtml(t) {
+      const section = sharedSections.find(x => x.id === t.sectionId); const tag = sharedTags.find(x => x.id === t.tagId); const canEdit = canModifyItem(t);
+      return `
+        <div id="task_${t.id}" ondragstart="dragTask(event, '${t.id}')" ondragend="endDragTask(event, '${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 shadow-sm relative transition cursor-move">
+          <div class="absolute top-1.5 right-1.5 flex items-center space-x-0.5 z-10 bg-gray-50/80 dark:bg-[#252525]/80 rounded-lg p-0.5">
+            <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${t.starred ? '⭐' : '☆'}</button>
+            <div class="drag-handle p-1 text-gray-500 cursor-grab hover:text-white" onmousedown="makeDraggable('task_${t.id}')" onmouseup="makeUndraggable('task_${t.id}')" ontouchstart="makeDraggable('task_${t.id}')" ontouchend="makeUndraggable('task_${t.id}')"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
+          </div>
+          <div class="flex items-start space-x-2.5 pr-14" onclick="openTaskDetailModal('${t.id}')" style="cursor: pointer;">
+            <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); handleTaskCheckAnimation('${t.id}', this)" class="mt-0.5 w-5 h-5 rounded-lg accent-green-600 cursor-pointer shrink-0">
+            <div class="flex-1 min-w-0"><span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>${t.notes ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-tight">${t.notes}</div>` : ''}</div>
+          </div>
+          ${getAttachmentBadgeHTML('task', t)}
+          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-gray-200/50 dark:border-gray-700/50" onclick="openTaskDetailModal('${t.id}')" style="cursor: pointer;">
+            <div class="flex flex-wrap items-center gap-1">
+              ${section ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold">${section.title}</span>` : ''}
+              ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
+              ${t.priority ? `<span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${t.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-gray-200 dark:bg-gray-800 text-gray-400'}">${t.priority}</span>` : ''}
+              ${t.assignees && currentWorkspace === 'shared' ? t.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded-full">${a}</span>`).join('') : ''}
+            </div>
+            ${canEdit ? `<div class="flex items-center space-x-1 shrink-0"><button onclick="event.stopPropagation(); openEditTaskModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button><button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCompletedTasks() {
+      const container = document.getElementById("completedTasksList"); if (!container) return;
+      const completed = tasks.filter(t => t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
+      container.innerHTML = completed.map(t => `<div onclick="openTaskDetailModal('${t.id}')" class="bg-gray-50 dark:bg-[#1C1C1C] border border-gray-200 dark:border-gray-800/80 rounded-2xl p-3 flex flex-col space-y-2 cursor-pointer shadow-sm hover:border-gray-700 transition"><div class="flex items-start justify-between space-x-2"><div class="flex items-start space-x-2 flex-1 min-w-0"><input type="checkbox" checked onclick="event.stopPropagation(); restoreTask('${t.id}')" class="mt-0.5 w-4 h-4 rounded accent-green-600 cursor-pointer shrink-0"><span class="text-xs font-medium line-through text-gray-400 break-words">${t.title}</span></div><button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="text-gray-500 hover:text-red-400 p-1" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`).join('');
+    }
+
+    function handleTaskCheckAnimation(id, checkboxEl) {
+      const titleEl = document.getElementById(`task_title_${id}`); if (titleEl) titleEl.classList.add('strikethrough-active');
+      setTimeout(() => {
+        const t = tasks.find(x => x.id === id);
+        if (t) { t.completed = true; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Marked completed`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Completed task: ${t.title}`); }
+      }, 350);
+    }
+    function restoreTask(id) { const t = tasks.find(x => x.id === id); if (t) { t.completed = false; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Restored to active board`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Restored task: ${t.title}`); } }
+    function clearAllCompletedTasks() { tasks = tasks.filter(t => !(t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser))); saveData(); }
+    
+    function handleQuickTask(e, sectionId) {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        const title = e.target.value.trim(); const sec = sharedSections.find(s => s.id === sectionId); let derivedPriority = "Medium";
+        if (sec && sec.title.toLowerCase().includes("high")) derivedPriority = "High"; else if (sec && sec.title.toLowerCase().includes("low")) derivedPriority = "Low";
+        tasks.push({ id: Date.now().toString(), title, sectionId, priority: derivedPriority, assignees: [activeUser], completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] });
+        e.target.value = ""; saveData(`New task added: ${title}`);
+      }
+    }
+    function toggleStarTask(id) { const t = tasks.find(x => x.id === id); if (t) { t.starred = !t.starred; saveData(); } }
+    function deleteTask(id) { tasks = tasks.filter(x => x.id !== id); saveData(); }
+    function deleteNote(id) { notes = notes.filter(x => x.id !== id); saveData(); }
+    function deleteOrder(id) { orders = orders.filter(x => x.id !== id); saveData(); }
+
+    function getFolderBreadcrumbs(folderId) { let crumbs = []; let curr = noteFolders.find(f => f.id === folderId); while(curr) { crumbs.unshift(curr); curr = noteFolders.find(f => f.id === curr.parentId); } return crumbs; }
+    function enterNoteFolder(id) { currentNoteFolderId = id; switchMainTab('notes'); renderAll(); }
+
+    function renderNotesView() {
+      const bContainer = document.getElementById("notesBreadcrumbs"); const fGrid = document.getElementById("notesFoldersGrid"); const nGrid = document.getElementById("notesGrid");
+      if(!bContainer || !fGrid || !nGrid) return;
+      let bHtml = `<button onclick="enterNoteFolder(null)" class="hover:text-white px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg"><i data-lucide="home" class="w-3.5 h-3.5"></i></button>`;
+      if (currentNoteFolderId) { const crumbs = getFolderBreadcrumbs(currentNoteFolderId); crumbs.forEach(c => { bHtml += ` <span class="text-gray-600">/</span> <button onclick="enterNoteFolder('${c.id}')" class="hover:text-white px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg">${c.title}</button>`; }); }
+      bContainer.innerHTML = bHtml;
+
+      let visibleFolders = noteFolders.filter(f => (f.parentId || null) === (currentNoteFolderId || null));
+      if (activeFilterType) visibleFolders = []; 
+      fGrid.innerHTML = visibleFolders.map(f => `
+        <div ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropNoteIntoFolder(event, '${f.id}')" onclick="enterNoteFolder('${f.id}')" class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer shadow-sm hover:border-[#A6192E] transition group">
+          <i data-lucide="folder" class="w-5 h-5 text-[#A6192E]"></i><span class="font-bold text-xs truncate flex-1 pointer-events-none">${f.title}</span><button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        </div>
+      `).join('');
+
+      let filtered = notes.filter(n => (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser));
+      if (activeFilterType === "folder") filtered = filtered.filter(n => n.folderId === activeFilterId);
+      else if (activeFilterType === "assignee") filtered = filtered.filter(n => n.assignees && n.assignees.includes(activeFilterId));
+      else if (activeFilterType === "tag") filtered = filtered.filter(n => n.tagId === activeFilterId);
+      else if (activeFilterType === "starred") filtered = filtered.filter(n => n.starred);
+      else filtered = filtered.filter(n => (n.folderId || null) === (currentNoteFolderId || null)); 
+
+      nGrid.innerHTML = filtered.map(n => {
+        const folder = noteFolders.find(f => f.id === n.folderId); const tag = sharedTags.find(x => x.id === n.tagId); const canEdit = canModifyItem(n);
+        return `
+        <div id="note_${n.id}" ondragstart="dragNote(event, '${n.id}')" ondragend="endDragNote(event, '${n.id}')" class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative group transition hover:border-gray-400 dark:hover:border-gray-600 cursor-move">
+          <div class="absolute top-2 right-2 flex items-center space-x-0.5 z-10 bg-white/80 dark:bg-[#1E1E1E]/80 rounded-lg p-0.5">
+            <button onclick="event.stopPropagation(); toggleStarNote('${n.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${n.starred ? '⭐' : '☆'}</button>
+            <div class="drag-handle p-1 text-gray-500 cursor-grab hover:text-white" onmousedown="makeDraggable('note_${n.id}')" onmouseup="makeUndraggable('note_${n.id}')" ontouchstart="makeDraggable('note_${n.id}')" ontouchend="makeUndraggable('note_${n.id}')"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
+          </div>
+          <div onclick="openNoteDetailModal('${n.id}')" class="cursor-pointer pr-12">
+            <h4 class="font-bold text-sm truncate mb-2">${n.title}</h4>
+            <p class="text-xs text-gray-400 whitespace-pre-wrap line-clamp-3 mb-2">${n.content}</p>
+          </div>
+          ${getAttachmentBadgeHTML('note', n)}
+          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-3 mt-auto border-t border-gray-100 dark:border-gray-800">
+             <div class="flex flex-wrap items-center gap-1">${folder ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold flex items-center"><i data-lucide="folder" class="w-3 h-3 mr-1"></i>${folder.title}</span>` : ''}${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}</div>
+             ${canEdit ? `<div class="flex items-center space-x-1"><button onclick="openEditNoteModal('${n.id}')" class="text-gray-400 hover:text-white p-1"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button><button onclick="deleteNote('${n.id}')" class="text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>` : ''}
+          </div>
+        </div>
+      `}).join('');
+    }
+
+    function getFolderOptionsHtml() { const getPath = (id) => getFolderBreadcrumbs(id).map(c => c.title).join(" / "); let html = `<option value="">Root (No Folder)</option>`; noteFolders.forEach(f => { html += `<option value="${f.id}">${getPath(f.id)}</option>`; }); return html; }
+    function toggleStarNote(id) { const n = notes.find(x => x.id === id); if (n) { n.starred = !n.starred; saveData(); } }
+
+    function openNoteModal() {
+      document.getElementById("noteFolderInput").innerHTML = getFolderOptionsHtml(); document.getElementById("noteFolderInput").value = currentNoteFolderId || "";
+      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      document.getElementById("noteAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
+      document.getElementById("noteId").value = ""; document.getElementById("noteTitleInput").value = ""; document.getElementById("noteContentInput").value = ""; document.getElementById("noteStarInput").checked = false;
+      document.getElementById("noteModalTitle").innerHTML = `<i data-lucide="sticky-note" class="w-5 h-5 text-[#A6192E]"></i><span>Add Keep Note</span>`;
+      removeUniversalFile('note'); document.getElementById("noteModal").classList.remove("hidden"); lucide.createIcons();
+    }
+    function openEditNoteModal(id) {
+      const n = notes.find(x => x.id === id); if (!n) return;
+      document.getElementById("noteFolderInput").innerHTML = getFolderOptionsHtml(); document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      document.getElementById("noteAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(n.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
+      document.getElementById("noteId").value = n.id; document.getElementById("noteTitleInput").value = n.title; document.getElementById("noteContentInput").value = n.content; document.getElementById("noteFolderInput").value = n.folderId || ""; document.getElementById("noteTagInput").value = n.tagId || ""; document.getElementById("noteStarInput").checked = !!n.starred;
+      if (n.attachment) { tempFileState.note = n.attachment; document.getElementById("noteFileNameLabel").innerText = n.attachment.name; document.getElementById("noteFilePreviewContainer").classList.remove("hidden"); } else { removeUniversalFile('note'); }
+      document.getElementById("noteModalTitle").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Keep Note</span>`; document.getElementById("noteModal").classList.remove("hidden"); lucide.createIcons();
+    }
+    function closeNoteModal() { document.getElementById("noteModal").classList.add("hidden"); removeUniversalFile('note'); }
+
+    function saveNote(e) {
+      e.preventDefault();
+      const id = document.getElementById("noteId").value; const title = document.getElementById("noteTitleInput").value.trim(); const content = document.getElementById("noteContentInput").value.trim(); const folderId = document.getElementById("noteFolderInput").value; const tagId = document.getElementById("noteTagInput").value; const starred = document.getElementById("noteStarInput").checked; const assignees = Array.from(document.querySelectorAll("#noteAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value); const attachment = tempFileState.note;
+      if (id) {
+        const n = notes.find(x => x.id === id);
+        if (n) { n.title = title; n.content = content; n.folderId = folderId; n.tagId = tagId; n.starred = starred; n.assignees = assignees; n.attachment = attachment; if (!Array.isArray(n.history)) n.history = []; n.history.unshift({ action: `Edited note`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited note: ${title}`); }
+      } else { notes.push({ id: "nt_" + Date.now(), title, content, folderId, tagId, starred, assignees, attachment, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created note", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Added note: ${title}`); }
+      closeNoteModal();
+    }
+    function openNoteDetailModal(id) {
+      const n = notes.find(x => x.id === id); if (!n) return;
+      document.getElementById("noteDetailTitle").innerText = n.title; document.getElementById("noteDetailContent").innerText = n.content || "No content.";
+      const f = noteFolders.find(x => x.id === n.folderId); document.getElementById("noteDetailFolder").innerText = f ? f.title : "No Folder";
+      document.getElementById("noteDetailAssignees").innerText = (n.assignees && n.assignees.length) ? n.assignees.join(', ') : "Anyone"; document.getElementById("noteDetailOwner").innerText = n.owner || "System";
+      const attC = document.getElementById("noteDetailAttachmentContainer"); if (n.attachment) { attC.innerHTML = getAttachmentBadgeHTML('note', n); attC.classList.remove("hidden"); } else { attC.classList.add("hidden"); }
+      const log = document.getElementById("noteDetailHistoryLog");
+      if (Array.isArray(n.history) && n.history.length > 0) { log.innerHTML = n.history.map(h => `<div class="border-b border-gray-200 dark:border-gray-800/80 pb-1 mt-1.5 last:border-none"><span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span><div class="text-[10px] text-gray-400">${h.date} by <span class="font-semibold text-emerald-400">${h.user}</span></div></div>`).join(''); } else { log.innerHTML = `<div class="text-gray-500 italic text-[10px]">No edit history recorded.</div>`; }
+      document.getElementById("noteDetailEditBtn").onclick = () => { closeNoteDetailModal(); openEditNoteModal(id); }; document.getElementById("noteDetailModal").classList.remove("hidden");
+    }
+    function closeNoteDetailModal() { document.getElementById("noteDetailModal").classList.add("hidden"); }
+
+    function openNewTaskModal() {
+      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      document.getElementById("taskAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
+      document.getElementById("taskIdInput").value = ""; document.getElementById("taskTitleInput").value = ""; document.getElementById("taskNotesInput").value = ""; document.getElementById("taskModalHeading").innerText = "Create New Task";
+      removeUniversalFile('task'); document.getElementById("taskModal").classList.remove("hidden");
+    }
+    function openEditTaskModal(id) {
+      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      const t = tasks.find(x => x.id === id);
+      if (t) {
+        document.getElementById("taskIdInput").value = t.id; document.getElementById("taskTitleInput").value = t.title; document.getElementById("taskSectionInput").value = t.sectionId; document.getElementById("taskPriorityInput").value = t.priority || "Medium"; document.getElementById("taskNotesInput").value = t.notes || "";
+        document.getElementById("taskAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(t.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
+        if (t.attachment) { tempFileState.task = t.attachment; document.getElementById("taskFileNameLabel").innerText = t.attachment.name; document.getElementById("taskFilePreviewContainer").classList.remove("hidden"); } else { removeUniversalFile('task'); }
+      }
+      document.getElementById("taskModalHeading").innerText = "Edit Task Details"; document.getElementById("taskModal").classList.remove("hidden");
+    }
+    function saveTask(e) {
+      e.preventDefault();
+      const id = document.getElementById("taskIdInput").value; const title = document.getElementById("taskTitleInput").value.trim(); const sectionId = document.getElementById("taskSectionInput").value; const priority = document.getElementById("taskPriorityInput").value; const notesText = document.getElementById("taskNotesInput").value.trim(); const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value); const attachment = tempFileState.task;
+      if (id) {
+        const t = tasks.find(x => x.id === id);
+        if (t) { t.title = title; t.sectionId = sectionId; t.priority = priority; t.notes = notesText; t.assignees = assignees; t.attachment = attachment; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited task: ${title}`); }
+      } else { tasks.push({ id: Date.now().toString(), title, sectionId, priority, notes: notesText, assignees: assignees.length ? assignees : [activeUser], attachment, completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Created new task: ${title}`); }
+      closeTaskModal();
+    }
+    function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); removeUniversalFile('task'); }
+    function closeTaskDetailModal() { document.getElementById("taskDetailModal").classList.add("hidden"); }
+    function openTaskDetailModal(id) {
+      const t = tasks.find(x => x.id === id); if (!t) return;
+      document.getElementById("detailTitle").innerText = t.title; document.getElementById("detailNotes").innerText = t.notes || "No description provided."; document.getElementById("detailPriority").innerText = t.priority || "Medium";
+      const sec = sharedSections.find(s => s.id === t.sectionId); document.getElementById("detailSection").innerText = sec ? sec.title : "General"; document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone"; document.getElementById("detailDueDate").innerText = t.dueDate || "No Date"; document.getElementById("detailOwner").innerText = t.owner || "System";
+      const badge = document.getElementById("detailStatusBadge");
+      if (t.completed) { badge.innerText = "Completed"; badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"; badge.classList.remove("hidden"); } else { badge.classList.add("hidden"); }
+      const log = document.getElementById("detailHistoryLog");
+      if (Array.isArray(t.history) && t.history.length > 0) { log.innerHTML = t.history.map(h => `<div class="border-b border-gray-200 dark:border-gray-800/80 pb-1 mt-1.5 last:border-none"><span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span><div class="text-[10px] text-gray-400">${h.date} by <span class="font-semibold text-emerald-400">${h.user}</span></div></div>`).join(''); } else { log.innerHTML = `<div class="text-gray-500 italic text-[10px]">No edit history recorded.</div>`; }
+      const attC = document.getElementById("detailAttachmentContainer");
+      if (t.attachment) { attC.innerHTML = getAttachmentBadgeHTML('task', t); attC.classList.remove("hidden"); } else { attC.classList.add("hidden"); }
+      document.getElementById("detailEditBtn").onclick = () => { closeTaskDetailModal(); openEditTaskModal(id); }; document.getElementById("taskDetailModal").classList.remove("hidden");
+    }
+
+    function formatItemDescription(rawText) { const trimmed = rawText.trim(); if (!trimmed || trimmed.includes("(")) return trimmed; let text = trimmed.toLowerCase(); let qty = ""; const qtyMatch = text.match(/(?:x\s*(\d+)|(\d+)\s*x|\bqty:?\s*(\d+)\b)/i); if (qtyMatch) qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]); return `${trimmed} ${qty ? `(${qty})` : ''}`.trim(); }
+    function openNewOrderModal() {
+      document.getElementById("orderIdInput").value = ""; document.getElementById("orderPoInput").value = ""; document.getElementById("orderDateInput").value = new Date().toISOString().split('T')[0]; document.getElementById("orderTypeInput").value = ""; document.getElementById("orderPlacedByInput").value = activeUser || ""; document.getElementById("orderFreeformItemsInput").value = ""; document.getElementById("orderNotesInput").value = "";
+      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i><span>Create New Order</span>`; removeUniversalFile('order'); document.getElementById("orderModal").classList.remove("hidden"); lucide.createIcons();
+    }
+    function openEditOrderModal(orderId) {
+      const ord = orders.find(x => x.id === orderId); if (!ord) return;
+      document.getElementById("orderIdInput").value = ord.id; document.getElementById("orderPoInput").value = ord.poNumber || ""; document.getElementById("orderDateInput").value = ord.dateOrdered || ""; document.getElementById("orderTypeInput").value = ord.orderType || ""; document.getElementById("orderPlacedByInput").value = ord.placedBy || ""; document.getElementById("orderNotesInput").value = ord.notes || ""; document.getElementById("orderFreeformItemsInput").value = ord.items && ord.items.length > 0 ? ord.items.map(i => i.desc).join("\n") : "";
+      if (ord.attachment) { tempFileState.order = ord.attachment; document.getElementById("orderFileNameLabel").innerText = ord.attachment.name; document.getElementById("orderFilePreviewContainer").classList.remove("hidden"); } else { removeUniversalFile('order'); }
+      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Purchase Order</span>`; document.getElementById("orderModal").classList.remove("hidden"); lucide.createIcons();
+    }
+    function closeOrderModal() { document.getElementById("orderModal").classList.add("hidden"); removeUniversalFile('order'); }
+    function saveOrder(
