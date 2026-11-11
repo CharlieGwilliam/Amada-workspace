@@ -14,7 +14,7 @@
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   
-  <!-- Makes Drag & Drop work on iPhones -->
+  <!-- Mobile Drag and Drop Polyfill -->
   <script src="https://bernardo-castilho.github.io/DragDropTouch/DragDropTouch.js"></script>
 
   <script>
@@ -36,8 +36,7 @@
     
     #annotationCanvas { transform-origin: 0 0; will-change: transform; }
     .tool-active { background-color: #A6192E; color: white; border-color: #A6192E; }
-    .dragging { opacity: 0.4; }
-    .drag-over { border: 2px dashed #A6192E !important; background-color: rgba(166,25,46,0.05); }
+    .drag-over { border: 2px dashed #A6192E !important; background-color: rgba(166,25,46,0.08) !important; }
   </style>
 </head>
 <body class="h-full flex flex-col bg-white text-gray-900 dark:bg-[#121212] dark:text-gray-100 transition-colors duration-200 overflow-hidden select-none">
@@ -51,12 +50,18 @@
       </svg>
       <h2 class="text-2xl font-bold mb-1">Amada Workspace</h2>
       <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Select your profile to continue</p>
-      <div id="userSelectionStep" class="grid grid-cols-2 gap-3 mb-4"></div>
-      <form id="passwordStep" onsubmit="verifyPassword(event)" class="hidden space-y-4 text-left">
-        <button type="button" onclick="resetLoginStep()" class="text-xs text-gray-400 hover:text-white mb-2 flex items-center space-x-1"><i data-lucide="arrow-left" class="w-3 h-3"></i> <span>Back</span></button>
-        <label id="loginUserLabel" class="block text-xs font-semibold text-gray-400 uppercase mb-1">Enter Password</label>
-        <input type="password" id="loginPassword" required placeholder="Password" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#A6192E]">
-        <div id="authError" class="text-red-500 text-xs hidden">Incorrect password. Access denied.</div>
+      
+      <div id="userSelectionStep" class="space-y-3">
+        <div id="userProfilesList" class="grid grid-cols-2 gap-3 mb-4"></div>
+      </div>
+
+      <form id="passwordStep" onsubmit="verifyPassword(event)" class="hidden space-y-4">
+        <div class="text-left">
+          <button type="button" onclick="resetLoginStep()" class="text-xs text-gray-400 hover:text-white mb-2 flex items-center space-x-1"><i data-lucide="arrow-left" class="w-3 h-3"></i> <span>Back</span></button>
+          <label id="loginUserLabel" class="block text-xs font-semibold text-gray-400 uppercase mb-1">Enter Password</label>
+          <input type="password" id="loginPassword" required placeholder="Password" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#A6192E]">
+        </div>
+        <div id="authError" class="text-red-500 text-xs text-left hidden">Incorrect password. Access denied.</div>
         <button type="submit" class="w-full bg-[#A6192E] text-white py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transition">Login</button>
       </form>
     </div>
@@ -86,11 +91,11 @@
         <div id="activeUsersPopover" class="hidden absolute right-0 top-10 w-60 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl p-3 z-50 text-xs">
           <div class="font-bold text-gray-400 mb-2 uppercase text-[10px]">Active Session Users</div>
           <div id="activeUsersList" class="space-y-1.5 mb-2"></div>
-          <div class="text-[10px] text-gray-500 border-t border-gray-200 dark:border-gray-800 pt-2">Connected</div>
+          <div id="syncStatusDetail" class="text-[10px] text-gray-500 border-t border-gray-200 dark:border-gray-800 pt-2 break-all">Connected</div>
         </div>
       </div>
       <button onclick="toggleDarkMode()" class="p-1.5 md:p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-[#A6192E]"><i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i><i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i></button>
-      <button id="settingsCogBtn" onclick="openSettingsModal()" class="p-1.5 md:p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-white"><i data-lucide="settings" class="w-4 h-4"></i></button>
+      <button id="settingsCogBtn" onclick="openSettingsModal()" class="p-1.5 md:p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-white" title="Settings"><i data-lucide="settings" class="w-4 h-4"></i></button>
       <div id="userBadge" class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-[10px] md:text-xs border border-white/20">?</div>
       <button onclick="handleLogout()" class="p-1 text-gray-400 hover:text-red-400 hidden sm:block"><i data-lucide="log-out" class="w-4 h-4"></i></button>
     </div>
@@ -105,6 +110,7 @@
         <button onclick="openNewTaskModal(); toggleMobileSidebar(false);" class="flex-1 bg-[#A6192E] active:scale-95 text-white rounded-xl py-2.5 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow"><i data-lucide="check-square" class="w-4 h-4"></i> <span>+ Task</span></button>
         <button onclick="openNoteModal(); toggleMobileSidebar(false);" class="flex-1 bg-gray-200 dark:bg-[#252525] active:scale-95 rounded-xl py-2.5 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold shadow"><i data-lucide="sticky-note" class="w-4 h-4 text-[#A6192E]"></i> <span>+ Note</span></button>
       </div>
+
       <button onclick="clearActiveFilter(); toggleMobileSidebar(false);" class="w-full flex items-center justify-between px-3.5 py-2.5 mb-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white active:scale-95 transition shadow">
         <div class="flex items-center space-x-2"><i data-lucide="layers" class="w-4 h-4"></i><span>All Active Items</span></div><span id="allTasksCountBadge" class="bg-black/30 px-2 py-0.5 rounded-full text-[10px]">0</span>
       </button>
@@ -112,7 +118,7 @@
         <div class="flex items-center space-x-2"><i data-lucide="star" class="w-4 h-4 text-amber-400"></i><span>Starred Items</span></div><span id="starredCountBadge" class="bg-amber-500/30 px-2 py-0.5 rounded-full text-[10px] text-amber-300">0</span>
       </button>
 
-      <div class="mb-4">
+      <div id="assigneeFilterSection" class="mb-4">
         <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Filter by Assignee</div>
         <div id="assigneesSidebar" class="space-y-1"></div>
       </div>
@@ -151,7 +157,9 @@
 
       <!-- VIEW 1: TASKS -->
       <div id="tasksWrapper" class="flex flex-col flex-1 w-full overflow-hidden">
+        <div class="md:hidden flex items-center space-x-1.5 overflow-x-auto pb-2 shrink-0 no-scrollbar" id="mobileColumnTabs"></div>
         <div id="tasksView" class="flex flex-col md:flex-row md:space-x-4 items-stretch md:items-start flex-1 md:overflow-x-auto pb-4 gap-3 md:gap-0"></div>
+
         <div id="completedTasksSection" class="mt-2 border-t border-gray-200 dark:border-gray-800 pt-3 shrink-0">
           <div class="flex items-center justify-between bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-xl px-3.5 py-2.5 cursor-pointer shadow-sm active:bg-gray-50 dark:active:bg-[#252525] transition" onclick="toggleCompletedDropdown()">
             <div class="flex items-center space-x-2">
@@ -219,6 +227,8 @@
     <button onclick="switchMainTab('orders')" id="mobileNavOrders" class="nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-gray-400"><i data-lucide="package" class="w-5 h-5 mb-0.5"></i><span class="text-[10px] font-semibold">Orders</span></button>
   </nav>
 
+  <!-- MODALS -->
+
   <!-- 1. SETTINGS MODAL -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 my-auto max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -234,6 +244,7 @@
         </div>
         <p class="text-[11px] text-gray-500 mb-3">Push notifications are disabled by default on every device. Enable below to turn on alerts for your account.</p>
         <button id="enablePushBtn" onclick="requestNotificationPermission()" class="w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Enable Device Push Notifications</button>
+        
         <div id="notificationPreferencesList" class="space-y-3 border-t border-gray-200 dark:border-gray-800 pt-3">
           <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">New Task Assignments</span><span class="text-[10px] text-gray-500">When you are assigned a task</span></div><input type="checkbox" id="prefNotifyAssigned" onchange="saveNotificationPref('notifyAssigned', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
           <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Task Completions</span><span class="text-[10px] text-gray-500">When your tasks are completed</span></div><input type="checkbox" id="prefNotifyCompleted" onchange="saveNotificationPref('notifyCompleted', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
@@ -242,7 +253,11 @@
         </div>
       </div>
 
-      <!-- Add User Section (Restored) -->
+      <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800">
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-1">Live Multi-User Sync Status</h4>
+        <p class="text-[10px] text-emerald-400 font-semibold">✓ Connected to real-time storage.</p>
+      </div>
+
       <div id="adminCreateUserSection" class="hidden mb-6 bg-gray-100 dark:bg-[#121212] p-3.5 rounded-2xl border border-gray-300 dark:border-gray-800">
         <h4 class="text-xs font-bold text-[#A6192E] uppercase mb-2 flex items-center space-x-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i><span>Create New User Profile</span></h4>
         <form onsubmit="adminAddNewUser(event)" class="space-y-2">
@@ -252,7 +267,7 @@
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input type="password" id="adminNewUserPassword" placeholder="Default: AMADA" class="bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs">
-            <button type="submit" class="bg-[#A6192E] text-white text-xs font-bold rounded-xl px-3 py-2.5 hover:opacity-90 transition">Add User</button>
+            <button type="submit" class="bg-[#A6192E] text-white text-xs font-bold rounded-xl px-3 py-2.5 hover:opacity-90 transition">Add User Profile</button>
           </div>
         </form>
       </div>
@@ -261,10 +276,19 @@
         <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Personal Layout Settings</h4>
         <button onclick="resetPersonalOrder()" class="px-3 py-2 bg-gray-200 dark:bg-[#252525] text-gray-300 hover:text-white rounded-xl text-xs font-semibold border border-gray-700">Reset Category Order</button>
       </div>
+
+      <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800">
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Change My Password</h4>
+        <form onsubmit="changeMyPassword(event)" class="space-y-2">
+          <input type="password" id="newPasswordInput" placeholder="New Password" required class="w-full bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs">
+          <button type="submit" class="px-3 py-2 bg-[#A6192E] text-white text-xs font-bold rounded-xl">Update Password</button>
+        </form>
+      </div>
       
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-3 rounded-2xl border border-gray-300 dark:border-gray-800">
         <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">User Accounts</h4>
-        <div id="permissionsUserList" class="space-y-2"></div>
+        <div id="permissionsUserList" class="max-h-48 overflow-y-auto pr-1"></div>
+        <button id="btnMasterResetPasswords" onclick="resetAllPasswordsToDefault()" class="hidden mt-3 w-full bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-400 py-2 rounded-xl text-xs font-bold transition">Master Reset All Passwords</button>
       </div>
     </div>
   </div>
@@ -295,9 +319,9 @@
         <p class="text-gray-300">Confirm all milestones for <strong id="verifyModalPo" class="text-white">PO</strong>:</p>
         <div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-2xl border border-gray-200 dark:border-gray-800">
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]"><span class="font-bold">1. Order Placed / Created</span></label>
-          <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600"><span class="font-bold">2. Order PO added on VBOP</span></label>
+          <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600"><span class="font-bold">2. Order PO added on VBOP (if applicable)</span></label>
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageReceived" onchange="toggleVerifyReceivedMissing(this.checked)" class="w-4 h-4 accent-emerald-600"><span class="font-bold">3. Items All Received</span></label>
-          <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600"><span class="font-bold">4. Emailed & Marked Order Complete</span></label>
+          <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600"><span class="font-bold">4. Emailed & Marked Order as Complete</span></label>
           <label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500"><span class="font-bold">5. Items Added to Stock</span></label>
         </div>
         <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
@@ -318,7 +342,7 @@
       <form onsubmit="saveOrder(event)" class="space-y-3">
         <input type="hidden" id="orderIdInput">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">PO #</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div>
+          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Purchase Order # (PO)</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div>
           <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Date Ordered</label><input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs text-gray-800 dark:text-gray-100 cursor-pointer focus:outline-none focus:border-[#A6192E]"></div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -330,18 +354,17 @@
           <textarea id="orderFreeformItemsInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
         </div>
         <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Notes</label>
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Notes & Remarks</label>
           <textarea id="orderNotesInput" rows="2" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
         </div>
         
         <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File / Photo</label>
-          <div tabindex="0" onpaste="handleUniversalPaste(event, 'order')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#A6192E] rounded-2xl p-4 text-center cursor-pointer transition focus:outline-none bg-gray-50 dark:bg-[#141414]">
+          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File / Photo (Click & Paste Ctrl+V)</label>
+          <div tabindex="0" onpaste="handleUniversalPaste(event, 'order')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#A6192E] rounded-2xl p-4 text-center cursor-pointer transition focus:outline-none focus:border-[#A6192E] bg-gray-50 dark:bg-[#141414]">
             <input type="file" id="orderFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'order')" class="hidden">
             <div onclick="document.getElementById('orderFileInput').click()"><i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click to browse or <span class="text-[#A6192E] font-bold">paste (Ctrl+V)</span> file here</div></div>
             <div id="orderFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs">
-              <span id="orderFileNameLabel" class="text-emerald-400 truncate max-w-[240px] font-semibold"></span>
-              <button type="button" onclick="removeUniversalFile('order')" class="text-red-400 hover:text-red-300 font-bold ml-2">Remove</button>
+              <span id="orderFileNameLabel" class="text-emerald-400 truncate max-w-[240px] font-semibold"></span><button type="button" onclick="removeUniversalFile('order')" class="text-red-400 hover:text-red-300 font-bold ml-2">Remove</button>
             </div>
           </div>
         </div>
@@ -435,7 +458,9 @@
       </div>
       <h3 id="detailTitle" class="text-lg font-bold mb-2 break-words">Task Title</h3>
       <div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div>
+      
       <div id="detailAttachmentContainer" class="hidden mb-3"></div>
+
       <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border border-gray-200 dark:border-gray-800">
         <div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate">General</div></div>
         <div><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate">Anyone</div></div>
@@ -452,7 +477,7 @@
     </div>
   </div>
 
-  <!-- 8. NOTE DETAIL MODAL -->
+  <!-- 8. NOTE DETAIL MODAL (HISTORY VIEW) -->
   <div id="noteDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto">
       <button onclick="closeNoteDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -462,7 +487,9 @@
       </div>
       <h3 id="noteDetailTitle" class="text-lg font-bold mb-2 break-words">Note Title</h3>
       <div id="noteDetailContent" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-200 dark:border-gray-800"></div>
+      
       <div id="noteDetailAttachmentContainer" class="hidden mb-3"></div>
+
       <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border border-gray-200 dark:border-gray-800">
         <div class="col-span-2"><span class="font-bold text-gray-400">Assignees:</span> <div id="noteDetailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate">Anyone</div></div>
         <div><span class="font-bold text-gray-400">Owner:</span> <div id="noteDetailOwner" class="text-gray-800 dark:text-gray-200 font-semibold truncate">System</div></div>
@@ -513,7 +540,7 @@
           <button id="btnViewAnnot" onclick="toggleAnnotView('annot')" class="px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition">Ann.</button>
         </div>
         <button onclick="downloadAnnotatedFile()" class="p-2 text-gray-400 hover:text-emerald-400 transition" title="Download Current View"><i data-lucide="download" class="w-5 h-5"></i></button>
-        <button onclick="saveAnnotationToItem()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow ml-1">Save</button>
+        <button onclick="saveAnnotationToItem()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow ml-1">Save</button>
       </div>
     </div>
     <div class="flex-1 overflow-hidden flex items-center justify-center bg-black relative" id="canvasScrollWrapper">
@@ -533,20 +560,37 @@
   <script>
     // --- DRAG AND DROP GLOBALS ---
     let draggedTaskId = null;
+    let draggedNoteId = null;
     let draggedSectionId = null;
 
-    function dragTask(e, id) { draggedTaskId = id; e.dataTransfer.setData('text/plain', id); e.stopPropagation(); }
-    function dragSection(e, id) { draggedSectionId = id; e.dataTransfer.setData('text/plain', id); e.target.classList.add('dragging'); }
-    function endDragSection(e) { e.target.classList.remove('dragging'); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); }
+    function makeDraggable(id) { const el = document.getElementById(id); if(el) el.setAttribute('draggable', 'true'); }
+    function makeUndraggable(id) { const el = document.getElementById(id); if(el) el.setAttribute('draggable', 'false'); }
+
+    function dragTask(e, id) { draggedTaskId = id; e.dataTransfer.setData('text/plain', id); e.target.style.opacity = '0.5'; }
+    function endDragTask(e, id) { draggedTaskId = null; e.target.style.opacity = '1'; makeUndraggable('task_' + id); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); }
+
+    function dragNote(e, id) { draggedNoteId = id; e.dataTransfer.setData('text/plain', id); e.target.style.opacity = '0.5'; }
+    function endDragNote(e, id) { draggedNoteId = null; e.target.style.opacity = '1'; makeUndraggable('note_' + id); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); }
+
+    function dragSection(e, id) { if(e.target.id !== 'section_'+id) return; draggedSectionId = id; e.dataTransfer.setData('text/plain', id); e.target.classList.add('opacity-50'); }
+    function endDragSection(e, id) { draggedSectionId = null; e.target.classList.remove('opacity-50'); makeUndraggable('section_' + id); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); }
+
     function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
     function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
     
-    function dropTask(e, targetSectionId) {
+    function dropTaskIntoSection(e, sectionId) {
       e.preventDefault(); e.currentTarget.classList.remove('drag-over'); e.stopPropagation();
       if (draggedTaskId) {
         const t = tasks.find(x => x.id === draggedTaskId);
-        if (t) { t.sectionId = targetSectionId; saveData(`Moved task: ${t.title}`); }
-        draggedTaskId = null;
+        if (t && t.sectionId !== sectionId) { t.sectionId = sectionId; saveData(`Moved task to new section`); }
+      }
+    }
+
+    function dropNoteIntoFolder(e, folderId) {
+      e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+      if (draggedNoteId) {
+        const n = notes.find(x => x.id === draggedNoteId);
+        if (n && n.folderId !== folderId) { n.folderId = folderId; saveData(`Moved note to new folder`); }
       }
     }
     
@@ -559,47 +603,36 @@
         const [moved] = ordered.splice(fromIdx, 1);
         ordered.splice(toIdx, 0, moved);
         savePersonalSectionOrder(ordered.map(s => s.id));
-        draggedSectionId = null;
       }
     }
 
     // --- USER MANAGEMENT (Admin) ---
     function renderPermissionsUserList() {
-      const container = document.getElementById("permissionsUserList");
-      if (!container) return;
+      const container = document.getElementById("permissionsUserList"); if (!container) return;
       const isMaster = users.find(u => u.name === activeUser)?.role === 'master_admin';
       
       container.innerHTML = users.map(u => `
-        <div class="flex items-center justify-between bg-white dark:bg-[#1E1E1E] p-2 rounded-xl border border-gray-200 dark:border-gray-800">
-          <div><div class="text-xs font-bold">${u.name}</div><div class="text-[9px] text-gray-500 uppercase">${u.role}</div></div>
-          ${isMaster && u.name !== 'Charlie' ? `<button onclick="deleteUser('${u.name}')" class="text-red-400 p-1 hover:bg-red-500/10 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : ''}
+        <div class="flex items-center justify-between bg-white dark:bg-[#1E1E1E] p-3 rounded-xl border border-gray-200 dark:border-gray-800 mb-2">
+          <div class="flex flex-col">
+            <div class="text-sm font-bold">${u.name}</div>
+            ${isMaster && u.name !== 'Charlie' ? `<select onchange="changeUserRole('${u.name}', this.value)" class="text-[9px] uppercase bg-transparent text-gray-400 mt-1 focus:outline-none cursor-pointer"><option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer</option><option value="editor" ${u.role==='editor'?'selected':''}>Editor</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select>` : `<div class="text-[9px] text-gray-500 uppercase mt-1">${u.role}</div>`}
+          </div>
+          ${isMaster ? `<div class="flex items-center space-x-2"><button onclick="resetUserPassword('${u.name}')" class="text-xs font-semibold px-2 py-1 bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-lg hover:text-white transition">Reset Pwd</button>${u.name !== 'Charlie' ? `<button onclick="deleteUser('${u.name}')" class="text-red-400 p-1.5 hover:bg-red-500/10 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}</div>` : ''}
         </div>
       `).join('');
       
-      document.getElementById("adminCreateUserSection").classList.toggle("hidden", !isMaster);
+      if(isMaster) {
+         if(document.getElementById("adminCreateUserSection")) document.getElementById("adminCreateUserSection").classList.remove("hidden");
+         if(document.getElementById("btnMasterResetPasswords")) document.getElementById("btnMasterResetPasswords").classList.remove("hidden");
+      }
       lucide.createIcons();
     }
 
-    function adminAddNewUser(e) {
-      e.preventDefault();
-      const name = document.getElementById("adminNewUserName").value.trim();
-      const role = document.getElementById("adminNewUserRole").value;
-      const pass = document.getElementById("adminNewUserPassword").value || "AMADA";
-      if(!users.find(u => u.name.toLowerCase() === name.toLowerCase())) {
-        users.push({ name, role, password: pass });
-        saveData(`Added new user: ${name}`);
-        e.target.reset();
-        renderPermissionsUserList();
-      } else { alert("User already exists!"); }
-    }
-
-    function deleteUser(name) {
-      if(confirm(`Are you sure you want to delete ${name}?`)) {
-         users = users.filter(u => u.name !== name);
-         saveData(`Deleted user: ${name}`);
-         renderPermissionsUserList();
-      }
-    }
+    function changeUserRole(name, role) { const u = users.find(x => x.name === name); if(u) { u.role = role; saveData(`Changed role of ${name} to ${role}`); } }
+    function resetUserPassword(name) { if(confirm(`Reset password for ${name} to AMADA?`)) { const u = users.find(x => x.name === name); if(u) { u.password = "AMADA"; saveData(`Reset password for ${name}`); } } }
+    function resetAllPasswordsToDefault() { if(confirm(`WARNING: Reset ALL user passwords (including yours) to 'AMADA'?`)) { users.forEach(u => u.password = "AMADA"); saveData(`Master reset all passwords`); alert("All passwords reset to AMADA."); } }
+    function adminAddNewUser(e) { e.preventDefault(); const name = document.getElementById("adminNewUserName").value.trim(); const role = document.getElementById("adminNewUserRole").value; const pass = document.getElementById("adminNewUserPassword").value || "AMADA"; if(!users.find(u => u.name.toLowerCase() === name.toLowerCase())) { users.push({ name, role, password: pass }); saveData(`Added new user: ${name}`); e.target.reset(); renderPermissionsUserList(); } else { alert("User already exists!"); } }
+    function deleteUser(name) { if(confirm(`Are you sure you want to delete ${name}?`)) { users = users.filter(u => u.name !== name); saveData(`Deleted user: ${name}`); renderPermissionsUserList(); } }
 
     // --- SYSTEM CORE ---
     const JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS";
@@ -747,7 +780,7 @@
 
       localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_note_folders", JSON.stringify(noteFolders)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders));
 
-      renderAll(); updatePresenceUI();
+      renderAll(); updatePresenceUI(); renderPermissionsUserList();
 
       try {
         await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
@@ -756,16 +789,6 @@
         });
         updateSyncUI("ok");
       } catch (e) { updateSyncUI("error"); }
-    }
-
-    function renderUserProfiles() {
-      const container = document.getElementById("userProfilesList"); if (!container) return;
-      users = ensureProfiles(users);
-      container.innerHTML = users.map(u => `
-        <button onclick="selectUserForLogin('${u.name}')" class="p-3.5 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-2xl flex flex-col items-center space-y-1.5 transition shadow-sm active:scale-95">
-          <div class="w-9 h-9 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-sm">${u.name.charAt(0)}</div><span class="text-xs font-semibold">${u.name}</span><span class="text-[9px] ${u.role === 'master_admin' ? 'text-amber-500 font-bold' : 'text-gray-400'} capitalize">${u.role.replace('_', ' ')}</span>
-        </button>
-      `).join('');
     }
 
     function selectUserForLogin(name) { selectedUserForAuth = name; document.getElementById("loginUserLabel").innerText = `Password for ${name}`; document.getElementById("userSelectionStep").classList.add("hidden"); document.getElementById("passwordStep").classList.remove("hidden"); document.getElementById("loginPassword").focus(); }
@@ -794,8 +817,7 @@
       const reader = new FileReader();
       reader.onload = (evt) => {
         tempFileState[type] = { name: file.name || "Pasted_File", data: evt.target.result, mime: file.type, annotatedData: null };
-        document.getElementById(`${type}FileNameLabel`).innerText = tempFileState[type].name;
-        document.getElementById(`${type}FilePreviewContainer`).classList.remove("hidden");
+        document.getElementById(`${type}FileNameLabel`).innerText = tempFileState[type].name; document.getElementById(`${type}FilePreviewContainer`).classList.remove("hidden");
       };
       reader.readAsDataURL(file);
     }
@@ -951,10 +973,12 @@
     function toggleAnnotView(view, forceUiOnly = false) {
       const btnOrig = document.getElementById("btnViewOrig"); const btnAnnot = document.getElementById("btnViewAnnot");
       if (view === 'orig') {
-        showingAnnotated = false; btnOrig.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition"; btnAnnot.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition";
+        showingAnnotated = false;
+        btnOrig.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition"; btnAnnot.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition";
         if (!forceUiOnly) { annotCtx.clearRect(0, 0, annotCanvas.width, annotCanvas.height); annotCtx.drawImage(annotOrigImg, 0, 0); }
       } else {
-        showingAnnotated = true; btnAnnot.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition"; btnOrig.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition";
+        showingAnnotated = true;
+        btnAnnot.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition"; btnOrig.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition";
         if (!forceUiOnly && annotHistory[annotStep]) restoreAnnotState(annotHistory[annotStep]);
       }
     }
@@ -977,7 +1001,7 @@
 
     // --- RENDER LOGIC ---
     function renderAll() {
-      renderAssigneesSidebar(); renderTagsSidebar(); renderSectionsSidebar(); renderNoteFoldersSidebar(); renderPermissionsUserList();
+      renderAssigneesSidebar(); renderTagsSidebar(); renderSectionsSidebar(); renderNoteFoldersSidebar();
       renderTasksBoard(); renderCompletedTasks(); renderNotesView(); renderOrders();
 
       const activeList = tasks.filter(t => !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
@@ -993,7 +1017,6 @@
       const container = document.getElementById("assigneesSidebar"); if (!container) return;
       container.innerHTML = users.map(u => `<div onclick="filterByAssignee('${u.name}'); toggleMobileSidebar(false);" class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs"><div class="flex items-center space-x-2"><div class="w-6 h-6 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div><span>${u.name}</span></div></div>`).join('');
     }
-
     function renderTagsSidebar() {
       const container = document.getElementById("tagsSidebar"); if (!container) return;
       container.innerHTML = sharedTags.map(t => `<div class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer text-xs"><div class="flex items-center space-x-2 flex-1 truncate" onclick="filterByTag('${t.id}'); toggleMobileSidebar(false);"><div class="w-3 h-3 rounded-full" style="background-color: ${t.color}"></div><span class="truncate">${t.title}</span></div><button onclick="event.stopPropagation(); deleteTag('${t.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>`).join('');
@@ -1004,7 +1027,7 @@
       const orderedSections = getPersonalOrderedSections();
       container.innerHTML = orderedSections.map(s => {
         const count = tasks.filter(t => t.sectionId === s.id && !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser)).length;
-        return `<div draggable="true" ondragstart="dragSection(event, '${s.id}')" ondragend="endDragSection(event)" ondragover="allowDrop(event)" ondrop="dropSection(event, '${s.id}')" class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all cursor-move"><div class="flex items-center space-x-2 truncate flex-1" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);"><span class="truncate font-medium">${s.title}</span></div><span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span></div>`;
+        return `<div id="section_sidebar_${s.id}" class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all"><div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);"><span class="truncate font-medium">${s.title}</span></div><span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span></div>`;
       }).join('');
     }
     
@@ -1013,7 +1036,7 @@
       const roots = noteFolders.filter(f => !f.parentId);
       container.innerHTML = roots.map(f => {
         const count = notes.filter(n => n.folderId === f.id && (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser)).length;
-        return `<div class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all"><div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="enterNoteFolder('${f.id}'); toggleMobileSidebar(false);"><i data-lucide="folder" class="w-3.5 h-3.5 text-gray-400"></i><span class="truncate font-medium">${f.title}</span></div><div class="flex items-center space-x-2"><span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span><button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`;
+        return `<div ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropNoteIntoFolder(event, '${f.id}')" class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all"><div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="enterNoteFolder('${f.id}'); toggleMobileSidebar(false);"><i data-lucide="folder" class="w-3.5 h-3.5 text-gray-400"></i><span class="truncate font-medium">${f.title}</span></div><div class="flex items-center space-x-2"><span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span><button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`;
       }).join('');
     }
 
@@ -1039,15 +1062,18 @@
         else if (activeFilterType === "starred") listTasks = listTasks.filter(t => t.starred);
 
         return `
-          <div draggable="true" ondragstart="dragSection(event, '${s.id}')" ondragend="endDragSection(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropSection(event, '${s.id}')" class="task-column-card w-full md:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl p-3.5 flex flex-col shrink-0 shadow-sm">
-            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-gray-100 dark:border-gray-800/60 cursor-move">
-              <h3 class="font-bold text-sm tracking-wide">${s.title}</h3>
+          <div id="section_${s.id}" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropSection(event, '${s.id}')" class="task-column-card w-full md:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl p-3.5 flex flex-col shrink-0 shadow-sm transition">
+            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-gray-100 dark:border-gray-800/60">
+              <div class="flex items-center space-x-2">
+                <div class="drag-handle p-1 -ml-1 text-gray-500 cursor-grab hover:text-white" onmousedown="makeDraggable('section_${s.id}')" onmouseup="makeUndraggable('section_${s.id}')" ontouchstart="makeDraggable('section_${s.id}')" ontouchend="makeUndraggable('section_${s.id}')" ondragstart="dragSection(event, '${s.id}')" ondragend="endDragSection(event, '${s.id}')"><i data-lucide="grip-vertical" class="w-4 h-4 pointer-events-none"></i></div>
+                <h3 class="font-bold text-sm tracking-wide">${s.title}</h3>
+              </div>
               <span class="text-[10px] bg-gray-100 dark:bg-[#252525] text-gray-400 px-2 py-0.5 rounded-full font-bold">${listTasks.length}</span>
             </div>
             <input type="text" placeholder="+ Add task (Press Enter)" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded-xl px-3 py-2 text-xs mb-3 focus:outline-none focus:border-[#A6192E]">
-            <div class="space-y-2.5 overflow-y-auto flex-1 pb-4" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropTask(event, '${s.id}')">
+            <div class="space-y-2.5 overflow-y-auto flex-1 pb-4 min-h-[50px]" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropTaskIntoSection(event, '${s.id}')">
               ${listTasks.map(t => renderTaskCardHtml(t)).join('')}
-              ${listTasks.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs italic">Drop tasks here</div>` : ''}
+              ${listTasks.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs italic pointer-events-none">Drop tasks here</div>` : ''}
             </div>
           </div>
         `;
@@ -1055,18 +1081,19 @@
     }
 
     function renderTaskCardHtml(t) {
-      const section = sharedSections.find(x => x.id === t.sectionId);
-      const tag = sharedTags.find(x => x.id === t.tagId);
-      const canEdit = canModifyItem(t);
+      const section = sharedSections.find(x => x.id === t.sectionId); const tag = sharedTags.find(x => x.id === t.tagId); const canEdit = canModifyItem(t);
       return `
-        <div draggable="true" ondragstart="dragTask(event, '${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 shadow-sm relative transition cursor-move">
-          <div class="flex items-start space-x-2.5" onclick="openTaskDetailModal('${t.id}')">
+        <div id="task_${t.id}" ondragstart="dragTask(event, '${t.id}')" ondragend="endDragTask(event, '${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 shadow-sm relative transition">
+          <div class="absolute top-1.5 right-1.5 flex items-center space-x-0.5 z-10 bg-gray-50/80 dark:bg-[#252525]/80 rounded-lg p-0.5">
+            <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${t.starred ? '⭐' : '☆'}</button>
+            <div class="drag-handle p-1 text-gray-500 cursor-grab hover:text-white" onmousedown="makeDraggable('task_${t.id}')" onmouseup="makeUndraggable('task_${t.id}')" ontouchstart="makeDraggable('task_${t.id}')" ontouchend="makeUndraggable('task_${t.id}')"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
+          </div>
+          <div class="flex items-start space-x-2.5 pr-14" onclick="openTaskDetailModal('${t.id}')" style="cursor: pointer;">
             <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); handleTaskCheckAnimation('${t.id}', this)" class="mt-0.5 w-5 h-5 rounded-lg accent-green-600 cursor-pointer shrink-0">
             <div class="flex-1 min-w-0"><span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>${t.notes ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-tight">${t.notes}</div>` : ''}</div>
-            <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${t.starred ? '⭐' : '☆'}</button>
           </div>
           ${getAttachmentBadgeHTML('task', t)}
-          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-gray-200/50 dark:border-gray-700/50" onclick="openTaskDetailModal('${t.id}')">
+          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-gray-200/50 dark:border-gray-700/50" onclick="openTaskDetailModal('${t.id}')" style="cursor: pointer;">
             <div class="flex flex-wrap items-center gap-1">
               ${section ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold">${section.title}</span>` : ''}
               ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
@@ -1086,16 +1113,8 @@
     }
 
     function handleTaskCheckAnimation(id, checkboxEl) {
-      const titleEl = document.getElementById(`task_title_${id}`);
-      if (titleEl) titleEl.classList.add('strikethrough-active');
-      setTimeout(() => {
-        const t = tasks.find(x => x.id === id);
-        if (t) {
-          t.completed = true; if (!Array.isArray(t.history)) t.history = [];
-          t.history.unshift({ action: `Marked completed`, user: activeUser || "User", date: new Date().toLocaleString() });
-          saveData(`Completed task: ${t.title}`);
-        }
-      }, 350);
+      const titleEl = document.getElementById(`task_title_${id}`); if (titleEl) titleEl.classList.add('strikethrough-active');
+      setTimeout(() => { const t = tasks.find(x => x.id === id); if (t) { t.completed = true; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Marked completed`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Completed task: ${t.title}`); } }, 350);
     }
     function restoreTask(id) { const t = tasks.find(x => x.id === id); if (t) { t.completed = false; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Restored to active board`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Restored task: ${t.title}`); } }
     function clearAllCompletedTasks() { tasks = tasks.filter(t => !(t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser))); saveData(); }
@@ -1114,14 +1133,6 @@
     function deleteNote(id) { notes = notes.filter(x => x.id !== id); saveData(); }
     function deleteOrder(id) { orders = orders.filter(x => x.id !== id); saveData(); }
 
-    function getFolderBreadcrumbs(folderId) {
-       let crumbs = []; let curr = noteFolders.find(f => f.id === folderId);
-       while(curr) { crumbs.unshift(curr); curr = noteFolders.find(f => f.id === curr.parentId); }
-       return crumbs;
-    }
-
-    function enterNoteFolder(id) { currentNoteFolderId = id; switchMainTab('notes'); renderAll(); }
-
     function renderNotesView() {
       const bContainer = document.getElementById("notesBreadcrumbs"); const fGrid = document.getElementById("notesFoldersGrid"); const nGrid = document.getElementById("notesGrid");
       if(!bContainer || !fGrid || !nGrid) return;
@@ -1132,8 +1143,8 @@
       let visibleFolders = noteFolders.filter(f => (f.parentId || null) === (currentNoteFolderId || null));
       if (activeFilterType) visibleFolders = []; 
       fGrid.innerHTML = visibleFolders.map(f => `
-        <div onclick="enterNoteFolder('${f.id}')" class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer shadow-sm hover:border-[#A6192E] transition group">
-          <i data-lucide="folder" class="w-5 h-5 text-[#A6192E]"></i><span class="font-bold text-xs truncate flex-1">${f.title}</span><button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        <div ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropNoteIntoFolder(event, '${f.id}')" onclick="enterNoteFolder('${f.id}')" class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer shadow-sm hover:border-[#A6192E] transition group">
+          <i data-lucide="folder" class="w-5 h-5 text-[#A6192E]"></i><span class="font-bold text-xs truncate flex-1 pointer-events-none">${f.title}</span><button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
       `).join('');
 
@@ -1147,9 +1158,13 @@
       nGrid.innerHTML = filtered.map(n => {
         const folder = noteFolders.find(f => f.id === n.folderId); const tag = sharedTags.find(x => x.id === n.tagId); const canEdit = canModifyItem(n);
         return `
-        <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative group transition hover:border-gray-400 dark:hover:border-gray-600">
-          <div onclick="openNoteDetailModal('${n.id}')" class="cursor-pointer">
-            <div class="flex items-center justify-between mb-2"><h4 class="font-bold text-sm truncate pr-2">${n.title}</h4><button onclick="event.stopPropagation(); toggleStarNote('${n.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${n.starred ? '⭐' : '☆'}</button></div>
+        <div id="note_${n.id}" ondragstart="dragNote(event, '${n.id}')" ondragend="endDragNote(event, '${n.id}')" class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative group transition hover:border-gray-400 dark:hover:border-gray-600">
+          <div class="absolute top-2 right-2 flex items-center space-x-0.5 z-10 bg-white/80 dark:bg-[#1E1E1E]/80 rounded-lg p-0.5">
+            <button onclick="event.stopPropagation(); toggleStarNote('${n.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${n.starred ? '⭐' : '☆'}</button>
+            <div class="drag-handle p-1 text-gray-500 cursor-grab hover:text-white" onmousedown="makeDraggable('note_${n.id}')" onmouseup="makeUndraggable('note_${n.id}')" ontouchstart="makeDraggable('note_${n.id}')" ontouchend="makeUndraggable('note_${n.id}')"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
+          </div>
+          <div onclick="openNoteDetailModal('${n.id}')" class="cursor-pointer pr-12">
+            <h4 class="font-bold text-sm truncate mb-2">${n.title}</h4>
             <p class="text-xs text-gray-400 whitespace-pre-wrap line-clamp-3 mb-2">${n.content}</p>
           </div>
           ${getAttachmentBadgeHTML('note', n)}
@@ -1165,7 +1180,6 @@
        const getPath = (id) => getFolderBreadcrumbs(id).map(c => c.title).join(" / ");
        let html = `<option value="">Root (No Folder)</option>`; noteFolders.forEach(f => { html += `<option value="${f.id}">${getPath(f.id)}</option>`; }); return html;
     }
-    function toggleStarNote(id) { const n = notes.find(x => x.id === id); if (n) { n.starred = !n.starred; saveData(); } }
 
     function openNoteModal() {
       document.getElementById("noteFolderInput").innerHTML = getFolderOptionsHtml(); document.getElementById("noteFolderInput").value = currentNoteFolderId || "";
@@ -1195,66 +1209,21 @@
           if (!Array.isArray(n.history)) n.history = []; n.history.unshift({ action: `Edited note`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited note: ${title}`);
         }
       } else {
-        notes.push({ id: "nt_" + Date.now(), title, content, folderId, tagId, starred, assignees, attachment, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created note", user: activeUser || "User", date: new Date().toLocaleString() }] });
-        saveData(`Added note: ${title}`);
+        notes.push({ id: "nt_" + Date.now(), title, content, folderId, tagId, starred, assignees, attachment, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created note", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Added note: ${title}`);
       }
       closeNoteModal();
     }
     function openNoteDetailModal(id) {
       const n = notes.find(x => x.id === id); if (!n) return;
       document.getElementById("noteDetailTitle").innerText = n.title; document.getElementById("noteDetailContent").innerText = n.content || "No content.";
-      const f = noteFolders.find(x => x.id === n.folderId);
-      document.getElementById("noteDetailFolder").innerText = f ? f.title : "No Folder";
+      const f = noteFolders.find(x => x.id === n.folderId); document.getElementById("noteDetailFolder").innerText = f ? f.title : "No Folder";
       document.getElementById("noteDetailAssignees").innerText = (n.assignees && n.assignees.length) ? n.assignees.join(', ') : "Anyone"; document.getElementById("noteDetailOwner").innerText = n.owner || "System";
-      const attC = document.getElementById("noteDetailAttachmentContainer");
-      if (n.attachment) { attC.innerHTML = getAttachmentBadgeHTML('note', n); attC.classList.remove("hidden"); } else { attC.classList.add("hidden"); }
+      const attC = document.getElementById("noteDetailAttachmentContainer"); if (n.attachment) { attC.innerHTML = getAttachmentBadgeHTML('note', n); attC.classList.remove("hidden"); } else { attC.classList.add("hidden"); }
       const log = document.getElementById("noteDetailHistoryLog");
       if (Array.isArray(n.history) && n.history.length > 0) { log.innerHTML = n.history.map(h => `<div class="border-b border-gray-200 dark:border-gray-800/80 pb-1 mt-1.5 last:border-none"><span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span><div class="text-[10px] text-gray-400">${h.date} by <span class="font-semibold text-emerald-400">${h.user}</span></div></div>`).join(''); } else { log.innerHTML = `<div class="text-gray-500 italic text-[10px]">No edit history recorded.</div>`; }
       document.getElementById("noteDetailEditBtn").onclick = () => { closeNoteDetailModal(); openEditNoteModal(id); }; document.getElementById("noteDetailModal").classList.remove("hidden");
     }
     function closeNoteDetailModal() { document.getElementById("noteDetailModal").classList.add("hidden"); }
-
-    function openNewTaskModal() {
-      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-      document.getElementById("taskAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
-      document.getElementById("taskIdInput").value = ""; document.getElementById("taskTitleInput").value = ""; document.getElementById("taskNotesInput").value = ""; document.getElementById("taskModalHeading").innerText = "Create New Task";
-      removeUniversalFile('task'); document.getElementById("taskModal").classList.remove("hidden");
-    }
-    function openEditTaskModal(id) {
-      document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
-      const t = tasks.find(x => x.id === id);
-      if (t) {
-        document.getElementById("taskIdInput").value = t.id; document.getElementById("taskTitleInput").value = t.title; document.getElementById("taskSectionInput").value = t.sectionId; document.getElementById("taskPriorityInput").value = t.priority || "Medium"; document.getElementById("taskNotesInput").value = t.notes || "";
-        document.getElementById("taskAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(t.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
-        if (t.attachment) { tempFileState.task = t.attachment; document.getElementById("taskFileNameLabel").innerText = t.attachment.name; document.getElementById("taskFilePreviewContainer").classList.remove("hidden"); } else { removeUniversalFile('task'); }
-      }
-      document.getElementById("taskModalHeading").innerText = "Edit Task Details"; document.getElementById("taskModal").classList.remove("hidden");
-    }
-    function saveTask(e) {
-      e.preventDefault();
-      const id = document.getElementById("taskIdInput").value; const title = document.getElementById("taskTitleInput").value.trim(); const sectionId = document.getElementById("taskSectionInput").value; const priority = document.getElementById("taskPriorityInput").value; const notesText = document.getElementById("taskNotesInput").value.trim(); const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value); const attachment = tempFileState.task;
-      if (id) {
-        const t = tasks.find(x => x.id === id);
-        if (t) { t.title = title; t.sectionId = sectionId; t.priority = priority; t.notes = notesText; t.assignees = assignees; t.attachment = attachment; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited task: ${title}`); }
-      } else {
-        tasks.push({ id: Date.now().toString(), title, sectionId, priority, notes: notesText, assignees: assignees.length ? assignees : [activeUser], attachment, completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Created new task: ${title}`);
-      }
-      closeTaskModal();
-    }
-    function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); removeUniversalFile('task'); }
-    function closeTaskDetailModal() { document.getElementById("taskDetailModal").classList.add("hidden"); }
-    function openTaskDetailModal(id) {
-      const t = tasks.find(x => x.id === id); if (!t) return;
-      document.getElementById("detailTitle").innerText = t.title; document.getElementById("detailNotes").innerText = t.notes || "No description provided."; document.getElementById("detailPriority").innerText = t.priority || "Medium";
-      const sec = sharedSections.find(s => s.id === t.sectionId); document.getElementById("detailSection").innerText = sec ? sec.title : "General"; document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone"; document.getElementById("detailDueDate").innerText = t.dueDate || "No Date"; document.getElementById("detailOwner").innerText = t.owner || "System";
-      const badge = document.getElementById("detailStatusBadge");
-      if (t.completed) { badge.innerText = "Completed"; badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"; badge.classList.remove("hidden"); } else { badge.classList.add("hidden"); }
-      const log = document.getElementById("detailHistoryLog");
-      if (Array.isArray(t.history) && t.history.length > 0) { log.innerHTML = t.history.map(h => `<div class="border-b border-gray-200 dark:border-gray-800/80 pb-1 mt-1.5 last:border-none"><span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span><div class="text-[10px] text-gray-400">${h.date} by <span class="font-semibold text-emerald-400">${h.user}</span></div></div>`).join(''); } else { log.innerHTML = `<div class="text-gray-500 italic text-[10px]">No edit history recorded.</div>`; }
-      const attC = document.getElementById("detailAttachmentContainer");
-      if (t.attachment) { attC.innerHTML = getAttachmentBadgeHTML('task', t); attC.classList.remove("hidden"); } else { attC.classList.add("hidden"); }
-      document.getElementById("detailEditBtn").onclick = () => { closeTaskDetailModal(); openEditTaskModal(id); }; document.getElementById("taskDetailModal").classList.remove("hidden");
-    }
 
     function formatItemDescription(rawText) { const trimmed = rawText.trim(); if (!trimmed || trimmed.includes("(")) return trimmed; let text = trimmed.toLowerCase(); let qty = ""; const qtyMatch = text.match(/(?:x\s*(\d+)|(\d+)\s*x|\bqty:?\s*(\d+)\b)/i); if (qtyMatch) qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]); return `${trimmed} ${qty ? `(${qty})` : ''}`.trim(); }
     
@@ -1269,25 +1238,29 @@
       document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Purchase Order</span>`; document.getElementById("orderModal").classList.remove("hidden"); lucide.createIcons();
     }
     function closeOrderModal() { document.getElementById("orderModal").classList.add("hidden"); removeUniversalFile('order'); }
+
     function saveOrder(e) {
       e.preventDefault();
       const id = document.getElementById("orderIdInput").value; const poNumber = document.getElementById("orderPoInput").value.trim(); const dateOrdered = document.getElementById("orderDateInput").value; const orderType = document.getElementById("orderTypeInput").value.trim(); const placedBy = document.getElementById("orderPlacedByInput").value.trim(); const rawLines = document.getElementById("orderFreeformItemsInput").value.split(/\r?\n|,/); const notesInput = document.getElementById("orderNotesInput").value.trim(); const attachment = tempFileState.order;
       const items = rawLines.map(line => line.trim()).filter(Boolean).map(desc => ({ id: "it_" + Math.random().toString(36).substr(2, 9), desc: formatItemDescription(desc), received: false, receivedPartial: false, partialQty: "", stocked: false }));
-      if (id) { const ord = orders.find(x => x.id === id); if (ord) { ord.poNumber = poNumber; ord.dateOrdered = dateOrdered; ord.orderType = orderType; ord.placedBy = placedBy; ord.notes = notesInput; ord.attachment = attachment; if (items.length > 0) ord.items = items; saveData(`Edited PO# ${poNumber}`); } } 
-      else { orders.push({ id: "ord_" + Date.now(), poNumber, dateOrdered, orderType, placedBy, items, notes: notesInput, attachment, placed: true, placedMeta: `Placed by ${placedBy} on ${dateOrdered}`, vbop: false, received: false, emailed: false, stocked: false, completed: false, workspace: currentWorkspace, owner: activeUser }); saveData(`Added PO# ${poNumber}`); }
+      if (id) {
+        const ord = orders.find(x => x.id === id);
+        if (ord) { ord.poNumber = poNumber; ord.dateOrdered = dateOrdered; ord.orderType = orderType; ord.placedBy = placedBy; ord.notes = notesInput; ord.attachment = attachment; if (items.length > 0) ord.items = items; saveData(`Edited PO# ${poNumber}`); } 
+      } else {
+        orders.push({ id: "ord_" + Date.now(), poNumber, dateOrdered, orderType, placedBy, items, notes: notesInput, attachment, placed: true, placedMeta: `Placed by ${placedBy} on ${dateOrdered}`, vbop: false, received: false, emailed: false, stocked: false, completed: false, workspace: currentWorkspace, owner: activeUser }); saveData(`Added PO# ${poNumber}`);
+      }
       closeOrderModal();
     }
+
     function toggleOrderItemsAccordion(orderId) { openAccordionsMap[orderId] = !openAccordionsMap[orderId]; renderOrders(); }
     function updateItemPartialQty(orderId, itemId, qty) { const ord = orders.find(x => x.id === orderId); if (!ord || !ord.items) return; const it = ord.items.find(x => x.id === itemId); if (it) { it.partialQty = qty; if (qty && !it.receivedPartial) { it.receivedPartial = true; it.received = false; } else if (!qty) { it.receivedPartial = false; } ord.received = ord.items.every(i => i.received); saveData(`Updated item quantity on PO# ${ord.poNumber}`); } }
     
     function renderOrders() {
       const activeContainer = document.getElementById("ordersListContainer"); const completedContainer = document.getElementById("completedOrdersList"); if (!activeContainer || !completedContainer) return;
       const filtered = orders.filter(o => (o.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || o.owner === activeUser));
-      const activeOrders = filtered.filter(o => !o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime());
-      const completedOrders = filtered.filter(o => o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime());
+      const activeOrders = filtered.filter(o => !o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime()); const completedOrders = filtered.filter(o => o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime());
       document.getElementById("activeOrdersBadge").innerText = activeOrders.length; document.getElementById("completedOrdersBadge").innerText = completedOrders.length;
-      activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join(''); completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join('');
-      lucide.createIcons();
+      activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join(''); completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join(''); lucide.createIcons();
     }
 
     function renderOrderCardHtml(ord) {
@@ -1341,7 +1314,8 @@
         if (field === 'received' && checked) it.receivedPartial = false;
         if (field === 'receivedPartial' && checked) it.received = false;
         if (field === 'receivedPartial' && !checked) it.partialQty = ""; 
-        ord.received = ord.items.every(i => i.received); saveData(`Updated items on PO# ${ord.poNumber}`);
+        ord.received = ord.items.every(i => i.received);
+        saveData(`Updated items on PO# ${ord.poNumber}`);
       }
     }
 
