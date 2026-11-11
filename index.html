@@ -34,11 +34,7 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #333333; border-radius: 3px; }
     
-    /* Annotation Canvas Specific Styles */
-    #annotationCanvas { 
-      transform-origin: 0 0; 
-      will-change: transform;
-    }
+    #annotationCanvas { transform-origin: 0 0; will-change: transform; }
     .tool-active { background-color: #A6192E; color: white; border-color: #A6192E; }
   </style>
 </head>
@@ -73,11 +69,18 @@
   <!-- HEADER -->
   <header class="h-14 md:h-16 bg-gray-100 dark:bg-[#181818] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-2 md:px-5 shrink-0 z-20">
     <div class="flex items-center space-x-2 md:space-x-4 shrink-0">
-      <button onclick="toggleMobileSidebar()" class="p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 md:hidden active:scale-95 transition shrink-0"><i data-lucide="menu" class="w-5 h-5"></i></button>
+      <button onclick="toggleMobileSidebar()" class="p-2 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 md:hidden active:scale-95 transition shrink-0">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+
       <div class="flex items-center space-x-2 shrink-0">
-        <svg class="w-8 h-8 md:w-9 md:h-9 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="22" fill="#A6192E"/><text x="50%" y="74%" font-family="Arial, sans-serif" font-size="68" font-weight="900" fill="white" text-anchor="middle">A</text></svg>
+        <svg class="w-8 h-8 md:w-9 md:h-9 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" rx="22" fill="#A6192E"/>
+          <text x="50%" y="74%" font-family="Arial, sans-serif" font-size="68" font-weight="900" fill="white" text-anchor="middle">A</text>
+        </svg>
         <span class="font-extrabold text-base md:text-xl tracking-wider text-[#A6192E] hidden xl:inline">AMADA</span>
       </div>
+
       <div class="inline-flex bg-gray-200 dark:bg-[#121212] p-1 rounded-xl border border-gray-300 dark:border-gray-700 shadow-inner shrink-0 ml-1 md:ml-3">
         <button id="wsBtnShared" onclick="switchWorkspace('shared')" class="px-2.5 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold bg-[#A6192E] text-white shadow transition-all whitespace-nowrap">Shared</button>
         <button id="wsBtnPersonal" onclick="switchWorkspace('personal')" class="px-2.5 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold text-gray-500 hover:text-gray-800 dark:text-gray-400 hover:text-white transition-all whitespace-nowrap">Personal</button>
@@ -137,6 +140,7 @@
         <div id="tagsSidebar" class="space-y-1 max-h-32 overflow-y-auto"></div>
       </div>
       
+      <!-- TASK SECTIONS -->
       <div id="taskSectionsSidebarBlock" class="flex-1 overflow-y-auto min-h-[120px]">
         <div class="flex items-center justify-between mb-2">
           <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Task Sections</span>
@@ -145,17 +149,11 @@
         <div id="sectionsSidebar" class="space-y-1"></div>
       </div>
 
-      <div id="noteFoldersSidebarBlock" class="flex-1 overflow-y-auto min-h-[120px] hidden border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Note Folders</span>
-          <button onclick="openNewNoteFolderModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="folder-plus" class="w-4 h-4"></i></button>
-        </div>
-        <div id="noteFoldersSidebar" class="space-y-1"></div>
-      </div>
     </aside>
 
     <main class="flex-1 bg-gray-100 dark:bg-[#121212] p-2.5 sm:p-4 overflow-y-auto flex flex-col h-full w-full relative">
       
+      <!-- ISOLATED FILTER HEADER -->
       <div id="isolatedFilterHeader" class="hidden mb-3 bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl p-2.5 flex items-center justify-between shrink-0 shadow-sm">
         <div class="flex items-center space-x-2">
           <button onclick="clearActiveFilter()" class="px-2.5 py-1 bg-gray-200 dark:bg-[#252525] text-xs rounded-lg flex items-center space-x-1 font-semibold"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> <span>All</span></button>
@@ -182,12 +180,19 @@
         </div>
       </div>
 
-      <!-- VIEW 2: NOTES -->
+      <!-- VIEW 2: NOTES (Now With Main-Page Folders) -->
       <div id="notesView" class="hidden h-full flex-1 overflow-y-auto pb-6">
-        <div class="flex justify-between items-center mb-3 bg-white dark:bg-[#181818] p-3 md:p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="flex justify-between items-center mb-4 bg-white dark:bg-[#181818] p-3 md:p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
           <h2 class="text-base font-bold flex items-center space-x-2"><i data-lucide="sticky-note" class="w-4 h-4 text-[#A6192E]"></i><span>Keep Notes</span></h2>
-          <button onclick="openNoteModal()" class="bg-[#A6192E] text-white text-xs px-3.5 py-2 rounded-xl font-bold flex items-center space-x-1 shadow"><i data-lucide="plus" class="w-4 h-4"></i> <span>Add Note</span></button>
+          <div class="flex items-center space-x-2">
+            <button onclick="openNewNoteFolderModal()" class="bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:text-white text-xs px-3.5 py-2 rounded-xl font-bold flex items-center space-x-1 transition"><i data-lucide="folder-plus" class="w-4 h-4"></i> <span class="hidden sm:inline">New Folder</span></button>
+            <button onclick="openNoteModal()" class="bg-[#A6192E] text-white text-xs px-3.5 py-2 rounded-xl font-bold flex items-center space-x-1 shadow"><i data-lucide="plus" class="w-4 h-4"></i> <span>Add Note</span></button>
+          </div>
         </div>
+
+        <div id="notesBreadcrumbs" class="mb-3 text-[11px] font-bold text-gray-400 flex items-center space-x-2 flex-wrap"></div>
+        
+        <div id="notesFoldersGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-5 border-b border-gray-200 dark:border-gray-800 pb-5 empty:hidden"></div>
         <div id="notesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"></div>
       </div>
 
@@ -195,7 +200,9 @@
       <div id="ordersView" class="hidden h-full flex-1 overflow-y-auto pb-6">
         <div class="flex flex-col gap-2.5 mb-3 bg-white dark:bg-[#181818] p-3 md:p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
           <div class="flex justify-between items-center gap-2">
-            <div><h2 class="text-base font-bold flex items-center space-x-2"><i data-lucide="package" class="w-4 h-4 text-[#A6192E]"></i><span>Order Tracker</span></h2></div>
+            <div>
+              <h2 class="text-base font-bold flex items-center space-x-2"><i data-lucide="package" class="w-4 h-4 text-[#A6192E]"></i><span>Order Tracker</span></h2>
+            </div>
             <button onclick="openNewOrderModal()" class="bg-[#A6192E] text-white text-xs px-3.5 py-2 rounded-xl font-bold flex items-center space-x-1 shadow"><i data-lucide="plus-circle" class="w-4 h-4"></i> <span>Add Order</span></button>
           </div>
           <div class="relative w-full">
@@ -211,6 +218,7 @@
           <div id="ordersListContainer" class="space-y-3"></div>
         </div>
         
+        <!-- COMPLETED ORDERS ARCHIVE -->
         <div class="mt-6 border-t border-gray-200 dark:border-gray-800 pt-3">
           <div class="flex items-center justify-between bg-white dark:bg-[#181818] border border-gray-200 dark:border-gray-800 rounded-xl px-3.5 py-2.5 cursor-pointer shadow-sm" onclick="toggleCompletedOrdersDropdown()">
             <div class="flex items-center space-x-2">
@@ -219,7 +227,9 @@
             </div>
             <button onclick="event.stopPropagation(); clearAllCompletedOrders();" class="text-xs text-gray-400 hover:text-red-400 p-1" title="Clear completed orders"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
           </div>
-          <div id="completedOrdersContainer" class="hidden mt-2.5 space-y-3"><div id="completedOrdersList" class="space-y-3"></div></div>
+          <div id="completedOrdersContainer" class="hidden mt-2.5 space-y-3">
+            <div id="completedOrdersList" class="space-y-3"></div>
+          </div>
         </div>
       </div>
     </main>
@@ -331,40 +341,48 @@
 
   <!-- ANNOTATION & PREVIEW MODAL -->
   <div id="annotationModal" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col w-full h-full overflow-hidden">
-    <div class="h-16 bg-[#181818] border-b border-gray-800 flex items-center justify-between px-4 shrink-0 shadow-lg overflow-x-auto">
-      <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+    <!-- TOOLBAR -->
+    <div class="h-16 bg-[#181818] border-b border-gray-800 flex items-center justify-between px-2 sm:px-4 shrink-0 shadow-lg overflow-x-auto">
+      
+      <div class="flex items-center space-x-2 shrink-0">
         <button onclick="closeAnnotationModal()" class="text-gray-400 hover:text-white p-2 flex items-center space-x-1"><i data-lucide="arrow-left" class="w-5 h-5"></i><span class="text-xs font-bold hidden sm:inline">Back</span></button>
         <div class="h-6 w-px bg-gray-700 mx-1"></div>
-        
-        <button id="toolPan" onclick="setDrawTool('pan')" class="tool-btn tool-active p-2 rounded-lg text-gray-300 hover:bg-gray-800 transition" title="Pan / View (Default)"><i data-lucide="hand" class="w-5 h-5"></i></button>
-        <button id="toolPen" onclick="setDrawTool('pen')" class="tool-btn p-2 rounded-lg text-gray-300 hover:bg-gray-800 transition" title="Draw (Pen)"><i data-lucide="pen-tool" class="w-5 h-5"></i></button>
-        <button id="toolArrow" onclick="setDrawTool('arrow')" class="tool-btn p-2 rounded-lg text-gray-300 hover:bg-gray-800 transition" title="Draw Arrow"><i data-lucide="arrow-up-right" class="w-5 h-5"></i></button>
-        <button id="toolText" onclick="setDrawTool('text')" class="tool-btn p-2 rounded-lg text-gray-300 hover:bg-gray-800 transition" title="Add Text"><i data-lucide="type" class="w-5 h-5"></i></button>
-        
+        <button onclick="annotFitToScreen()" class="p-2 text-gray-400 hover:text-white transition rounded-lg hover:bg-gray-800" title="Fit to Screen"><i data-lucide="maximize" class="w-5 h-5"></i></button>
         <div class="h-6 w-px bg-gray-700 mx-1"></div>
         
+        <!-- View / Annotate Toggle -->
+        <div class="flex items-center space-x-1 bg-[#252525] p-1 rounded-xl">
+          <button id="btnModeView" onclick="setAnnotMode('view')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#A6192E] text-white shadow transition">View</button>
+          <button id="btnModeAnnotate" onclick="setAnnotMode('annotate')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition">Annotate</button>
+        </div>
+      </div>
+
+      <!-- Drawing Tools (Hidden in View Mode) -->
+      <div id="annotationTools" class="hidden items-center space-x-1 sm:space-x-2 shrink-0 mx-2">
+        <button id="toolPan" onclick="setDrawTool('pan')" class="tool-btn p-2 rounded-lg text-gray-300 hover:bg-gray-800 transition hidden" title="Pan / View"><i data-lucide="hand" class="w-5 h-5"></i></button>
+        <button id="toolPen" onclick="setDrawTool('pen')" class="tool-btn tool-active p-2 rounded-lg text-gray-300 hover:bg-gray-800 transition" title="Draw (Pen)"><i data-lucide="pen-tool" class="w-5 h-5"></i></button>
+        <button id="toolArrow" onclick="setDrawTool('arrow')" class="tool-btn p-2 rounded-lg text-gray-300 hover:bg-gray-800 transition" title="Draw Arrow"><i data-lucide="arrow-up-right" class="w-5 h-5"></i></button>
+        <button id="toolText" onclick="setDrawTool('text')" class="tool-btn p-2 rounded-lg text-gray-300 hover:bg-gray-800 transition" title="Add Text"><i data-lucide="type" class="w-5 h-5"></i></button>
+        <div class="h-6 w-px bg-gray-700 mx-1"></div>
         <input type="color" id="annotColor" value="#ef4444" class="w-7 h-7 rounded cursor-pointer border-none bg-transparent p-0" title="Choose Color">
         <input type="range" id="annotSize" min="1" max="20" value="4" class="w-16 accent-[#A6192E]" title="Line Thickness / Text Size">
-        
         <div id="textStyleControls" class="hidden items-center space-x-1 ml-1">
           <button id="btnTextBold" onclick="toggleTextStyle('bold')" class="p-1.5 rounded text-gray-400 hover:text-white border border-transparent font-serif font-bold">B</button>
           <button id="btnTextItalic" onclick="toggleTextStyle('italic')" class="p-1.5 rounded text-gray-400 hover:text-white border border-transparent font-serif italic">I</button>
         </div>
-      </div>
-
-      <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+        <div class="h-6 w-px bg-gray-700 mx-1"></div>
         <button onclick="annotUndo()" class="p-2 text-gray-400 hover:text-white transition" title="Undo"><i data-lucide="undo" class="w-5 h-5"></i></button>
         <button onclick="annotRedo()" class="p-2 text-gray-400 hover:text-white transition" title="Redo"><i data-lucide="redo" class="w-5 h-5"></i></button>
-        
-        <div class="h-6 w-px bg-gray-700 mx-1 hidden sm:block"></div>
-        
-        <div class="flex items-center space-x-1 sm:space-x-2 bg-[#252525] p-1 rounded-xl">
-          <button id="btnViewOrig" onclick="toggleAnnotView('orig')" class="px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition">Original</button>
-          <button id="btnViewAnnot" onclick="toggleAnnotView('annot')" class="px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition">Annotated</button>
-        </div>
+      </div>
 
+      <div class="flex items-center space-x-1 sm:space-x-2 shrink-0">
+        <div class="h-6 w-px bg-gray-700 mx-1 hidden sm:block"></div>
+        <div class="flex items-center space-x-1 bg-[#252525] p-1 rounded-xl">
+          <button id="btnViewOrig" onclick="toggleAnnotView('orig')" class="px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition">Orig.</button>
+          <button id="btnViewAnnot" onclick="toggleAnnotView('annot')" class="px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition">Ann.</button>
+        </div>
         <button onclick="downloadAnnotatedFile()" class="p-2 text-gray-400 hover:text-emerald-400 transition" title="Download Current View"><i data-lucide="download" class="w-5 h-5"></i></button>
-        <button onclick="saveAnnotationToItem()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow ml-1">Save</button>
+        <button onclick="saveAnnotationToItem()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow ml-1">Save</button>
       </div>
     </div>
 
@@ -380,174 +398,6 @@
         <p class="text-white text-sm font-bold mb-1">File Preview Not Supported</p>
         <p class="text-gray-400 text-xs mb-4">You cannot draw on this file type directly in the browser.</p>
         <button onclick="downloadOriginalFile()" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-bold rounded-xl">Download Original File</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ORDER MODAL (WITH UNIVERSAL ATTACHMENT) -->
-  <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
-      <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
-        <h3 id="orderModalHeading" class="text-base font-bold flex items-center space-x-2"><i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i><span>Create New Order</span></h3>
-        <button type="button" onclick="closeOrderModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-      <form onsubmit="saveOrder(event)" class="space-y-3">
-        <input type="hidden" id="orderIdInput">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Purchase Order # (PO)</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div>
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Date Ordered</label><input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs text-gray-800 dark:text-gray-100 cursor-pointer focus:outline-none focus:border-[#A6192E]"></div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Type of Order</label><input type="text" id="orderTypeInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none"></div>
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Ordered By</label><input type="text" id="orderPlacedByInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none"></div>
-        </div>
-        <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Contents (Items, Sizes & Quantities)</label><textarea id="orderFreeformItemsInput" rows="3" placeholder="M-tshirt x10" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></textarea></div>
-        <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Order Notes & Remarks</label><textarea id="orderNotesInput" rows="2" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs focus:outline-none focus:border-[#A6192E]"></textarea></div>
-        
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File / Photo (Click & Paste Ctrl+V)</label>
-          <div tabindex="0" onpaste="handleUniversalPaste(event, 'order')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#A6192E] rounded-2xl p-4 text-center cursor-pointer transition focus:outline-none focus:border-[#A6192E] bg-gray-50 dark:bg-[#141414]">
-            <input type="file" id="orderFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'order')" class="hidden">
-            <div onclick="document.getElementById('orderFileInput').click()"><i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click to browse or <span class="text-[#A6192E] font-bold">paste (Ctrl+V)</span> file here</div><p class="text-[10px] text-gray-500 mt-0.5">Supports images and PDFs</p></div>
-            <div id="orderFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs"><span id="orderFileNameLabel" class="text-emerald-400 truncate max-w-[240px] font-semibold"></span><button type="button" onclick="removeUniversalFile('order')" class="text-red-400 hover:text-red-300 font-bold ml-2">Remove</button></div>
-          </div>
-        </div>
-
-        <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
-          <button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl shadow">Save Order</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- TASK MODAL (WITH UNIVERSAL ATTACHMENT) -->
-  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800">
-        <h3 id="taskModalHeading" class="text-base font-bold">Create / Edit Task</h3>
-        <button type="button" onclick="closeTaskModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-      <form onsubmit="saveTask(event)" class="space-y-3">
-        <input type="hidden" id="taskIdInput">
-        <input type="text" id="taskTitleInput" placeholder="Task Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-[#A6192E]">
-        <div class="grid grid-cols-2 gap-2">
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Section</label><select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select></div>
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Priority</label><select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div>
-        </div>
-        <textarea id="taskNotesInput" rows="3" placeholder="Add additional details..." class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></textarea>
-        
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File / Photo (Click & Paste Ctrl+V)</label>
-          <div tabindex="0" onpaste="handleUniversalPaste(event, 'task')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#A6192E] rounded-2xl p-4 text-center cursor-pointer transition focus:outline-none focus:border-[#A6192E] bg-gray-50 dark:bg-[#141414]">
-            <input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'task')" class="hidden">
-            <div onclick="document.getElementById('taskFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click to browse or <span class="text-[#A6192E] font-bold">paste</span> file here</div></div>
-            <div id="taskFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs"><span id="taskFileNameLabel" class="text-emerald-400 truncate max-w-[240px] font-semibold"></span><button type="button" onclick="removeUniversalFile('task')" class="text-red-400 hover:text-red-300 font-bold ml-2">Remove</button></div>
-          </div>
-        </div>
-
-        <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assign Users</label><div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border border-gray-300 dark:border-gray-700 max-h-24 overflow-y-auto text-xs"></div></div>
-        <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-800">
-          <button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl shadow">Save Task</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- NOTE MODAL (WITH FOLDERS, ASSIGNEES & ATTACHMENT) -->
-  <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800">
-        <h3 id="noteModalTitle" class="text-base font-bold flex items-center space-x-2"><i data-lucide="sticky-note" class="w-5 h-5 text-[#A6192E]"></i><span>Add Keep Note</span></h3>
-        <button type="button" onclick="closeNoteModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-      <form onsubmit="saveNote(event)" class="space-y-3">
-        <input type="hidden" id="noteId">
-        <input type="text" id="noteTitleInput" placeholder="Note Title" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-[#A6192E]">
-        <div class="grid grid-cols-2 gap-2">
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Folder</label><select id="noteFolderInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select></div>
-          <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Tag</label><select id="noteTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select></div>
-        </div>
-        <textarea id="noteContentInput" rows="4" placeholder="Take a note..." required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-[#A6192E]"></textarea>
-        
-        <div>
-          <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Attach File / Photo (Click & Paste Ctrl+V)</label>
-          <div tabindex="0" onpaste="handleUniversalPaste(event, 'note')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#A6192E] rounded-2xl p-4 text-center cursor-pointer transition focus:outline-none focus:border-[#A6192E] bg-gray-50 dark:bg-[#141414]">
-            <input type="file" id="noteFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'note')" class="hidden">
-            <div onclick="document.getElementById('noteFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click to browse or <span class="text-[#A6192E] font-bold">paste</span> file here</div></div>
-            <div id="noteFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs"><span id="noteFileNameLabel" class="text-emerald-400 truncate max-w-[240px] font-semibold"></span><button type="button" onclick="removeUniversalFile('note')" class="text-red-400 hover:text-red-300 font-bold ml-2">Remove</button></div>
-          </div>
-        </div>
-
-        <div><label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Assign Users</label><div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border border-gray-300 dark:border-gray-700 max-h-24 overflow-y-auto text-xs"></div></div>
-        
-        <div class="flex items-center space-x-2 pt-1"><input type="checkbox" id="noteStarInput" class="w-4 h-4 accent-[#A6192E]"><label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label></div>
-        <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200 dark:border-gray-800">
-          <button type="button" onclick="closeNoteModal()" class="px-4 py-2 text-xs text-gray-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-5 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl shadow">Save Note</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- TASK DETAIL MODAL -->
-  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto">
-      <button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      <div class="flex items-center space-x-2 mb-2">
-        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK DETAIL</span>
-        <span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800">Priority</span>
-        <span id="detailStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded hidden">Status</span>
-      </div>
-      <h3 id="detailTitle" class="text-lg font-bold mb-2 break-words">Task Title</h3>
-      <div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div>
-      
-      <div id="detailAttachmentContainer" class="hidden mb-3"></div>
-
-      <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border border-gray-200 dark:border-gray-800">
-        <div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate">General</div></div>
-        <div><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate">Anyone</div></div>
-        <div><span class="font-bold text-gray-400">Due Date:</span> <div id="detailDueDate" class="text-gray-800 dark:text-gray-200 font-semibold truncate">No Date</div></div>
-        <div><span class="font-bold text-gray-400">Owner:</span> <div id="detailOwner" class="text-gray-800 dark:text-gray-200 font-semibold truncate">System</div></div>
-      </div>
-      <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mb-4">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center space-x-1"><i data-lucide="history" class="w-3.5 h-3.5"></i><span>Edit History</span></div>
-        <div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-gray-100 dark:bg-[#121212] p-2.5 rounded-xl border border-gray-300 dark:border-gray-800"></div>
-      </div>
-      <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200 dark:border-gray-800">
-        <button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl flex items-center space-x-1.5 shadow">
-          <i data-lucide="pencil" class="w-3.5 h-3.5"></i> <span>Edit Task</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- NOTE DETAIL MODAL (HISTORY VIEW) -->
-  <div id="noteDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto">
-      <button onclick="closeNoteDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
-      <div class="flex items-center space-x-2 mb-2">
-        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-blue-600 text-white">NOTE DETAIL</span>
-        <span id="noteDetailFolder" class="text-[10px] font-bold text-gray-400">Folder</span>
-      </div>
-      <h3 id="noteDetailTitle" class="text-lg font-bold mb-2 break-words">Note Title</h3>
-      <div id="noteDetailContent" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl border border-gray-200 dark:border-gray-800"></div>
-      
-      <div id="noteDetailAttachmentContainer" class="hidden mb-3"></div>
-
-      <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border border-gray-200 dark:border-gray-800">
-        <div class="col-span-2"><span class="font-bold text-gray-400">Assignees:</span> <div id="noteDetailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate">Anyone</div></div>
-        <div><span class="font-bold text-gray-400">Owner:</span> <div id="noteDetailOwner" class="text-gray-800 dark:text-gray-200 font-semibold truncate">System</div></div>
-      </div>
-      <div class="border-t border-gray-200 dark:border-gray-800 pt-3 mb-4">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center space-x-1"><i data-lucide="history" class="w-3.5 h-3.5"></i><span>Edit History</span></div>
-        <div id="noteDetailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-gray-100 dark:bg-[#121212] p-2.5 rounded-xl border border-gray-300 dark:border-gray-800"></div>
-      </div>
-      <div class="flex justify-end space-x-2 pt-2 border-t border-gray-200 dark:border-gray-800">
-        <button id="noteDetailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl flex items-center space-x-1.5 shadow">
-          <i data-lucide="pencil" class="w-3.5 h-3.5"></i> <span>Edit Note</span>
-        </button>
       </div>
     </div>
   </div>
@@ -636,6 +486,10 @@
     let activeUser = localStorage.getItem("amada_active_user") || "";
     let currentWorkspace = 'shared'; 
     let currentMainTab = "tasks";
+    
+    // Notes Folder State
+    let currentNoteFolderId = null;
+
     let activeFilterType = null;
     let activeFilterId = null;
     let selectedUserForAuth = "";
@@ -646,7 +500,7 @@
 
     let sharedTags = JSON.parse(localStorage.getItem("amada_shared_tags")) || [{ id: "t_urgent", title: "Urgent", color: "#ef4444" }, { id: "t_cnc", title: "Machining", color: "#3b82f6" }];
     let sharedSections = JSON.parse(localStorage.getItem("amada_shared_sections")) || [{ id: "s1", title: "High Priority" }, { id: "s2", title: "Medium Priority" }];
-    let noteFolders = JSON.parse(localStorage.getItem("amada_note_folders")) || [{ id: "nf1", title: "General Guidelines" }];
+    let noteFolders = JSON.parse(localStorage.getItem("amada_note_folders")) || [{ id: "nf1", title: "General Guidelines", parentId: null }];
     
     let tasks = JSON.parse(localStorage.getItem("amada_tasks")) || [];
     let notes = JSON.parse(localStorage.getItem("amada_notes")) || [];
@@ -688,6 +542,8 @@
 
     window.onload = () => {
       users = ensureProfiles(users);
+      // Migrate old note folders to have parentId
+      noteFolders.forEach(f => { if(f.parentId === undefined) f.parentId = null; });
       renderUserProfiles();
       checkAuth();
       renderAll();
@@ -927,6 +783,7 @@
     let annotCtx = null, annotCanvas = null;
     let annotOrigImg = new Image();
     let annotHistory = [], annotStep = -1;
+    let annotMode = 'view'; // view or annotate
     let annotTool = 'pan', isDrawing = false, isPanning = false;
     let lastX = 0, lastY = 0, lastPanX = 0, lastPanY = 0;
     let currentAnnotItemType = null, currentAnnotItemId = null;
@@ -941,13 +798,11 @@
     function setupCanvasEvents() {
       annotCanvas = document.getElementById("annotationCanvas");
       annotCtx = annotCanvas.getContext("2d");
-
       const wrapper = document.getElementById("canvasScrollWrapper");
       
       annotCanvas.addEventListener("pointerdown", startDraw);
       annotCanvas.addEventListener("pointermove", draw);
-      annotCanvas.addEventListener("pointerup", stopDraw);
-      annotCanvas.addEventListener("pointerout", stopDraw);
+      window.addEventListener("pointerup", stopDraw); 
 
       // Scroll to zoom
       wrapper.addEventListener("wheel", (e) => {
@@ -958,13 +813,14 @@
         const zoomFactor = Math.exp(wheel * zoomIntensity);
         
         const rect = annotCanvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        // Mouse position relative to canvas top-left, scaled
+        const mouseX = (e.clientX - rect.left) / annotScale;
+        const mouseY = (e.clientY - rect.top) / annotScale;
 
-        const newScale = Math.min(Math.max(0.2, annotScale * zoomFactor), 5);
+        const newScale = Math.min(Math.max(0.1, annotScale * zoomFactor), 10);
         
-        annotPanOffsetX -= mouseX / annotScale * (newScale - annotScale);
-        annotPanOffsetY -= mouseY / annotScale * (newScale - annotScale);
+        annotPanOffsetX -= mouseX * (newScale - annotScale);
+        annotPanOffsetY -= mouseY * (newScale - annotScale);
         
         annotScale = newScale;
         updateCanvasTransform();
@@ -975,10 +831,50 @@
       annotCanvas.style.transform = `translate(${annotPanOffsetX}px, ${annotPanOffsetY}px) scale(${annotScale})`;
     }
 
+    function annotFitToScreen() {
+      if(!annotOrigImg || !annotOrigImg.width) return;
+      const wrapper = document.getElementById("canvasScrollWrapper");
+      const wW = wrapper.clientWidth; const wH = wrapper.clientHeight;
+      const iW = annotCanvas.width; const iH = annotCanvas.height;
+      if(iW === 0 || iH === 0) return;
+
+      const scale = Math.min(wW / iW, wH / iH) * 0.95;
+      annotScale = scale;
+      annotPanOffsetX = (wW - (iW * scale)) / 2;
+      annotPanOffsetY = (wH - (iH * scale)) / 2;
+      updateCanvasTransform();
+    }
+
+    function setAnnotMode(mode) {
+      annotMode = mode;
+      const btnV = document.getElementById("btnModeView");
+      const btnA = document.getElementById("btnModeAnnotate");
+      const tools = document.getElementById("annotationTools");
+      
+      if(mode === 'view') {
+         btnV.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-[#A6192E] text-white shadow transition";
+         btnA.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition";
+         tools.classList.add("hidden");
+         tools.classList.remove("flex");
+         setDrawTool('pan');
+      } else {
+         btnA.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-[#A6192E] text-white shadow transition";
+         btnV.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition";
+         tools.classList.remove("hidden");
+         tools.classList.add("flex");
+         
+         // Only force view mode to annotated when opening edit tools
+         if(!showingAnnotated) toggleAnnotView('annot');
+         
+         setDrawTool('pen');
+      }
+    }
+
     function setDrawTool(tool) {
       annotTool = tool;
       document.querySelectorAll(".tool-btn").forEach(btn => btn.classList.remove("tool-active"));
-      document.getElementById(`tool${tool.charAt(0).toUpperCase() + tool.slice(1)}`).classList.add("tool-active");
+      const btn = document.getElementById(`tool${tool.charAt(0).toUpperCase() + tool.slice(1)}`);
+      if(btn) btn.classList.add("tool-active");
       
       const txtControls = document.getElementById("textStyleControls");
       if(tool === 'text') txtControls.classList.remove("hidden");
@@ -1000,7 +896,7 @@
     }
 
     function startDraw(e) {
-      if (annotTool === 'pan') {
+      if (annotTool === 'pan' || annotMode === 'view') {
          isPanning = true;
          lastPanX = e.clientX; lastPanY = e.clientY;
          annotCanvas.style.cursor = 'grabbing';
@@ -1036,8 +932,7 @@
          const dy = e.clientY - lastPanY;
          annotPanOffsetX += dx;
          annotPanOffsetY += dy;
-         lastPanX = e.clientX;
-         lastPanY = e.clientY;
+         lastPanX = e.clientX; lastPanY = e.clientY;
          updateCanvasTransform();
          return;
       }
@@ -1065,7 +960,7 @@
     function stopDraw(e) {
       if (isPanning) {
          isPanning = false;
-         annotCanvas.style.cursor = 'grab';
+         annotCanvas.style.cursor = annotMode === 'view' ? 'grab' : (annotTool === 'pan' ? 'grab' : 'crosshair');
          return;
       }
       if (!isDrawing || !showingAnnotated) return;
@@ -1120,8 +1015,8 @@
       document.getElementById("pdfLoadingIndicator").classList.remove("hidden");
 
       annotHistory = []; annotStep = -1;
-      setDrawTool('pan'); 
       showingAnnotated = true; toggleAnnotView('annot', true); 
+      setAnnotMode('view'); // defaults to view
       
       annotScale = 1; annotPanOffsetX = 0; annotPanOffsetY = 0; updateCanvasTransform();
 
@@ -1132,7 +1027,6 @@
       }
 
       let sourceData = att.data;
-      
       if (att.mime && att.mime.includes("pdf")) {
         try {
           const pdfjsLib = window['pdfjs-dist/build/pdf'];
@@ -1174,6 +1068,9 @@
           annotCtx.drawImage(annotOrigImg, 0, 0);
           saveAnnotState(); 
         }
+        
+        // Auto fit
+        annotFitToScreen();
       };
       annotOrigImg.src = sourceData;
     }
@@ -1182,13 +1079,13 @@
       const btnOrig = document.getElementById("btnViewOrig"); const btnAnnot = document.getElementById("btnViewAnnot");
       if (view === 'orig') {
         showingAnnotated = false;
-        btnOrig.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-[#A6192E] text-white shadow transition";
-        btnAnnot.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition";
+        btnOrig.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition";
+        btnAnnot.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition";
         if (!forceUiOnly) { annotCtx.clearRect(0, 0, annotCanvas.width, annotCanvas.height); annotCtx.drawImage(annotOrigImg, 0, 0); }
       } else {
         showingAnnotated = true;
-        btnAnnot.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-[#A6192E] text-white shadow transition";
-        btnOrig.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition";
+        btnAnnot.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white shadow transition";
+        btnOrig.className = "px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white transition";
         if (!forceUiOnly && annotHistory[annotStep]) restoreAnnotState(annotHistory[annotStep]);
       }
     }
@@ -1224,7 +1121,7 @@
     // --- RENDER LOGIC ---
     function renderAll() {
       renderAssigneesSidebar(); renderTagsSidebar(); renderSectionsSidebar(); renderNoteFoldersSidebar();
-      renderTasksBoard(); renderCompletedTasks(); renderNotesGrid(); renderOrders();
+      renderTasksBoard(); renderCompletedTasks(); renderNotesView(); renderOrders();
 
       const activeList = tasks.filter(t => !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
       document.getElementById("allTasksCountBadge").innerText = activeList.length;
@@ -1275,11 +1172,13 @@
     function renderNoteFoldersSidebar() {
       const container = document.getElementById("noteFoldersSidebar");
       if (!container) return;
-      container.innerHTML = noteFolders.map(f => {
+      // Only show root folders in sidebar
+      const roots = noteFolders.filter(f => !f.parentId);
+      container.innerHTML = roots.map(f => {
         const count = notes.filter(n => n.folderId === f.id && (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser)).length;
         return `
           <div class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all">
-            <div class="flex items-center space-x-2 truncate flex-1" onclick="filterByFolder('${f.id}'); toggleMobileSidebar(false);"><i data-lucide="folder" class="w-3.5 h-3.5 text-gray-400"></i><span class="truncate font-medium">${f.title}</span></div>
+            <div class="flex items-center space-x-2 truncate flex-1" onclick="enterNoteFolder('${f.id}'); toggleMobileSidebar(false);"><i data-lucide="folder" class="w-3.5 h-3.5 text-gray-400"></i><span class="truncate font-medium">${f.title}</span></div>
             <div class="flex items-center space-x-2">
               <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
               <button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
@@ -1290,15 +1189,27 @@
     }
 
     function filterBySection(id) { activeFilterType = "section"; activeFilterId = id; switchMainTab('tasks'); }
-    function filterByFolder(id) { activeFilterType = "folder"; activeFilterId = id; switchMainTab('notes'); }
     function filterByAssignee(id) { activeFilterType = "assignee"; activeFilterId = id; renderAll(); }
     function filterByTag(id) { activeFilterType = "tag"; activeFilterId = id; renderAll(); }
     function filterByStarred() { activeFilterType = "starred"; activeFilterId = "starred"; renderAll(); }
     function clearActiveFilter() { activeFilterType = null; activeFilterId = null; renderAll(); }
 
     function openNewSectionModal() { const title = prompt("Section Title:"); if (title) { sharedSections.push({ id: "s_" + Date.now(), title }); saveData(); } }
-    function openNewNoteFolderModal() { const title = prompt("Note Folder Title:"); if (title) { noteFolders.push({ id: "nf_" + Date.now(), title }); saveData(); } }
-    function deleteNoteFolder(id) { noteFolders = noteFolders.filter(f => f.id !== id); notes.forEach(n => { if(n.folderId === id) n.folderId = ""; }); saveData(); }
+    
+    function openNewNoteFolderModal() { 
+      const title = prompt("New Folder Name:"); 
+      if (title) { 
+        noteFolders.push({ id: "nf_" + Date.now(), title, parentId: currentNoteFolderId || null }); 
+        saveData(`Created note folder: ${title}`); 
+      } 
+    }
+    
+    function deleteNoteFolder(id) { 
+      noteFolders = noteFolders.filter(f => f.id !== id); 
+      notes.forEach(n => { if(n.folderId === id) n.folderId = ""; }); 
+      if(currentNoteFolderId === id) currentNoteFolderId = null;
+      saveData(); 
+    }
 
     function renderTasksBoard() {
       const view = document.getElementById("tasksView");
@@ -1402,6 +1313,7 @@
       }
     }
     function clearAllCompletedTasks() { tasks = tasks.filter(t => !(t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser))); saveData(); }
+    
     function handleQuickTask(e, sectionId) {
       if (e.key === 'Enter' && e.target.value.trim()) {
         const title = e.target.value.trim();
@@ -1421,6 +1333,191 @@
     function deleteTask(id) { tasks = tasks.filter(x => x.id !== id); saveData(); }
     function deleteNote(id) { notes = notes.filter(x => x.id !== id); saveData(); }
     function deleteOrder(id) { orders = orders.filter(x => x.id !== id); saveData(); }
+
+    function getFolderBreadcrumbs(folderId) {
+       let crumbs = [];
+       let curr = noteFolders.find(f => f.id === folderId);
+       while(curr) { crumbs.unshift(curr); curr = noteFolders.find(f => f.id === curr.parentId); }
+       return crumbs;
+    }
+
+    function enterNoteFolder(id) {
+       currentNoteFolderId = id;
+       switchMainTab('notes');
+       renderAll();
+    }
+
+    function renderNotesView() {
+      const bContainer = document.getElementById("notesBreadcrumbs");
+      const fGrid = document.getElementById("notesFoldersGrid");
+      const nGrid = document.getElementById("notesGrid");
+      if(!bContainer || !fGrid || !nGrid) return;
+
+      let bHtml = `<button onclick="enterNoteFolder(null)" class="hover:text-white px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg"><i data-lucide="home" class="w-3.5 h-3.5"></i></button>`;
+      if (currentNoteFolderId) {
+         const crumbs = getFolderBreadcrumbs(currentNoteFolderId);
+         crumbs.forEach(c => { bHtml += ` <span class="text-gray-600">/</span> <button onclick="enterNoteFolder('${c.id}')" class="hover:text-white px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg">${c.title}</button>`; });
+      }
+      bContainer.innerHTML = bHtml;
+
+      // Folders
+      let visibleFolders = noteFolders.filter(f => (f.parentId || null) === (currentNoteFolderId || null));
+      if (activeFilterType) visibleFolders = []; // hide folders when searching/filtering
+      
+      fGrid.innerHTML = visibleFolders.map(f => `
+        <div onclick="enterNoteFolder('${f.id}')" class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer shadow-sm hover:border-[#A6192E] transition group">
+          <i data-lucide="folder" class="w-5 h-5 text-[#A6192E]"></i>
+          <span class="font-bold text-xs truncate flex-1">${f.title}</span>
+          <button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        </div>
+      `).join('');
+
+      // Notes
+      let filtered = notes.filter(n => (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser));
+      
+      if (activeFilterType === "folder") filtered = filtered.filter(n => n.folderId === activeFilterId);
+      else if (activeFilterType === "assignee") filtered = filtered.filter(n => n.assignees && n.assignees.includes(activeFilterId));
+      else if (activeFilterType === "tag") filtered = filtered.filter(n => n.tagId === activeFilterId);
+      else if (activeFilterType === "starred") filtered = filtered.filter(n => n.starred);
+      else filtered = filtered.filter(n => (n.folderId || null) === (currentNoteFolderId || null)); // Apply folder view
+
+      nGrid.innerHTML = filtered.map(n => {
+        const folder = noteFolders.find(f => f.id === n.folderId);
+        const tag = sharedTags.find(x => x.id === n.tagId);
+        const canEdit = canModifyItem(n);
+
+        return `
+        <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative group transition hover:border-gray-400 dark:hover:border-gray-600">
+          <div onclick="openNoteDetailModal('${n.id}')" class="cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-bold text-sm truncate pr-2">${n.title}</h4>
+              <button onclick="event.stopPropagation(); toggleStarNote('${n.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${n.starred ? '⭐' : '☆'}</button>
+            </div>
+            <p class="text-xs text-gray-400 whitespace-pre-wrap line-clamp-3 mb-2">${n.content}</p>
+          </div>
+          
+          ${getAttachmentBadgeHTML('note', n)}
+
+          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-3 mt-auto border-t border-gray-100 dark:border-gray-800">
+             <div class="flex flex-wrap items-center gap-1">
+               ${folder ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold flex items-center"><i data-lucide="folder" class="w-3 h-3 mr-1"></i>${folder.title}</span>` : ''}
+               ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
+             </div>
+             ${canEdit ? `
+               <div class="flex items-center space-x-1">
+                 <button onclick="openEditNoteModal('${n.id}')" class="text-gray-400 hover:text-white p-1"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                 <button onclick="deleteNote('${n.id}')" class="text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+               </div>
+             ` : ''}
+          </div>
+        </div>
+      `}).join('');
+    }
+
+    function getFolderOptionsHtml() {
+       const getPath = (id) => getFolderBreadcrumbs(id).map(c => c.title).join(" / ");
+       let html = `<option value="">Root (No Folder)</option>`;
+       noteFolders.forEach(f => { html += `<option value="${f.id}">${getPath(f.id)}</option>`; });
+       return html;
+    }
+
+    function openNoteModal() {
+      document.getElementById("noteFolderInput").innerHTML = getFolderOptionsHtml();
+      document.getElementById("noteFolderInput").value = currentNoteFolderId || "";
+      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      document.getElementById("noteAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
+      
+      document.getElementById("noteId").value = "";
+      document.getElementById("noteTitleInput").value = "";
+      document.getElementById("noteContentInput").value = "";
+      document.getElementById("noteStarInput").checked = false;
+      document.getElementById("noteModalTitle").innerHTML = `<i data-lucide="sticky-note" class="w-5 h-5 text-[#A6192E]"></i><span>Add Keep Note</span>`;
+      removeUniversalFile('note');
+      document.getElementById("noteModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function openEditNoteModal(id) {
+      const n = notes.find(x => x.id === id);
+      if (!n) return;
+      document.getElementById("noteFolderInput").innerHTML = getFolderOptionsHtml();
+      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      document.getElementById("noteAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(n.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
+      
+      document.getElementById("noteId").value = n.id;
+      document.getElementById("noteTitleInput").value = n.title;
+      document.getElementById("noteContentInput").value = n.content;
+      document.getElementById("noteFolderInput").value = n.folderId || "";
+      document.getElementById("noteTagInput").value = n.tagId || "";
+      document.getElementById("noteStarInput").checked = !!n.starred;
+
+      if (n.attachment) {
+         tempFileState.note = n.attachment;
+         document.getElementById("noteFileNameLabel").innerText = n.attachment.name;
+         document.getElementById("noteFilePreviewContainer").classList.remove("hidden");
+      } else { removeUniversalFile('note'); }
+
+      document.getElementById("noteModalTitle").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Keep Note</span>`;
+      document.getElementById("noteModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function closeNoteModal() { document.getElementById("noteModal").classList.add("hidden"); removeUniversalFile('note'); }
+
+    function saveNote(e) {
+      e.preventDefault();
+      const id = document.getElementById("noteId").value;
+      const title = document.getElementById("noteTitleInput").value.trim();
+      const content = document.getElementById("noteContentInput").value.trim();
+      const folderId = document.getElementById("noteFolderInput").value;
+      const tagId = document.getElementById("noteTagInput").value;
+      const starred = document.getElementById("noteStarInput").checked;
+      const assignees = Array.from(document.querySelectorAll("#noteAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
+      const attachment = tempFileState.note;
+
+      if (id) {
+        const n = notes.find(x => x.id === id);
+        if (n) { 
+          n.title = title; n.content = content; n.folderId = folderId; n.tagId = tagId; n.starred = starred; n.assignees = assignees; n.attachment = attachment;
+          if (!Array.isArray(n.history)) n.history = [];
+          n.history.unshift({ action: `Edited note`, user: activeUser || "User", date: new Date().toLocaleString() });
+          saveData(`Edited note: ${title}`);
+        }
+      } else {
+        notes.push({ 
+          id: "nt_" + Date.now(), title, content, folderId, tagId, starred, assignees, attachment, 
+          owner: activeUser, workspace: currentWorkspace,
+          history: [{ action: "Created note", user: activeUser || "User", date: new Date().toLocaleString() }]
+        });
+        saveData(`Added note: ${title}`);
+      }
+      closeNoteModal();
+    }
+
+    function openNoteDetailModal(id) {
+      const n = notes.find(x => x.id === id);
+      if (!n) return;
+      document.getElementById("noteDetailTitle").innerText = n.title;
+      document.getElementById("noteDetailContent").innerText = n.content || "No content.";
+      
+      const f = noteFolders.find(x => x.id === n.folderId);
+      document.getElementById("noteDetailFolder").innerText = f ? f.title : "No Folder";
+      document.getElementById("noteDetailAssignees").innerText = (n.assignees && n.assignees.length) ? n.assignees.join(', ') : "Anyone";
+      document.getElementById("noteDetailOwner").innerText = n.owner || "System";
+
+      const attC = document.getElementById("noteDetailAttachmentContainer");
+      if (n.attachment) { attC.innerHTML = getAttachmentBadgeHTML('note', n); attC.classList.remove("hidden"); } 
+      else { attC.classList.add("hidden"); }
+
+      const log = document.getElementById("noteDetailHistoryLog");
+      if (Array.isArray(n.history) && n.history.length > 0) {
+        log.innerHTML = n.history.map(h => `<div class="border-b border-gray-200 dark:border-gray-800/80 pb-1 mt-1.5 last:border-none"><span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span><div class="text-[10px] text-gray-400">${h.date} by <span class="font-semibold text-emerald-400">${h.user}</span></div></div>`).join('');
+      } else { log.innerHTML = `<div class="text-gray-500 italic text-[10px]">No edit history recorded.</div>`; }
+
+      document.getElementById("noteDetailEditBtn").onclick = () => { closeNoteDetailModal(); openEditNoteModal(id); };
+      document.getElementById("noteDetailModal").classList.remove("hidden");
+    }
+    function closeNoteDetailModal() { document.getElementById("noteDetailModal").classList.add("hidden"); }
 
     function openNewTaskModal() {
       document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
@@ -1516,148 +1613,6 @@
       document.getElementById("detailEditBtn").onclick = () => { closeTaskDetailModal(); openEditTaskModal(id); };
       document.getElementById("taskDetailModal").classList.remove("hidden");
     }
-
-    function renderNotesGrid() {
-      const grid = document.getElementById("notesGrid");
-      if (!grid) return;
-      let filtered = notes.filter(n => (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser));
-      
-      if (activeFilterType === "folder") filtered = filtered.filter(n => n.folderId === activeFilterId);
-      else if (activeFilterType === "assignee") filtered = filtered.filter(n => n.assignees && n.assignees.includes(activeFilterId));
-      else if (activeFilterType === "tag") filtered = filtered.filter(n => n.tagId === activeFilterId);
-      else if (activeFilterType === "starred") filtered = filtered.filter(n => n.starred);
-
-      grid.innerHTML = filtered.map(n => {
-        const folder = noteFolders.find(f => f.id === n.folderId);
-        const tag = sharedTags.find(x => x.id === n.tagId);
-        const canEdit = canModifyItem(n);
-
-        return `
-        <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative group transition hover:border-gray-400 dark:hover:border-gray-600">
-          <div onclick="openNoteDetailModal('${n.id}')" class="cursor-pointer">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="font-bold text-sm truncate pr-2">${n.title}</h4>
-              <button onclick="event.stopPropagation(); toggleStarNote('${n.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${n.starred ? '⭐' : '☆'}</button>
-            </div>
-            <p class="text-xs text-gray-400 whitespace-pre-wrap line-clamp-3 mb-2">${n.content}</p>
-          </div>
-          
-          ${getAttachmentBadgeHTML('note', n)}
-
-          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-3 mt-auto border-t border-gray-100 dark:border-gray-800">
-             <div class="flex flex-wrap items-center gap-1">
-               ${folder ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold flex items-center"><i data-lucide="folder" class="w-3 h-3 mr-1"></i>${folder.title}</span>` : ''}
-               ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
-             </div>
-             ${canEdit ? `
-               <div class="flex items-center space-x-1">
-                 <button onclick="openEditNoteModal('${n.id}')" class="text-gray-400 hover:text-white p-1"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                 <button onclick="deleteNote('${n.id}')" class="text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-               </div>
-             ` : ''}
-          </div>
-        </div>
-      `}).join('');
-    }
-
-    function toggleStarNote(id) { const n = notes.find(x => x.id === id); if (n) { n.starred = !n.starred; saveData(); } }
-
-    function openNoteModal() {
-      document.getElementById("noteFolderInput").innerHTML = `<option value="">No Folder</option>` + noteFolders.map(f => `<option value="${f.id}">${f.title}</option>`).join('');
-      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-      document.getElementById("noteAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
-      
-      document.getElementById("noteId").value = "";
-      document.getElementById("noteTitleInput").value = "";
-      document.getElementById("noteContentInput").value = "";
-      document.getElementById("noteStarInput").checked = false;
-      document.getElementById("noteModalTitle").innerHTML = `<i data-lucide="sticky-note" class="w-5 h-5 text-[#A6192E]"></i><span>Add Keep Note</span>`;
-      removeUniversalFile('note');
-      document.getElementById("noteModal").classList.remove("hidden");
-      lucide.createIcons();
-    }
-
-    function openEditNoteModal(id) {
-      const n = notes.find(x => x.id === id);
-      if (!n) return;
-      document.getElementById("noteFolderInput").innerHTML = `<option value="">No Folder</option>` + noteFolders.map(f => `<option value="${f.id}">${f.title}</option>`).join('');
-      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-      document.getElementById("noteAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(n.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
-      
-      document.getElementById("noteId").value = n.id;
-      document.getElementById("noteTitleInput").value = n.title;
-      document.getElementById("noteContentInput").value = n.content;
-      document.getElementById("noteFolderInput").value = n.folderId || "";
-      document.getElementById("noteTagInput").value = n.tagId || "";
-      document.getElementById("noteStarInput").checked = !!n.starred;
-
-      if (n.attachment) {
-         tempFileState.note = n.attachment;
-         document.getElementById("noteFileNameLabel").innerText = n.attachment.name;
-         document.getElementById("noteFilePreviewContainer").classList.remove("hidden");
-      } else { removeUniversalFile('note'); }
-
-      document.getElementById("noteModalTitle").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Keep Note</span>`;
-      document.getElementById("noteModal").classList.remove("hidden");
-      lucide.createIcons();
-    }
-
-    function closeNoteModal() { document.getElementById("noteModal").classList.add("hidden"); removeUniversalFile('note'); }
-
-    function saveNote(e) {
-      e.preventDefault();
-      const id = document.getElementById("noteId").value;
-      const title = document.getElementById("noteTitleInput").value.trim();
-      const content = document.getElementById("noteContentInput").value.trim();
-      const folderId = document.getElementById("noteFolderInput").value;
-      const tagId = document.getElementById("noteTagInput").value;
-      const starred = document.getElementById("noteStarInput").checked;
-      const assignees = Array.from(document.querySelectorAll("#noteAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value);
-      const attachment = tempFileState.note;
-
-      if (id) {
-        const n = notes.find(x => x.id === id);
-        if (n) { 
-          n.title = title; n.content = content; n.folderId = folderId; n.tagId = tagId; n.starred = starred; n.assignees = assignees; n.attachment = attachment;
-          if (!Array.isArray(n.history)) n.history = [];
-          n.history.unshift({ action: `Edited note`, user: activeUser || "User", date: new Date().toLocaleString() });
-          saveData(`Edited note: ${title}`);
-        }
-      } else {
-        notes.push({ 
-          id: "nt_" + Date.now(), title, content, folderId, tagId, starred, assignees, attachment, 
-          owner: activeUser, workspace: currentWorkspace,
-          history: [{ action: "Created note", user: activeUser || "User", date: new Date().toLocaleString() }]
-        });
-        saveData(`Added note: ${title}`);
-      }
-      closeNoteModal();
-    }
-
-    function openNoteDetailModal(id) {
-      const n = notes.find(x => x.id === id);
-      if (!n) return;
-      document.getElementById("noteDetailTitle").innerText = n.title;
-      document.getElementById("noteDetailContent").innerText = n.content || "No content.";
-      
-      const f = noteFolders.find(x => x.id === n.folderId);
-      document.getElementById("noteDetailFolder").innerText = f ? f.title : "No Folder";
-      document.getElementById("noteDetailAssignees").innerText = (n.assignees && n.assignees.length) ? n.assignees.join(', ') : "Anyone";
-      document.getElementById("noteDetailOwner").innerText = n.owner || "System";
-
-      const attC = document.getElementById("noteDetailAttachmentContainer");
-      if (n.attachment) { attC.innerHTML = getAttachmentBadgeHTML('note', n); attC.classList.remove("hidden"); } 
-      else { attC.classList.add("hidden"); }
-
-      const log = document.getElementById("noteDetailHistoryLog");
-      if (Array.isArray(n.history) && n.history.length > 0) {
-        log.innerHTML = n.history.map(h => `<div class="border-b border-gray-200 dark:border-gray-800/80 pb-1 mt-1.5 last:border-none"><span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span><div class="text-[10px] text-gray-400">${h.date} by <span class="font-semibold text-emerald-400">${h.user}</span></div></div>`).join('');
-      } else { log.innerHTML = `<div class="text-gray-500 italic text-[10px]">No edit history recorded.</div>`; }
-
-      document.getElementById("noteDetailEditBtn").onclick = () => { closeNoteDetailModal(); openEditNoteModal(id); };
-      document.getElementById("noteDetailModal").classList.remove("hidden");
-    }
-    function closeNoteDetailModal() { document.getElementById("noteDetailModal").classList.add("hidden"); }
 
     function formatItemDescription(rawText) {
       const trimmed = rawText.trim();
@@ -1904,35 +1859,6 @@
         saveData(`Updated items on PO# ${ord.poNumber}`);
       }
     }
-
-    function switchMainTab(tab) {
-      currentMainTab = tab;
-      document.getElementById("tasksWrapper").classList.toggle("hidden", tab !== 'tasks');
-      document.getElementById("notesView").classList.toggle("hidden", tab !== 'notes');
-      document.getElementById("ordersView").classList.toggle("hidden", tab !== 'orders');
-      
-      document.getElementById("taskSectionsSidebarBlock").classList.toggle("hidden", tab !== 'tasks');
-      document.getElementById("noteFoldersSidebarBlock").classList.toggle("hidden", tab !== 'notes');
-
-      const dActive = "nav-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#A6192E] text-white shadow flex items-center space-x-2 transition-all";
-      const dInactive = "nav-btn px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-white flex items-center space-x-2 transition-all";
-      const btnT = document.getElementById("tabTasksDesktop"); const btnN = document.getElementById("tabNotesDesktop"); const btnO = document.getElementById("tabOrdersDesktop");
-      if(btnT) btnT.className = tab === 'tasks' ? dActive : dInactive;
-      if(btnN) btnN.className = tab === 'notes' ? dActive : dInactive;
-      if(btnO) btnO.className = tab === 'orders' ? dActive : dInactive;
-
-      const mActive = "nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-[#A6192E]";
-      const mInactive = "nav-btn-mobile flex flex-col items-center justify-center flex-1 py-1 text-gray-400";
-      const mbT = document.getElementById("mobileNavTasks"); const mbN = document.getElementById("mobileNavNotes"); const mbO = document.getElementById("mobileNavOrders");
-      if(mbT) mbT.className = tab === 'tasks' ? mActive : mInactive;
-      if(mbN) mbN.className = tab === 'notes' ? mActive : mInactive;
-      if(mbO) mbO.className = tab === 'orders' ? mActive : mInactive;
-      renderAll();
-    }
-
-    function toggleDarkMode() { document.documentElement.classList.toggle("dark"); }
-    function openSettingsModal() { document.getElementById("settingsModal").classList.remove("hidden"); updatePushUI(); }
-    function closeSettingsModal() { document.getElementById("settingsModal").classList.add("hidden"); }
   </script>
 </body>
 </html>
