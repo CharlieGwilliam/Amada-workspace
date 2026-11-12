@@ -275,6 +275,8 @@
         <div class="flex items-center justify-between mb-2"><h4 class="text-xs font-bold text-gray-400 uppercase flex items-center space-x-1.5"><i data-lucide="bell" class="w-4 h-4 text-[#A6192E]"></i><span>Notification Centre</span></h4><span id="pushStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400">OFF</span></div>
         <p class="text-[11px] text-gray-500 mb-3">Push notifications disabled by default.</p>
         <button id="enablePushBtn" onclick="requestNotificationPermission()" class="w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Enable Device Notifications</button>
+        <button id="testPushBtn" onclick="sendTestPush()" class="w-full py-2 px-3 rounded-xl bg-emerald-700/80 text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Send Test Notification</button>
+        <p id="pushDiagnosticText" class="text-[10px] text-gray-500 mb-2">Push status will appear here.</p>
         <div id="notificationPreferencesList" class="space-y-3 border-t border-gray-200 dark:border-gray-800 pt-3">
           <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">New Task Assignments</span></div><input type="checkbox" id="prefNotifyAssigned" onchange="saveNotificationPref('notifyAssigned', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
           <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Task Completions</span></div><input type="checkbox" id="prefNotifyCompleted" onchange="saveNotificationPref('notifyCompleted', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
@@ -352,28 +354,115 @@
     const ONESIGNAL_APP_ID = "40ee1473-8e3b-4e29-b08e-e424b0e35e39";
     const AMADA_API_BASE = "https://amada-sync-api.gwilliamcharlie.workers.dev";
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) { if (ONESIGNAL_APP_ID && !ONESIGNAL_APP_ID.includes("PASTE_")) { await OneSignal.init({ appId: ONESIGNAL_APP_ID, notifyButton: { enable: false } }); updatePushUI(); } });
-    
-    function getNotificationPrefs(username) { return loadLocal(`amada_notify_${username}`, { enabled: false, notifyAssigned: false, notifyCompleted: false, notifyOrders: false, notifyNotes: false }); }
-    function saveNotificationPref(key, value) { if (!activeUser) return; const prefs = getNotificationPrefs(activeUser); prefs[key] = value; localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs)); }
-    
-    async function requestNotificationPermission() {
-      if (typeof window.Notification !== 'undefined') {
-        try { const permission = await window.Notification.requestPermission();
-          if (permission === 'granted') {
-            if (window.OneSignalDeferred) OneSignalDeferred.push(function(OneSignal) { OneSignal.User.PushSubscription.optIn(); });
-            const prefs = getNotificationPrefs(activeUser); prefs.enabled = true; prefs.notifyAssigned = true; prefs.notifyCompleted = true; prefs.notifyOrders = true; prefs.notifyNotes = true;
-            localStorage.setItem(`amada_notify_${activeUser}`, JSON.stringify(prefs)); updatePushUI();
-          } else { alert("Notifications denied. Check iOS Settings > Safari (or Amada App) and allow Notifications."); }
-        } catch (e) { alert("Could not request permissions. Make sure your iPhone is updated to iOS 16.4+."); }
-      } else { alert("Web Push is not supported here. Make sure you added this to your Home Screen on iOS 16.4+."); }
+    let oneSignalClient = null;
+    let oneSignalInitError = "";
+
+    function defaultNotificationPrefs() { return { enabled: false, notifyAssigned: false, notifyCompleted: false, notifyOrders: false, notifyNotes: false }; }
+    function getNotificationPrefs(username) { return { ...defaultNotificationPrefs(), ...(loadLocal(`amada_notify_${username}`, defaultNotificationPrefs()) || {}) }; }
+
+    async function saveNotificationPreferencesToCloud(prefs = getNotificationPrefs(activeUser)) {
+      if (!activeUser || !cloudToken) return false;
+      try {
+        const response = await fetch(`${AMADA_API_BASE}/api/notification-preferences`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cloudToken}` },
+          body: JSON.stringify({ preferences: prefs })
+        });
+        if (!response.ok) throw new Error(`Preference sync failed (${response.status})`);
+        return true;
+      } catch (error) {
+        console.warn("Notification preferences could not be synced:", error);
+        return false;
+      }
     }
-    
+
+    async function syncNotificationPreferencesWithCloud() {
+      if (!activeUser || !cloudToken) return;
+      try {
+        const response = await fetch(`${AMADA_API_BASE}/api/notification-preferences`, {
+          headers: { "Authorization": `Bearer ${cloudToken}` }, cache: "no-store"
+        });
+        if (!response.ok) throw new Error(`Preference read failed (${response.status})`);
+        const data = await response.json();
+        const localPrefs = getNotificationPrefs(activeUser);
+        if (data.preferences && typeof data.preferences === "object") {
+          const merged = { ...defaultNotificationPrefs(), ...data.preferences };
+          safeStorageSet(`amada_notify_${activeUser}`, JSON.stringify(merged));
+        } else if (localPrefs.enabled || localPrefs.notifyAssigned || localPrefs.notifyCompleted || localPrefs.notifyOrders || localPrefs.notifyNotes) {
+          await saveNotificationPreferencesToCloud(localPrefs);
+        }
+        updatePushUI();
+      } catch (error) { console.warn("Could not synchronise notification preferences:", error); }
+    }
+
+    function saveNotificationPref(key, value) {
+      if (!activeUser) return;
+      const prefs = getNotificationPrefs(activeUser);
+      prefs[key] = !!value;
+      safeStorageSet(`amada_notify_${activeUser}`, JSON.stringify(prefs));
+      saveNotificationPreferencesToCloud(prefs);
+    }
+
+    async function requestNotificationPermission() {
+      if (!activeUser) { alert("Please sign in before enabling notifications."); return; }
+      if (!oneSignalClient) {
+        alert(oneSignalInitError ? `OneSignal could not initialise: ${oneSignalInitError}` : "Notification service is still loading. Refresh the app and try again.");
+        return;
+      }
+      try {
+        // Call optIn directly from this button tap; OneSignal handles the browser/device permission prompt.
+        const optInResult = oneSignalClient.User.PushSubscription.optIn();
+        await optInResult;
+        const subscribed = oneSignalClient.User.PushSubscription.optedIn === true;
+        if (!subscribed) throw new Error("The device has not subscribed to push notifications. Check your browser or phone notification settings.");
+        const prefs = getNotificationPrefs(activeUser);
+        prefs.enabled = true; prefs.notifyAssigned = true; prefs.notifyCompleted = true; prefs.notifyOrders = true; prefs.notifyNotes = true;
+        safeStorageSet(`amada_notify_${activeUser}`, JSON.stringify(prefs));
+        await saveNotificationPreferencesToCloud(prefs);
+        updatePushUI();
+        alert("This device is subscribed to Amada Workspace notifications.");
+      } catch (error) {
+        console.error("OneSignal opt-in failed:", error);
+        alert(`Could not enable notifications: ${error.message || error}`);
+        updatePushUI();
+      }
+    }
+
     function updatePushUI() {
-      if (!activeUser) return; const prefs = getNotificationPrefs(activeUser); const badge = document.getElementById("pushStatusBadge"); const btn = document.getElementById("enablePushBtn");
+      if (!activeUser) return;
+      const prefs = getNotificationPrefs(activeUser);
+      const subscribed = !!(oneSignalClient && oneSignalClient.User && oneSignalClient.User.PushSubscription && oneSignalClient.User.PushSubscription.optedIn === true);
+      const badge = document.getElementById("pushStatusBadge");
+      const btn = document.getElementById("enablePushBtn");
+      const testBtn = document.getElementById("testPushBtn");
+      const diagnostic = document.getElementById("pushDiagnosticText");
       ['prefNotifyAssigned', 'prefNotifyCompleted', 'prefNotifyOrders', 'prefNotifyNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = !!prefs[id.replace('prefN', 'n')]; });
-      if (prefs.enabled) { if (badge) { badge.innerText = "ACTIVE"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400"; } if (btn) { btn.innerText = "Push Notifications Active"; btn.disabled = true; btn.className = "w-full py-2 px-3 rounded-xl bg-gray-700 text-gray-400 text-xs font-bold cursor-default mb-3"; } } 
-      else { if (badge) { badge.innerText = "OFF"; badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400"; } if (btn) { btn.innerText = "Enable Device Push Notifications"; btn.disabled = false; btn.className = "w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3"; } }
+      if (badge) {
+        badge.innerText = subscribed && prefs.enabled ? "SUBSCRIBED" : (prefs.enabled ? "CHECK DEVICE" : "OFF");
+        badge.className = subscribed && prefs.enabled
+          ? "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400"
+          : "text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-400";
+      }
+      if (btn) {
+        btn.innerText = subscribed ? "Notifications Enabled on This Device" : "Enable Device Notifications";
+        btn.disabled = false;
+        btn.className = "w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3";
+      }
+      if (testBtn) testBtn.disabled = !(subscribed && prefs.enabled);
+      if (diagnostic) diagnostic.innerText = subscribed ? "This browser/device is subscribed to OneSignal." : (oneSignalClient ? "This device is not yet subscribed to OneSignal." : (oneSignalInitError || "Connecting to notification service…"));
+    }
+
+    async function sendTestPush() {
+      if (!activeUser || !cloudToken) { alert("Please sign in first."); return; }
+      try {
+        const response = await fetch(`${AMADA_API_BASE}/api/notifications/test`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${cloudToken}` }
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || `Test notification failed (${response.status})`);
+        alert("OneSignal accepted the test notification. Check your phone in a moment.");
+      } catch (error) { alert(error.message || "Could not send test notification."); }
     }
     
     function triggerLocalNotification(title, message) {
@@ -415,6 +504,28 @@
     let activeMobileSectionId = "";
     let sortableInstances = [], appBooted = false, canvasEventsReady = false, remoteSyncTimer = null;
 
+    // Initialise OneSignal after the local session variables exist. Link the subscription to the signed-in Amada user.
+    OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        const pushBasePath = new URL(".", window.location.href).pathname;
+        const pushWorkerPath = `${pushBasePath.replace(/^\/+/, "")}OneSignalSDKWorker.js`;
+        await OneSignal.init({
+          appId: ONESIGNAL_APP_ID,
+          serviceWorkerPath: pushWorkerPath,
+          serviceWorkerParam: { scope: pushBasePath },
+          notifyButton: { enable: false },
+          autoResubscribe: true
+        });
+        oneSignalClient = OneSignal;
+        if (activeUser) await OneSignal.login(activeUser);
+        updatePushUI();
+      } catch (error) {
+        oneSignalInitError = error && error.message ? error.message : String(error);
+        console.warn("OneSignal initialisation failed:", error);
+        updatePushUI();
+      }
+    });
+
     function canModifyItem(item) { if (item.owner === activeUser) return true; if (item.restricted) return false; const u = users.find(x => x.name === activeUser); return u && (u.role === "admin" || u.role === "master_admin"); }
     function getPersonalOrderedSections() {
       if (!activeUser) return sharedSections; const savedOrder = loadLocal(`amada_order_${activeUser}`, []); if (!Array.isArray(savedOrder) || savedOrder.length === 0) return sharedSections;
@@ -448,6 +559,7 @@
       // Load public profile names first. Private workspace data is fetched only after login.
       loadProfilesFromCloud().catch(error => console.warn('Could not load cloud profiles:', error));
       if (activeUser && cloudToken) {
+        syncNotificationPreferencesWithCloud().catch(error => console.warn('Initial notification preference sync failed:', error));
         fetchFromRemoteBin().catch(error => console.warn('Initial Cloudflare sync failed:', error));
       }
       // A longer interval reduces free-tier usage while keeping the shared board current.
@@ -595,8 +707,9 @@
         safeStorageSet("amada_active_user", activeUser); safeStorageSet("amada_cloud_token", cloudToken);
         passwordInput.value = "";
         document.getElementById("authOverlay").classList.add("hidden");
-        try { if (window.OneSignalDeferred) OneSignalDeferred.push(function(OneSignal) { OneSignal.login(activeUser); }); } catch(err){}
+        try { if (oneSignalClient) await oneSignalClient.login(activeUser); else if (window.OneSignalDeferred) OneSignalDeferred.push(function(OneSignal) { OneSignal.login(activeUser); }); } catch(err) { console.warn("Could not link OneSignal user:", err); }
         switchWorkspace('shared'); checkAuth();
+        await syncNotificationPreferencesWithCloud();
         const loaded = await fetchFromRemoteBin();
         if (!loaded) { updateSyncUI("error"); }
       } catch (error) {
