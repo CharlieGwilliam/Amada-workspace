@@ -13,7 +13,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script src="https://bernardo-castilho.github.io/DragDropTouch/DragDropTouch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" defer></script>
 
   <script>
     tailwind.config = {
@@ -35,6 +35,13 @@
     #annotationCanvas { transform-origin: 0 0; will-change: transform; }
     .tool-active { background-color: #A6192E; color: white; border-color: #A6192E; }
     .drag-over { border: 2px dashed #A6192E !important; background-color: rgba(166,25,46,0.08) !important; }
+    .drag-handle { touch-action: none; user-select: none; -webkit-user-select: none; }
+    .sortable-ghost { opacity: .28 !important; border: 1px dashed #A6192E !important; }
+    .sortable-chosen { box-shadow: 0 12px 32px rgba(0,0,0,.28); }
+    .sortable-drag { opacity: .96 !important; transform: rotate(1deg); }
+    .task-card, .note-card { cursor: pointer; }
+    .task-list { min-height: 54px; }
+    .note-folder-dropzone { min-height: 66px; }
   </style>
 </head>
 <body class="h-full flex flex-col bg-white text-gray-900 dark:bg-[#121212] dark:text-gray-100 transition-colors duration-200 overflow-hidden select-none">
@@ -273,15 +280,37 @@
 
   <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="noteModalTitle" class="text-base font-bold">Edit Note</h3><button type="button" onclick="closeNoteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveNote(event)" class="space-y-3"><input type="hidden" id="noteId"><input type="text" id="noteTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="noteFolderInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="noteTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select></div><textarea id="noteContentInput" rows="4" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'note')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="noteFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'note')" class="hidden"><div onclick="document.getElementById('noteFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="noteFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="noteFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('note')" class="text-red-400">Remove</button></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl text-xs"></div></div><div class="flex items-center space-x-2 pt-1"><input type="checkbox" id="noteStarInput" class="w-4 h-4"><label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label></div><div class="flex justify-end space-x-2 pt-2 border-t border-gray-800"><button type="button" onclick="closeNoteModal()" class="px-4 py-2 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
-  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK</span><span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800"></span><span id="detailStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded hidden"></span></div><h3 id="detailTitle" class="text-lg font-bold mb-2 break-words"></h3><div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="detailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border-gray-800"><div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Task</button></div></div></div>
+  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK</span><span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800"></span><span id="detailStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded hidden"></span></div><h3 id="detailTitle" class="text-lg font-bold mb-2 break-words"></h3><div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="detailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border-gray-800"><div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div><span class="font-bold text-gray-400">Due date:</span> <div id="detailDueDate" class="text-gray-800 dark:text-gray-200 font-semibold truncate">No Date</div></div><div><span class="font-bold text-gray-400">Owner:</span> <div id="detailOwner" class="text-gray-800 dark:text-gray-200 font-semibold truncate">System</div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Task</button></div></div></div>
 
-  <div id="noteDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeNoteDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">NOTE</span><span id="noteDetailFolder" class="text-[10px] font-bold text-gray-400"></span></div><h3 id="noteDetailTitle" class="text-lg font-bold mb-2"></h3><div id="noteDetailContent" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="noteDetailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl"><div class="col-span-2"><span class="font-bold text-gray-400">Assignees:</span> <div id="noteDetailAssignees" class="text-gray-200 font-semibold truncate"></div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="noteDetailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="noteDetailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Note</button></div></div></div>
+  <div id="noteDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeNoteDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">NOTE</span><span id="noteDetailFolder" class="text-[10px] font-bold text-gray-400"></span></div><h3 id="noteDetailTitle" class="text-lg font-bold mb-2"></h3><div id="noteDetailContent" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="noteDetailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl"><div class="col-span-2"><span class="font-bold text-gray-400">Assignees:</span> <div id="noteDetailAssignees" class="text-gray-200 font-semibold truncate"></div></div><div class="col-span-2"><span class="font-bold text-gray-400">Owner:</span> <div id="noteDetailOwner" class="text-gray-200 font-semibold truncate">System</div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="noteDetailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="noteDetailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Note</button></div></div></div>
 
   <div id="annotationModal" class="hidden fixed inset-0 bg-black/95 z-[60] flex flex-col w-full h-full overflow-hidden">
     <div class="h-16 bg-[#181818] border-b border-gray-800 flex items-center justify-between px-2 sm:px-4 shrink-0 shadow-lg overflow-x-auto"><div class="flex items-center space-x-2 shrink-0"><button onclick="closeAnnotationModal()" class="text-gray-400 hover:text-white p-2"><i data-lucide="arrow-left" class="w-5 h-5"></i></button><button onclick="annotFitToScreen()" class="p-2 text-gray-400 hover:text-white"><i data-lucide="maximize" class="w-5 h-5"></i></button><div class="flex items-center space-x-1 bg-[#252525] p-1 rounded-xl"><button id="btnModeView" onclick="setAnnotMode('view')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#A6192E] text-white">View</button><button id="btnModeAnnotate" onclick="setAnnotMode('annotate')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400">Annotate</button></div></div><div id="annotationTools" class="hidden items-center space-x-1 sm:space-x-2 shrink-0 mx-2"><button id="toolPan" onclick="setDrawTool('pan')" class="tool-btn p-2 rounded-lg text-gray-300 hidden"><i data-lucide="hand" class="w-5 h-5"></i></button><button id="toolPen" onclick="setDrawTool('pen')" class="tool-btn tool-active p-2 rounded-lg text-gray-300"><i data-lucide="pen-tool" class="w-5 h-5"></i></button><button id="toolArrow" onclick="setDrawTool('arrow')" class="tool-btn p-2 rounded-lg text-gray-300"><i data-lucide="arrow-up-right" class="w-5 h-5"></i></button><button id="toolText" onclick="setDrawTool('text')" class="tool-btn p-2 rounded-lg text-gray-300"><i data-lucide="type" class="w-5 h-5"></i></button><input type="color" id="annotColor" value="#ef4444" class="w-7 h-7 bg-transparent p-0"><input type="range" id="annotSize" min="1" max="20" value="4" class="w-16 accent-[#A6192E]"><div id="textStyleControls" class="hidden items-center space-x-1"><button id="btnTextBold" onclick="toggleTextStyle('bold')" class="p-1.5 rounded text-gray-400 font-bold">B</button><button id="btnTextItalic" onclick="toggleTextStyle('italic')" class="p-1.5 rounded text-gray-400 italic">I</button></div><button onclick="annotUndo()" class="p-2 text-gray-400"><i data-lucide="undo" class="w-5 h-5"></i></button><button onclick="annotRedo()" class="p-2 text-gray-400"><i data-lucide="redo" class="w-5 h-5"></i></button></div><div class="flex items-center space-x-1 sm:space-x-2 shrink-0"><div class="flex items-center space-x-1 bg-[#252525] p-1 rounded-xl"><button id="btnViewOrig" onclick="toggleAnnotView('orig')" class="px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400">Orig.</button><button id="btnViewAnnot" onclick="toggleAnnotView('annot')" class="px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-[#A6192E] text-white">Ann.</button></div><button onclick="downloadAnnotatedFile()" class="p-2 text-gray-400 hover:text-emerald-400"><i data-lucide="download" class="w-5 h-5"></i></button><button onclick="saveAnnotationToItem()" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl ml-1">Save</button></div></div><div class="flex-1 overflow-hidden flex items-center justify-center bg-black relative" id="canvasScrollWrapper"><div id="pdfLoadingIndicator" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-10"><div class="w-8 h-8 border-4 border-[#A6192E] border-t-transparent rounded-full animate-spin mb-3"></div><p class="text-white text-xs font-bold">Rendering...</p></div><canvas id="annotationCanvas" class="shadow-2xl bg-white"></canvas><div id="unsupportedPreview" class="hidden text-center"><i data-lucide="file-text" class="w-16 h-16 text-gray-500 mx-auto mb-3"></i><p class="text-white text-sm font-bold mb-1">Preview Not Supported</p><button onclick="downloadOriginalFile()" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-bold rounded-xl">Download File</button></div></div></div>
 
   <script>
-    const loadLocal = (key, fallback) => { try { const v = JSON.parse(localStorage.getItem(key)); return (v !== null) ? v : fallback; } catch(e) { return fallback; } };
+    function loadLocal(key, fallback) {
+      try {
+        const raw = window.localStorage ? window.localStorage.getItem(key) : null;
+        if (raw === null || raw === undefined) return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed === null ? fallback : parsed;
+      } catch (error) {
+        console.warn(`Amada Workspace: could not read saved value for ${key}; using defaults.`, error);
+        return fallback;
+      }
+    }
+    function loadArray(key, fallback = []) {
+      const value = loadLocal(key, fallback);
+      return Array.isArray(value) ? value.filter(item => item && typeof item === 'object' && !Array.isArray(item)) : fallback;
+    }
+    function safeStorageGet(key, fallback = '') {
+      try { return window.localStorage ? (window.localStorage.getItem(key) ?? fallback) : fallback; }
+      catch (error) { console.warn(`Amada Workspace: local storage unavailable for ${key}.`, error); return fallback; }
+    }
+    function safeStorageSet(key, value) {
+      try { if (window.localStorage) window.localStorage.setItem(key, value); return true; }
+      catch (error) { console.warn(`Amada Workspace: could not save ${key}.`, error); return false; }
+    }
 
     const ONESIGNAL_APP_ID = "40ee1473-8e3b-4e29-b08e-e424b0e35e39", JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS", JSONBIN_BIN_ID = "6ae0b445ffd5d160538fff26";
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -317,20 +346,33 @@
 
     const BASELINE_USERS = [{ name: "Charlie", role: "master_admin", password: "AMADA" }, { name: "Jacob", role: "admin", password: "AMADA" }];
     function ensureProfiles(userList) {
-      if (!Array.isArray(userList) || userList.length === 0) return JSON.parse(JSON.stringify(BASELINE_USERS));
-      if (!userList.find(u => u && u.name === "Charlie")) userList.unshift({ name: "Charlie", role: "master_admin", password: "AMADA" });
-      if (!userList.find(u => u && u.name === "Jacob")) userList.push({ name: "Jacob", role: "admin", password: "AMADA" });
-      return userList;
+      const safeUsers = Array.isArray(userList)
+        ? userList.filter(u => u && typeof u === 'object' && typeof u.name === 'string' && u.name.trim())
+            .map(u => ({ ...u, name: u.name.trim(), role: (typeof u.role === 'string' && u.role) ? u.role : 'viewer', password: (typeof u.password === 'string' && u.password) ? u.password : 'AMADA' }))
+        : [];
+      if (!safeUsers.some(u => u.name.toLowerCase() === 'charlie')) safeUsers.unshift({ ...BASELINE_USERS[0] });
+      if (!safeUsers.some(u => u.name.toLowerCase() === 'jacob')) safeUsers.push({ ...BASELINE_USERS[1] });
+      return safeUsers;
     }
 
-    let users = ensureProfiles(loadLocal("amada_users", []));
-    let activeUser = localStorage.getItem("amada_active_user") || "", currentWorkspace = 'shared', currentMainTab = "tasks", currentNoteFolderId = null, activeFilterType = null, activeFilterId = null, selectedUserForAuth = "", presenceMap = {}, isCompletedOpen = false, isCompletedOrdersOpen = false, openAccordionsMap = {};
-    let sharedTags = loadLocal("amada_shared_tags", [{ id: "t_urgent", title: "Urgent", color: "#ef4444" }, { id: "t_cnc", title: "Machining", color: "#3b82f6" }]);
-    let sharedSections = loadLocal("amada_shared_sections", [{ id: "s1", title: "High Priority" }, { id: "s2", title: "Medium Priority" }]);
-    let noteFolders = loadLocal("amada_note_folders", [{ id: "nf1", title: "General Guidelines", parentId: null }]);
-    let tasks = loadLocal("amada_tasks", []), notes = loadLocal("amada_notes", []), orders = loadLocal("amada_orders", []);
+    let users = ensureProfiles(loadArray("amada_users", []));
+    let activeUser = safeStorageGet("amada_active_user", ""), currentWorkspace = 'shared', currentMainTab = "tasks", currentNoteFolderId = null, activeFilterType = null, activeFilterId = null, selectedUserForAuth = "", presenceMap = {}, isCompletedOpen = false, isCompletedOrdersOpen = false, openAccordionsMap = {};
+    let sharedTags = loadArray("amada_shared_tags", [{ id: "t_urgent", title: "Urgent", color: "#ef4444" }, { id: "t_cnc", title: "Machining", color: "#3b82f6" }]);
+    let sharedSections = loadArray("amada_shared_sections", [{ id: "s1", title: "High Priority" }, { id: "s2", title: "Medium Priority" }]);
+    let noteFolders = loadArray("amada_note_folders", [{ id: "nf1", title: "General Guidelines", parentId: null }]);
+    let tasks = loadArray("amada_tasks", []), notes = loadArray("amada_notes", []), orders = loadArray("amada_orders", []);
     let globalActivity = loadLocal("amada_recent_activity", { id: "", msg: "", user: "" });
-    let tempFileState = { note: null, task: null, order: null }; 
+    if (!globalActivity || typeof globalActivity !== 'object' || Array.isArray(globalActivity)) globalActivity = { id: "", msg: "", user: "" };
+    presenceMap = loadLocal("amada_presence", {});
+    if (!presenceMap || typeof presenceMap !== 'object' || Array.isArray(presenceMap)) presenceMap = {};
+    noteFolders = noteFolders.map((f, index) => ({ ...f, id: f.id || `nf_recovered_${index}`, title: String(f.title || 'Untitled folder'), parentId: f.parentId ?? null }));
+    sharedSections = sharedSections.map((section, index) => ({ ...section, id: section.id || `section_recovered_${index}`, title: String(section.title || 'Untitled section') }));
+    sharedTags = sharedTags.map((tag, index) => ({ ...tag, id: tag.id || `tag_recovered_${index}`, title: String(tag.title || 'Untitled tag'), color: tag.color || '#A6192E' }));
+    tasks = tasks.map((item, index) => ({ ...item, id: item.id || `task_recovered_${index}`, title: String(item.title || 'Untitled task'), assignees: Array.isArray(item.assignees) ? item.assignees : [], history: Array.isArray(item.history) ? item.history : [] }));
+    notes = notes.map((item, index) => ({ ...item, id: item.id || `note_recovered_${index}`, title: String(item.title || 'Untitled note'), content: String(item.content || ''), assignees: Array.isArray(item.assignees) ? item.assignees : [], history: Array.isArray(item.history) ? item.history : [] }));
+    orders = orders.map((item, index) => ({ ...item, id: item.id || `order_recovered_${index}`, items: Array.isArray(item.items) ? item.items.filter(entry => entry && typeof entry === 'object') : [] }));
+    let tempFileState = { note: null, task: null, order: null };
+    let sortableInstances = [], appBooted = false, canvasEventsReady = false, remoteSyncTimer = null;
 
     function canModifyItem(item) { if (item.owner === activeUser) return true; if (item.restricted) return false; const u = users.find(x => x.name === activeUser); return u && (u.role === "admin" || u.role === "master_admin"); }
     function getPersonalOrderedSections() {
@@ -341,7 +383,33 @@
     function savePersonalSectionOrder(newIdArray) { if (!activeUser) return; localStorage.setItem(`amada_order_${activeUser}`, JSON.stringify(newIdArray)); renderAll(); }
     function resetPersonalOrder() { if (!activeUser) return; localStorage.removeItem(`amada_order_${activeUser}`); renderAll(); alert("Layout reset to default!"); }
 
-    window.onload = () => { users = ensureProfiles(users); noteFolders.forEach(f => { if(f.parentId === undefined) f.parentId = null; }); renderUserProfiles(); checkAuth(); renderAll(); fetchFromRemoteBin(); setInterval(fetchFromRemoteBin, 3500); setupCanvasEvents(); };
+    function bootApp() {
+      if (appBooted) return;
+      appBooted = true;
+
+      // Normalise persisted values before any render function calls array methods.
+      users = ensureProfiles(users);
+      sharedTags = Array.isArray(sharedTags) ? sharedTags : [];
+      sharedSections = Array.isArray(sharedSections) ? sharedSections : [];
+      noteFolders = Array.isArray(noteFolders) ? noteFolders.map(f => ({ ...f, parentId: f.parentId ?? null })) : [];
+      tasks = Array.isArray(tasks) ? tasks.filter(Boolean) : [];
+      notes = Array.isArray(notes) ? notes.filter(Boolean) : [];
+      orders = Array.isArray(orders) ? orders.filter(Boolean).map(o => ({ ...o, items: Array.isArray(o.items) ? o.items.filter(Boolean) : [] })) : [];
+
+      // Authentication must render even if another view, icon pack, or optional library fails.
+      try { renderUserProfiles(); } catch (error) { console.error('Could not render login profiles:', error); users = ensureProfiles([]); renderUserProfiles(); }
+      try { checkAuth(); } catch (error) { console.error('Could not initialise authentication UI:', error); const overlay = document.getElementById('authOverlay'); if (overlay) overlay.classList.remove('hidden'); }
+
+      try { setupCanvasEvents(); } catch (error) { console.error('Annotation tools could not initialise:', error); }
+      try { renderAll(); } catch (error) { console.error('Workspace view initialisation failed; login remains available:', error); }
+      try { initSortable(); } catch (error) { console.warn('Drag-and-drop will be unavailable in this session:', error); }
+
+      // Remote sync is optional and never blocks the initial login screen.
+      fetchFromRemoteBin().catch(error => console.warn('Initial remote sync failed:', error));
+      if (!remoteSyncTimer) remoteSyncTimer = window.setInterval(() => fetchFromRemoteBin().catch(error => console.warn('Remote sync failed:', error)), 3500);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootApp, { once: true });
+    else window.setTimeout(bootApp, 0);
 
     function switchWorkspace(ws) {
       currentWorkspace = ws; const btnS = document.getElementById("wsBtnShared"), btnP = document.getElementById("wsBtnPersonal");
@@ -371,9 +439,16 @@
         if (res.ok) {
           const content = (await res.json()).record || {};
           if (content.recentActivity && content.recentActivity.id !== globalActivity.id) { if (content.recentActivity.user !== activeUser && activeUser !== "") triggerLocalNotification("Workspace Update", content.recentActivity.msg); globalActivity = content.recentActivity; localStorage.setItem("amada_recent_activity", JSON.stringify(globalActivity)); }
-          if (content.users) users = ensureProfiles(content.users); if (content.sharedTags) sharedTags = content.sharedTags; if (content.sharedSections) sharedSections = content.sharedSections; if (content.noteFolders) noteFolders = content.noteFolders; if (content.tasks) tasks = content.tasks; if (content.notes) notes = content.notes; if (content.orders) orders = content.orders; if (content.presence) presenceMap = content.presence;
+          if (Array.isArray(content.users)) users = ensureProfiles(content.users);
+          if (Array.isArray(content.sharedTags)) sharedTags = content.sharedTags.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `tag_remote_${i}`, title: String(x.title || 'Untitled tag'), color: x.color || '#A6192E' }));
+          if (Array.isArray(content.sharedSections)) sharedSections = content.sharedSections.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `section_remote_${i}`, title: String(x.title || 'Untitled section') }));
+          if (Array.isArray(content.noteFolders)) noteFolders = content.noteFolders.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `folder_remote_${i}`, title: String(x.title || 'Untitled folder'), parentId: x.parentId ?? null }));
+          if (Array.isArray(content.tasks)) tasks = content.tasks.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `task_remote_${i}`, assignees: Array.isArray(x.assignees) ? x.assignees : [], history: Array.isArray(x.history) ? x.history : [] }));
+          if (Array.isArray(content.notes)) notes = content.notes.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `note_remote_${i}`, assignees: Array.isArray(x.assignees) ? x.assignees : [], history: Array.isArray(x.history) ? x.history : [] }));
+          if (Array.isArray(content.orders)) orders = content.orders.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `order_remote_${i}`, items: Array.isArray(x.items) ? x.items.filter(Boolean) : [] }));
+          if (content.presence && typeof content.presence === 'object' && !Array.isArray(content.presence)) presenceMap = content.presence;
           if (activeUser) presenceMap[activeUser] = Date.now();
-          localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_note_folders", JSON.stringify(noteFolders)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders));
+          localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_note_folders", JSON.stringify(noteFolders)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders)); localStorage.setItem("amada_presence", JSON.stringify(presenceMap));
           updateSyncUI("ok"); updatePresenceUI(); renderUserProfiles(); renderPermissionsUserList();
           const el = document.activeElement; if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' && el.tagName !== 'SELECT')) renderAll();
         } else updateSyncUI("error");
@@ -383,7 +458,7 @@
     async function saveData(actionMessage = "") {
       if (activeUser) presenceMap[activeUser] = Date.now();
       if (actionMessage) { globalActivity = { id: Date.now().toString(), msg: actionMessage, user: activeUser }; localStorage.setItem("amada_recent_activity", JSON.stringify(globalActivity)); }
-      localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_note_folders", JSON.stringify(noteFolders)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders));
+      localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_note_folders", JSON.stringify(noteFolders)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders)); localStorage.setItem("amada_presence", JSON.stringify(presenceMap));
       renderAll(); updatePresenceUI(); renderPermissionsUserList();
       try { await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, { method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY }, body: JSON.stringify({ users, sharedTags, sharedSections, noteFolders, tasks, notes, orders, presence: presenceMap, recentActivity: globalActivity }) }); updateSyncUI("ok"); } catch (e) { updateSyncUI("error"); }
     }
@@ -393,7 +468,7 @@
       users = ensureProfiles(users);
       container.innerHTML = users.map(u => `
         <button onclick="selectUserForLogin('${u.name}')" class="p-3.5 bg-gray-100 dark:bg-[#252525] hover:border-[#A6192E] border border-transparent rounded-2xl flex flex-col items-center space-y-1.5 transition shadow-sm active:scale-95">
-          <div class="w-9 h-9 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-sm">${u.name.charAt(0)}</div><span class="text-xs font-semibold">${u.name}</span><span class="text-[9px] ${u.role === 'master_admin' ? 'text-amber-500 font-bold' : 'text-gray-400'} capitalize">${u.role.replace('_', ' ')}</span>
+          <div class="w-9 h-9 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold text-sm">${String(u.name || '?').charAt(0)}</div><span class="text-xs font-semibold">${u.name || 'User'}</span><span class="text-[9px] ${u.role === 'master_admin' ? 'text-amber-500 font-bold' : 'text-gray-400'} capitalize">${String(u.role || 'viewer').replace('_', ' ')}</span>
         </button>
       `).join('');
     }
@@ -439,13 +514,19 @@
     let annotCtx = null, annotCanvas = null, annotOrigImg = new Image(), annotHistory = [], annotStep = -1, annotMode = 'view', annotTool = 'pan', isDrawing = false, isPanning = false, lastX = 0, lastY = 0, lastPanX = 0, lastPanY = 0, currentAnnotItemType = null, currentAnnotItemId = null, showingAnnotated = true, textStyle = { bold: false, italic: false }, annotScale = 1, annotPanOffsetX = 0, annotPanOffsetY = 0;
     
     function setupCanvasEvents() {
-      annotCanvas = document.getElementById("annotationCanvas"); annotCtx = annotCanvas.getContext("2d"); const wrapper = document.getElementById("canvasScrollWrapper");
-      annotCanvas.addEventListener("pointerdown", startDraw); annotCanvas.addEventListener("pointermove", draw); window.addEventListener("pointerup", stopDraw); 
+      if (canvasEventsReady) return;
+      annotCanvas = document.getElementById("annotationCanvas");
+      const wrapper = document.getElementById("canvasScrollWrapper");
+      if (!annotCanvas || !wrapper || typeof annotCanvas.getContext !== 'function') return;
+      annotCtx = annotCanvas.getContext("2d");
+      if (!annotCtx) return;
+      annotCanvas.addEventListener("pointerdown", startDraw); annotCanvas.addEventListener("pointermove", draw); window.addEventListener("pointerup", stopDraw);
       wrapper.addEventListener("wheel", (e) => {
         if(!currentAnnotItemId) return; e.preventDefault(); const zoomIntensity = 0.1; const wheel = e.deltaY < 0 ? 1 : -1; const zoomFactor = Math.exp(wheel * zoomIntensity);
         const rect = annotCanvas.getBoundingClientRect(); const mouseX = (e.clientX - rect.left) / annotScale; const mouseY = (e.clientY - rect.top) / annotScale;
         const newScale = Math.min(Math.max(0.1, annotScale * zoomFactor), 10); annotPanOffsetX -= mouseX * (newScale - annotScale); annotPanOffsetY -= mouseY * (newScale - annotScale); annotScale = newScale; updateCanvasTransform();
       }, {passive: false});
+      canvasEventsReady = true;
     }
     
     function updateCanvasTransform() { annotCanvas.style.transform = `translate(${annotPanOffsetX}px, ${annotPanOffsetY}px) scale(${annotScale})`; }
@@ -566,6 +647,96 @@
       if (item && item.attachment) { item.attachment.annotatedData = annotCanvas.toDataURL("image/png"); saveData(`Annotated file on ${item.title || item.poNumber}`); closeAnnotationModal(); alert("Annotation saved successfully!"); }
     }
 
+    function destroySortableInstances() {
+      sortableInstances.forEach(instance => {
+        try { if (instance && typeof instance.destroy === 'function') instance.destroy(); } catch (error) { console.warn('Sortable cleanup failed:', error); }
+      });
+      sortableInstances = [];
+    }
+
+    function initSortable() {
+      // Sortable is optional: do not ever let a CDN failure block login or normal app use.
+      if (!window.Sortable || typeof window.Sortable.create !== 'function') return false;
+      destroySortableInstances();
+      const addSortable = (element, options) => {
+        if (!element) return;
+        try { sortableInstances.push(window.Sortable.create(element, options)); }
+        catch (error) { console.warn('Could not enable drag-and-drop for', element, error); }
+      };
+
+      const taskBoard = document.getElementById('tasksView');
+      addSortable(taskBoard, {
+        animation: 180, easing: 'cubic-bezier(0.2, 0, 0, 1)',
+        draggable: '.task-column-card', handle: '.section-drag-handle',
+        ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen', dragClass: 'sortable-drag',
+        fallbackTolerance: 4, touchStartThreshold: 4, filter: 'button,input,a,textarea,select', preventOnFilter: false,
+        onEnd: function() {
+          const ids = Array.from(taskBoard.children).filter(el => el.matches('.task-column-card')).map(el => el.dataset.sectionId).filter(Boolean);
+          if (ids.length) savePersonalSectionOrder(ids);
+        }
+      });
+
+      document.querySelectorAll('#tasksView .task-list').forEach(list => {
+        addSortable(list, {
+          group: { name: 'amadaTasks', pull: true, put: true },
+          animation: 180, easing: 'cubic-bezier(0.2, 0, 0, 1)',
+          draggable: '.task-card', handle: '.task-drag-handle',
+          ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen', dragClass: 'sortable-drag',
+          fallbackTolerance: 4, touchStartThreshold: 4, filter: 'button,input,a,textarea,select', preventOnFilter: false,
+          onEnd: function(evt) {
+            const movedTask = tasks.find(task => String(task.id) === String(evt.item.dataset.taskId));
+            const targetSectionId = evt.to && evt.to.dataset.sectionId;
+            if (movedTask && targetSectionId) movedTask.sectionId = targetSectionId;
+            [evt.from, evt.to].filter((el, index, arr) => el && arr.indexOf(el) === index).forEach(container => {
+              Array.from(container.children).filter(el => el.matches('.task-card')).forEach((el, index) => {
+                const task = tasks.find(item => String(item.id) === String(el.dataset.taskId));
+                if (task) { task.sectionId = container.dataset.sectionId || task.sectionId; task.sortOrder = index; }
+              });
+            });
+            saveData(movedTask ? `Moved task: ${movedTask.title}` : 'Reordered tasks');
+          }
+        });
+      });
+
+      const notesGrid = document.getElementById('notesGrid');
+      addSortable(notesGrid, {
+        group: { name: 'amadaNotes', pull: true, put: true },
+        animation: 180, easing: 'cubic-bezier(0.2, 0, 0, 1)',
+        draggable: '.note-card', handle: '.note-drag-handle',
+        ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen', dragClass: 'sortable-drag',
+        fallbackTolerance: 4, touchStartThreshold: 4, filter: 'button,input,a,textarea,select', preventOnFilter: false,
+        onEnd: function(evt) {
+          if (evt.to && evt.to.id === 'notesGrid') {
+            const movedNote = notes.find(note => String(note.id) === String(evt.item.dataset.noteId));
+            if (movedNote) movedNote.folderId = currentNoteFolderId || '';
+            [evt.from, evt.to].filter((el, index, arr) => el && el.id === 'notesGrid' && arr.indexOf(el) === index).forEach(container => {
+              Array.from(container.children).filter(el => el.matches('.note-card')).forEach((el, index) => {
+                const note = notes.find(item => String(item.id) === String(el.dataset.noteId));
+                if (note) note.sortOrder = index;
+              });
+            });
+            saveData(movedNote ? `Moved note: ${movedNote.title}` : 'Reordered notes');
+          }
+        }
+      });
+
+      // Each folder is a drop target, but only note cards (via their grip) can be dragged.
+      document.querySelectorAll('#notesFoldersGrid .note-folder-dropzone, #noteFoldersSidebar .note-folder-dropzone').forEach(folderTarget => {
+        addSortable(folderTarget, {
+          group: { name: 'amadaNotes', pull: false, put: true },
+          sort: false, animation: 160, draggable: '.note-card', handle: '.note-drag-handle',
+          ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen',
+          onAdd: function(evt) {
+            const note = notes.find(item => String(item.id) === String(evt.item.dataset.noteId));
+            const folderId = folderTarget.dataset.folderId;
+            if (note && folderId) { note.folderId = folderId; note.sortOrder = Date.now(); saveData(`Moved note ${note.title} to folder`); }
+            else if (evt.item && evt.item.parentNode) evt.item.parentNode.removeChild(evt.item);
+          }
+        });
+      });
+      return true;
+    }
+
     function renderAll() {
       renderAssigneesSidebar(); renderTagsSidebar(); renderSectionsSidebar(); renderNoteFoldersSidebar(); renderPermissionsUserList();
       renderTasksBoard(); renderCompletedTasks(); renderNotesView(); renderOrders();
@@ -575,7 +746,8 @@
       document.getElementById("completedCountBadge").innerText = completedList.length;
       const starredList = tasks.filter(t => t.starred && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser)).length + notes.filter(n => n.starred && (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser)).length;
       document.getElementById("starredCountBadge").innerText = starredList;
-      lucide.createIcons();
+      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+      initSortable();
     }
 
     function renderAssigneesSidebar() {
@@ -603,7 +775,7 @@
       const roots = noteFolders.filter(f => !f.parentId);
       container.innerHTML = roots.map(f => {
         const count = notes.filter(n => n.folderId === f.id && (n.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || n.owner === activeUser)).length;
-        return `<div ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropNoteIntoFolder(event, '${f.id}')" class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all"><div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="enterNoteFolder('${f.id}'); toggleMobileSidebar(false);"><i data-lucide="folder" class="w-3.5 h-3.5 text-gray-400"></i><span class="truncate font-medium">${f.title}</span></div><div class="flex items-center space-x-2"><span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span><button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`;
+        return `<div data-folder-id="${f.id}" class="note-folder-dropzone group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all"><div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="enterNoteFolder('${f.id}'); toggleMobileSidebar(false);"><i data-lucide="folder" class="w-3.5 h-3.5 text-gray-400"></i><span class="truncate font-medium">${f.title}</span></div><div class="flex items-center space-x-2"><span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span><button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`;
       }).join('');
     }
 
@@ -612,7 +784,7 @@
       const isMaster = users.find(u => u.name === activeUser)?.role === 'master_admin';
       container.innerHTML = users.map(u => `<div class="flex items-center justify-between bg-white dark:bg-[#1E1E1E] p-3 rounded-xl border border-gray-200 dark:border-gray-800 mb-2"><div class="flex flex-col"><div class="text-sm font-bold">${u.name}</div>${isMaster && u.name !== 'Charlie' ? `<select onchange="changeUserRole('${u.name}', this.value)" class="text-[9px] uppercase bg-transparent text-gray-400 mt-1 focus:outline-none cursor-pointer"><option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer</option><option value="editor" ${u.role==='editor'?'selected':''}>Editor</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select>` : `<div class="text-[9px] text-gray-500 uppercase mt-1">${u.role}</div>`}</div>${isMaster ? `<div class="flex items-center space-x-2"><button onclick="resetUserPassword('${u.name}')" class="text-xs font-semibold px-2 py-1 bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-lg hover:text-white transition">Reset Pwd</button>${u.name !== 'Charlie' ? `<button onclick="deleteUser('${u.name}')" class="text-red-400 p-1.5 hover:bg-red-500/10 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}</div>` : ''}</div>`).join('');
       if(isMaster) { if(document.getElementById("adminCreateUserSection")) document.getElementById("adminCreateUserSection").classList.remove("hidden"); if(document.getElementById("btnMasterResetPasswords")) document.getElementById("btnMasterResetPasswords").classList.remove("hidden"); }
-      lucide.createIcons();
+      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
 
     function changeUserRole(name, role) { const u = users.find(x => x.name === name); if(u) { u.role = role; saveData(`Changed role of ${name}`); } }
@@ -641,18 +813,19 @@
         if (activeFilterType === "assignee") listTasks = listTasks.filter(t => t.assignees && t.assignees.includes(activeFilterId));
         else if (activeFilterType === "tag") listTasks = listTasks.filter(t => t.tagId === activeFilterId);
         else if (activeFilterType === "starred") listTasks = listTasks.filter(t => t.starred);
+        listTasks = listTasks.slice().sort((a, b) => (Number.isFinite(a.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER) - (Number.isFinite(b.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER));
 
         return `
-          <div id="section_${s.id}" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropSection(event, '${s.id}')" class="task-column-card w-full md:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl p-3.5 flex flex-col shrink-0 shadow-sm transition">
-            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-gray-100 dark:border-gray-800/60 cursor-move">
+          <div id="section_${s.id}" data-section-id="${s.id}" class="task-column-card w-full md:w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl p-3.5 flex flex-col shrink-0 shadow-sm transition">
+            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-gray-100 dark:border-gray-800/60">
               <div class="flex items-center space-x-2">
-                <div class="drag-handle p-1 -ml-1 text-gray-500 cursor-grab hover:text-white" onmousedown="makeDraggable('section_${s.id}')" onmouseup="makeUndraggable('section_${s.id}')" ontouchstart="makeDraggable('section_${s.id}')" ontouchend="makeUndraggable('section_${s.id}')" ondragstart="dragSection(event, '${s.id}')" ondragend="endDragSection(event, '${s.id}')"><i data-lucide="grip-vertical" class="w-4 h-4 pointer-events-none"></i></div>
+                <div class="section-drag-handle drag-handle p-1 -ml-1 text-gray-500 cursor-grab hover:text-white" title="Drag to reorder category"><i data-lucide="grip-vertical" class="w-4 h-4 pointer-events-none"></i></div>
                 <h3 class="font-bold text-sm tracking-wide">${s.title}</h3>
               </div>
               <span class="text-[10px] bg-gray-100 dark:bg-[#252525] text-gray-400 px-2 py-0.5 rounded-full font-bold">${listTasks.length}</span>
             </div>
             <input type="text" placeholder="+ Add task (Press Enter)" onkeydown="handleQuickTask(event, '${s.id}')" class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-800 rounded-xl px-3 py-2 text-xs mb-3 focus:outline-none focus:border-[#A6192E]">
-            <div class="space-y-2.5 overflow-y-auto flex-1 pb-4 min-h-[50px]" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropTaskIntoSection(event, '${s.id}')">
+            <div class="task-list space-y-2.5 overflow-y-auto flex-1 pb-4 min-h-[54px]" data-section-id="${s.id}">
               ${listTasks.map(t => renderTaskCardHtml(t)).join('')}
               ${listTasks.length === 0 ? `<div class="text-center py-6 text-gray-400 text-xs italic pointer-events-none">Drop tasks here</div>` : ''}
             </div>
@@ -664,17 +837,17 @@
     function renderTaskCardHtml(t) {
       const section = sharedSections.find(x => x.id === t.sectionId); const tag = sharedTags.find(x => x.id === t.tagId); const canEdit = canModifyItem(t);
       return `
-        <div id="task_${t.id}" ondragstart="dragTask(event, '${t.id}')" ondragend="endDragTask(event, '${t.id}')" class="group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 shadow-sm relative transition cursor-move">
+        <div id="task_${t.id}" data-task-id="${t.id}" onclick="if (!event.target.closest('button,input,label,a,select,textarea,.drag-handle')) openTaskDetailModal('${t.id}')" class="task-card group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 shadow-sm relative transition">
           <div class="absolute top-1.5 right-1.5 flex items-center space-x-0.5 z-10 bg-gray-50/80 dark:bg-[#252525]/80 rounded-lg p-0.5">
             <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${t.starred ? '⭐' : '☆'}</button>
-            <div class="drag-handle p-1 text-gray-500 cursor-grab hover:text-white" onmousedown="makeDraggable('task_${t.id}')" onmouseup="makeUndraggable('task_${t.id}')" ontouchstart="makeDraggable('task_${t.id}')" ontouchend="makeUndraggable('task_${t.id}')"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
+            <div class="task-drag-handle drag-handle p-1 text-gray-500 cursor-grab hover:text-white" title="Drag to move task"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
           </div>
-          <div class="flex items-start space-x-2.5 pr-14" onclick="openTaskDetailModal('${t.id}')" style="cursor: pointer;">
+          <div class="flex items-start space-x-2.5 pr-14">
             <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); handleTaskCheckAnimation('${t.id}', this)" class="mt-0.5 w-5 h-5 rounded-lg accent-green-600 cursor-pointer shrink-0">
             <div class="flex-1 min-w-0"><span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>${t.notes ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-tight">${t.notes}</div>` : ''}</div>
           </div>
           ${getAttachmentBadgeHTML('task', t)}
-          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-gray-200/50 dark:border-gray-700/50" onclick="openTaskDetailModal('${t.id}')" style="cursor: pointer;">
+          <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-gray-200/50 dark:border-gray-700/50">
             <div class="flex flex-wrap items-center gap-1">
               ${section ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold">${section.title}</span>` : ''}
               ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
@@ -729,7 +902,7 @@
       let visibleFolders = noteFolders.filter(f => (f.parentId || null) === (currentNoteFolderId || null));
       if (activeFilterType) visibleFolders = []; 
       fGrid.innerHTML = visibleFolders.map(f => `
-        <div ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropNoteIntoFolder(event, '${f.id}')" onclick="enterNoteFolder('${f.id}')" class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer shadow-sm hover:border-[#A6192E] transition group">
+        <div data-folder-id="${f.id}" onclick="enterNoteFolder('${f.id}')" class="note-folder-dropzone bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer shadow-sm hover:border-[#A6192E] transition group">
           <i data-lucide="folder" class="w-5 h-5 text-[#A6192E]"></i><span class="font-bold text-xs truncate flex-1 pointer-events-none">${f.title}</span><button onclick="event.stopPropagation(); deleteNoteFolder('${f.id}')" class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
       `).join('');
@@ -741,15 +914,16 @@
       else if (activeFilterType === "starred") filtered = filtered.filter(n => n.starred);
       else filtered = filtered.filter(n => (n.folderId || null) === (currentNoteFolderId || null)); 
 
+      filtered = filtered.slice().sort((a, b) => (Number.isFinite(a.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER) - (Number.isFinite(b.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER));
       nGrid.innerHTML = filtered.map(n => {
         const folder = noteFolders.find(f => f.id === n.folderId); const tag = sharedTags.find(x => x.id === n.tagId); const canEdit = canModifyItem(n);
         return `
-        <div id="note_${n.id}" ondragstart="dragNote(event, '${n.id}')" ondragend="endDragNote(event, '${n.id}')" class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative group transition hover:border-gray-400 dark:hover:border-gray-600 cursor-move">
+        <div id="note_${n.id}" data-note-id="${n.id}" onclick="if (!event.target.closest('button,input,label,a,select,textarea,.drag-handle')) openNoteDetailModal('${n.id}')" class="note-card bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative group transition hover:border-gray-400 dark:hover:border-gray-600">
           <div class="absolute top-2 right-2 flex items-center space-x-0.5 z-10 bg-white/80 dark:bg-[#1E1E1E]/80 rounded-lg p-0.5">
             <button onclick="event.stopPropagation(); toggleStarNote('${n.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${n.starred ? '⭐' : '☆'}</button>
-            <div class="drag-handle p-1 text-gray-500 cursor-grab hover:text-white" onmousedown="makeDraggable('note_${n.id}')" onmouseup="makeUndraggable('note_${n.id}')" ontouchstart="makeDraggable('note_${n.id}')" ontouchend="makeUndraggable('note_${n.id}')"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
+            <div class="note-drag-handle drag-handle p-1 text-gray-500 cursor-grab hover:text-white" title="Drag to move note"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
           </div>
-          <div onclick="openNoteDetailModal('${n.id}')" class="cursor-pointer pr-12">
+          <div class="pr-12">
             <h4 class="font-bold text-sm truncate mb-2">${n.title}</h4>
             <p class="text-xs text-gray-400 whitespace-pre-wrap line-clamp-3 mb-2">${n.content}</p>
           </div>
@@ -771,7 +945,7 @@
       document.getElementById("noteAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
       document.getElementById("noteId").value = ""; document.getElementById("noteTitleInput").value = ""; document.getElementById("noteContentInput").value = ""; document.getElementById("noteStarInput").checked = false;
       document.getElementById("noteModalTitle").innerHTML = `<i data-lucide="sticky-note" class="w-5 h-5 text-[#A6192E]"></i><span>Add Keep Note</span>`;
-      removeUniversalFile('note'); document.getElementById("noteModal").classList.remove("hidden"); lucide.createIcons();
+      removeUniversalFile('note'); document.getElementById("noteModal").classList.remove("hidden"); if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
     function openEditNoteModal(id) {
       const n = notes.find(x => x.id === id); if (!n) return;
@@ -779,7 +953,7 @@
       document.getElementById("noteAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(n.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
       document.getElementById("noteId").value = n.id; document.getElementById("noteTitleInput").value = n.title; document.getElementById("noteContentInput").value = n.content; document.getElementById("noteFolderInput").value = n.folderId || ""; document.getElementById("noteTagInput").value = n.tagId || ""; document.getElementById("noteStarInput").checked = !!n.starred;
       if (n.attachment) { tempFileState.note = n.attachment; document.getElementById("noteFileNameLabel").innerText = n.attachment.name; document.getElementById("noteFilePreviewContainer").classList.remove("hidden"); } else { removeUniversalFile('note'); }
-      document.getElementById("noteModalTitle").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Keep Note</span>`; document.getElementById("noteModal").classList.remove("hidden"); lucide.createIcons();
+      document.getElementById("noteModalTitle").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Keep Note</span>`; document.getElementById("noteModal").classList.remove("hidden"); if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
     function closeNoteModal() { document.getElementById("noteModal").classList.add("hidden"); removeUniversalFile('note'); }
 
@@ -796,7 +970,7 @@
       const n = notes.find(x => x.id === id); if (!n) return;
       document.getElementById("noteDetailTitle").innerText = n.title; document.getElementById("noteDetailContent").innerText = n.content || "No content.";
       const f = noteFolders.find(x => x.id === n.folderId); document.getElementById("noteDetailFolder").innerText = f ? f.title : "No Folder";
-      document.getElementById("noteDetailAssignees").innerText = (n.assignees && n.assignees.length) ? n.assignees.join(', ') : "Anyone"; document.getElementById("noteDetailOwner").innerText = n.owner || "System";
+      document.getElementById("noteDetailAssignees").innerText = (n.assignees && n.assignees.length) ? n.assignees.join(', ') : "Anyone"; const noteOwnerEl = document.getElementById("noteDetailOwner"); if (noteOwnerEl) noteOwnerEl.innerText = n.owner || "System";
       const attC = document.getElementById("noteDetailAttachmentContainer"); if (n.attachment) { attC.innerHTML = getAttachmentBadgeHTML('note', n); attC.classList.remove("hidden"); } else { attC.classList.add("hidden"); }
       const log = document.getElementById("noteDetailHistoryLog");
       if (Array.isArray(n.history) && n.history.length > 0) { log.innerHTML = n.history.map(h => `<div class="border-b border-gray-200 dark:border-gray-800/80 pb-1 mt-1.5 last:border-none"><span class="font-bold text-gray-800 dark:text-gray-200">${h.action}</span><div class="text-[10px] text-gray-400">${h.date} by <span class="font-semibold text-emerald-400">${h.user}</span></div></div>`).join(''); } else { log.innerHTML = `<div class="text-gray-500 italic text-[10px]">No edit history recorded.</div>`; }
@@ -834,7 +1008,7 @@
     function openTaskDetailModal(id) {
       const t = tasks.find(x => x.id === id); if (!t) return;
       document.getElementById("detailTitle").innerText = t.title; document.getElementById("detailNotes").innerText = t.notes || "No description provided."; document.getElementById("detailPriority").innerText = t.priority || "Medium";
-      const sec = sharedSections.find(s => s.id === t.sectionId); document.getElementById("detailSection").innerText = sec ? sec.title : "General"; document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone"; document.getElementById("detailDueDate").innerText = t.dueDate || "No Date"; document.getElementById("detailOwner").innerText = t.owner || "System";
+      const sec = sharedSections.find(s => s.id === t.sectionId); document.getElementById("detailSection").innerText = sec ? sec.title : "General"; document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone"; const dueEl = document.getElementById("detailDueDate"); const ownerEl = document.getElementById("detailOwner"); if (dueEl) dueEl.innerText = t.dueDate || "No Date"; if (ownerEl) ownerEl.innerText = t.owner || "System";
       const badge = document.getElementById("detailStatusBadge");
       if (t.completed) { badge.innerText = "Completed"; badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"; badge.classList.remove("hidden"); } else { badge.classList.add("hidden"); }
       const log = document.getElementById("detailHistoryLog");
@@ -847,13 +1021,13 @@
     function formatItemDescription(rawText) { const trimmed = rawText.trim(); if (!trimmed || trimmed.includes("(")) return trimmed; let text = trimmed.toLowerCase(); let qty = ""; const qtyMatch = text.match(/(?:x\s*(\d+)|(\d+)\s*x|\bqty:?\s*(\d+)\b)/i); if (qtyMatch) qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]); return `${trimmed} ${qty ? `(${qty})` : ''}`.trim(); }
     function openNewOrderModal() {
       document.getElementById("orderIdInput").value = ""; document.getElementById("orderPoInput").value = ""; document.getElementById("orderDateInput").value = new Date().toISOString().split('T')[0]; document.getElementById("orderTypeInput").value = ""; document.getElementById("orderPlacedByInput").value = activeUser || ""; document.getElementById("orderFreeformItemsInput").value = ""; document.getElementById("orderNotesInput").value = "";
-      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i><span>Create New Order</span>`; removeUniversalFile('order'); document.getElementById("orderModal").classList.remove("hidden"); lucide.createIcons();
+      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i><span>Create New Order</span>`; removeUniversalFile('order'); document.getElementById("orderModal").classList.remove("hidden"); if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
     function openEditOrderModal(orderId) {
       const ord = orders.find(x => x.id === orderId); if (!ord) return;
       document.getElementById("orderIdInput").value = ord.id; document.getElementById("orderPoInput").value = ord.poNumber || ""; document.getElementById("orderDateInput").value = ord.dateOrdered || ""; document.getElementById("orderTypeInput").value = ord.orderType || ""; document.getElementById("orderPlacedByInput").value = ord.placedBy || ""; document.getElementById("orderNotesInput").value = ord.notes || ""; document.getElementById("orderFreeformItemsInput").value = ord.items && ord.items.length > 0 ? ord.items.map(i => i.desc).join("\n") : "";
       if (ord.attachment) { tempFileState.order = ord.attachment; document.getElementById("orderFileNameLabel").innerText = ord.attachment.name; document.getElementById("orderFilePreviewContainer").classList.remove("hidden"); } else { removeUniversalFile('order'); }
-      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Purchase Order</span>`; document.getElementById("orderModal").classList.remove("hidden"); lucide.createIcons();
+      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Purchase Order</span>`; document.getElementById("orderModal").classList.remove("hidden"); if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
     function closeOrderModal() { document.getElementById("orderModal").classList.add("hidden"); removeUniversalFile('order'); }
     function saveOrder(e) {
@@ -864,7 +1038,7 @@
         const ord = orders.find(x => x.id === id);
         if (ord) { ord.poNumber = poNumber; ord.dateOrdered = dateOrdered; ord.orderType = orderType; ord.placedBy = placedBy; ord.notes = notesInput; ord.attachment = attachment; if (items.length > 0) ord.items = items; saveData(`Edited PO# ${poNumber}`); } 
       } else {
-        orders.push({ id: "ord_" + Date.now(), poNumber, dateOrdered, orderType, placedBy, items, notes: notesInput, attachment, placed: true, placedMeta: `Placed by ${placedBy} on ${dateOrdered}`, vbop: false, received: false, emailed: false, stocked: false, completed: false, workspace: currentWorkspace, owner: activeUser }); saveData(`Added PO# ${poNumber}`);
+        orders.push({ id: "ord_" + Date.now(), poNumber, dateOrdered, orderType, placedBy, items, notes: notesInput, attachment, placed: true, placedMeta: `Placed by ${activeUser || placedBy} on ${new Date().toLocaleDateString()}`, placedBy: activeUser || placedBy, placedDate: new Date().toLocaleDateString(), placedAt: new Date().toISOString(), vbop: false, received: false, emailed: false, stocked: false, completed: false, workspace: currentWorkspace, owner: activeUser }); saveData(`Added PO# ${poNumber}`);
       }
       closeOrderModal();
     }
@@ -876,23 +1050,23 @@
       const filtered = orders.filter(o => (o.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || o.owner === activeUser));
       const activeOrders = filtered.filter(o => !o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime()); const completedOrders = filtered.filter(o => o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime());
       document.getElementById("activeOrdersBadge").innerText = activeOrders.length; document.getElementById("completedOrdersBadge").innerText = completedOrders.length;
-      activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join(''); completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join(''); lucide.createIcons();
+      activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join(''); completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join(''); if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
 
     function renderOrderCardHtml(ord) {
       const hasItems = ord.items && ord.items.length > 0; const allReceived = hasItems ? ord.items.every(i => i.received) : !!ord.received; const partialReceived = hasItems ? (ord.items.some(i => i.received || i.receivedPartial) && !allReceived) : false; const receivedCount = hasItems ? ord.items.filter(i => i.received).length : 0; const stockedCount = hasItems ? ord.items.filter(i => i.stocked).length : 0; const isAccordionOpen = !!openAccordionsMap[ord.id];
       const poList = (ord.poNumber || "").split(/[,/&;]|\band\b/i).map(p => p.trim()).filter(Boolean); if (poList.length === 0) poList.push(ord.poNumber || "N/A");
       return `
-        <div class="bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-3xl p-3.5 md:p-5 shadow-sm space-y-3.5">
+        <div onclick="if (!event.target.closest('button,input,label,a,select,textarea')) openEditOrderModal('${ord.id}')" class="order-card bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-3xl p-3.5 md:p-5 shadow-sm space-y-3.5 cursor-pointer">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 border-b border-gray-200 dark:border-gray-800 gap-2">
-            <div class="flex items-center flex-wrap gap-2"><span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-md bg-[#A6192E] text-white">PO#</span><div class="flex flex-wrap items-center gap-1.5">${poList.map(po => `<div class="flex items-center space-x-1.5 bg-gray-100 dark:bg-[#1E1E1E] pl-2 pr-1.5 py-0.5 rounded-md border border-gray-300 dark:border-gray-700"><span class="text-base font-black tracking-wide">${po}</span><a href="https://mail.google.com/mail/u/0/#search/${encodeURIComponent(po)}" target="_blank" class="p-1 hover:text-[#A6192E] text-gray-400 transition"><i data-lucide="mail" class="w-4 h-4"></i></a></div>`).join('')}</div><span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400">${ord.orderType}</span></div>
+            <div class="flex items-center flex-wrap gap-2"><span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-md bg-[#A6192E] text-white">PO#</span><div class="flex flex-wrap items-center gap-1.5">${poList.map(po => `<div class="flex items-center space-x-1.5 bg-gray-100 dark:bg-[#1E1E1E] pl-2 pr-1.5 py-0.5 rounded-md border border-gray-300 dark:border-gray-700"><span class="text-lg md:text-xl font-black tracking-wider">${po}</span><a href="https://mail.google.com/mail/u/0/#search/${encodeURIComponent(po)}" target="_blank" class="p-1 hover:text-[#A6192E] text-gray-400 transition"><i data-lucide="mail" class="w-4 h-4"></i></a></div>`).join('')}</div><span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400">${ord.orderType}</span></div>
             <div class="flex items-center justify-between sm:justify-end space-x-2 text-xs text-gray-400">
               <span class="bg-gray-200 dark:bg-[#252525] px-2.5 py-1 rounded-lg text-gray-300 font-bold border border-gray-300 dark:border-gray-700/60">Ordered: <strong class="text-white">${ord.dateOrdered}</strong></span><span class="text-emerald-400 font-semibold">${ord.placedBy}</span>
               ${canModifyItem(ord) ? `<button onclick="openEditOrderModal('${ord.id}')" class="p-1 hover:text-white transition"><i data-lucide="pencil" class="w-4 h-4"></i></button>${ord.completed ? `<button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold ml-1">Re-open</button>` : `<button onclick="openOrderCompleteVerification('${ord.id}')" class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold active:scale-95 transition flex items-center space-x-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>Complete</span></button>`}<button onclick="deleteOrder('${ord.id}')" class="p-1 hover:text-red-400 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]"><div><div class="font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div><div class="text-[9px] text-gray-500">${ord.placed ? `Placed by ${ord.placedBy} on ${ord.dateOrdered}` : ''}</div></div></label>
+            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]"><div><div class="font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div><div class="text-[9px] text-gray-500">${ord.placed ? `Placed by ${ord.placedBy || 'User'} on ${ord.placedDate || ord.dateOrdered || 'Date unavailable'}` : ''}</div></div></label>
             <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="mt-0.5 w-4 h-4 accent-purple-600"><div><div class="font-bold ${ord.vbop ? 'text-purple-400' : 'text-gray-400'}">2. Added on VBOP</div><div class="text-[9px] text-gray-500">${ord.vbopMeta || ''}</div></div></label>
             <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 space-y-1.5"><div class="font-bold text-gray-200">3. Order Received</div><div class="flex flex-col space-y-1"><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${partialReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 accent-amber-500"><span class="text-[10px] ${partialReceived ? 'text-amber-400 font-semibold' : 'text-gray-400'}">Received (Partial)</span></label><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${allReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="w-3.5 h-3.5 accent-emerald-500"><span class="text-[10px] ${allReceived ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Received (Full)</span></label></div><div class="text-[9px] text-gray-500 truncate">${ord.receivedMeta || (allReceived ? 'All items received' : (partialReceived ? 'Partially arrived' : 'Awaiting delivery'))}</div></div>
             <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.emailed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'emailed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600"><div><div class="font-bold ${ord.emailed ? 'text-blue-400' : 'text-gray-400'}">4. Emailed & Complete</div><div class="text-[9px] text-gray-500">${ord.emailedMeta || ''}</div></div></label>
@@ -914,7 +1088,15 @@
       const ord = orders.find(x => x.id === orderId); if (!ord) return;
       const meta = `${checked ? 'Confirmed' : 'Unchecked'} by ${activeUser || 'User'} on ${new Date().toLocaleString()}`;
       if (stage === 'received') { ord.received = checked; if (ord.items) ord.items.forEach(i => { i.received = checked; if (checked) i.receivedPartial = false; }); } 
-      else if (stage === 'placed') { ord.placed = checked; } else if (stage === 'vbop') { ord.vbop = checked; ord.vbopMeta = checked ? meta : null; } 
+      else if (stage === 'placed') {
+        ord.placed = checked;
+        if (checked) {
+          ord.placedBy = activeUser || ord.placedBy || 'User';
+          ord.placedDate = new Date().toLocaleDateString();
+          ord.placedAt = new Date().toISOString();
+          ord.placedMeta = `Placed by ${ord.placedBy} on ${ord.placedDate}`;
+        }
+      } else if (stage === 'vbop') { ord.vbop = checked; ord.vbopMeta = checked ? meta : null; } 
       else if (stage === 'emailed') { ord.emailed = checked; ord.emailedMeta = checked ? meta : null; } else if (stage === 'stocked') { ord.stocked = checked; ord.stockedMeta = checked ? meta : null; if (ord.items) ord.items.forEach(i => i.stocked = checked); } 
       else { ord[stage] = checked; } saveData(`Updated PO# ${ord.poNumber} status`);
     }
