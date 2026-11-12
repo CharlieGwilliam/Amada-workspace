@@ -268,8 +268,16 @@
 
   <!-- MODALS -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 my-auto shadow-2xl">
-      <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2"><h3 class="text-base font-bold flex items-center space-x-2"><i data-lucide="settings" class="w-5 h-5 text-[#A6192E]"></i><span>Workspace Settings</span></h3><button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-800 rounded-3xl max-w-lg w-full p-4 sm:p-5 md:p-6 my-auto shadow-2xl max-h-[92dvh] overflow-y-auto overscroll-contain">
+      <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2"><h3 class="text-base font-bold flex items-center space-x-2"><i data-lucide="settings" class="w-5 h-5 text-[#A6192E]"></i><span>Workspace Settings</span></h3><button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white p-2 rounded-lg"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+
+      <div class="mb-4 bg-gray-100 dark:bg-[#121212] p-4 rounded-2xl border border-gray-300 dark:border-gray-800">
+        <div class="flex items-center gap-3">
+          <div id="settingsAccountAvatar" class="w-10 h-10 rounded-full bg-[#A6192E] text-white flex items-center justify-center font-bold shrink-0">?</div>
+          <div class="min-w-0 flex-1"><div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Currently signed in as</div><div id="settingsAccountName" class="font-bold text-sm text-gray-900 dark:text-white truncate">Not signed in</div><div id="settingsAccountRole" class="text-[11px] text-gray-500">Workspace account</div></div>
+        </div>
+        <button onclick="handleLogout()" class="mt-3 w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-red-300 dark:border-red-900/70 text-red-700 dark:text-red-400 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-950/30 transition"><i data-lucide="log-out" class="w-4 h-4"></i><span>Log out of Amada Workspace</span></button>
+      </div>
       
       <div class="mb-6 bg-gray-100 dark:bg-[#121212] p-4 rounded-2xl border border-gray-300 dark:border-gray-800">
         <div class="flex items-center justify-between mb-2"><h4 class="text-xs font-bold text-gray-400 uppercase flex items-center space-x-1.5"><i data-lucide="bell" class="w-4 h-4 text-[#A6192E]"></i><span>Notification Centre</span></h4><span id="pushStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-gray-200 dark:bg-gray-800 text-gray-400">OFF</span></div>
@@ -277,11 +285,21 @@
         <button id="enablePushBtn" onclick="requestNotificationPermission()" class="w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Enable Device Notifications</button>
         <button id="testPushBtn" onclick="sendTestPush()" class="w-full py-2 px-3 rounded-xl bg-emerald-700/80 text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Send Test Notification</button>
         <p id="pushDiagnosticText" class="text-[10px] text-gray-500 mb-2">Push status will appear here.</p>
-        <div id="notificationPreferencesList" class="space-y-3 border-t border-gray-200 dark:border-gray-800 pt-3">
-          <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">New Task Assignments</span></div><input type="checkbox" id="prefNotifyAssigned" onchange="saveNotificationPref('notifyAssigned', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
-          <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Task Completions</span></div><input type="checkbox" id="prefNotifyCompleted" onchange="saveNotificationPref('notifyCompleted', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
-          <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Order Updates</span></div><input type="checkbox" id="prefNotifyOrders" onchange="saveNotificationPref('notifyOrders', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
-          <label class="flex items-center justify-between text-xs cursor-pointer"><div class="flex flex-col"><span class="text-gray-300 font-bold">Note Updates</span></div><input type="checkbox" id="prefNotifyNotes" onchange="saveNotificationPref('notifyNotes', this.checked)" class="w-4 h-4 accent-[#A6192E]"></label>
+        <div id="notificationPreferencesList" class="space-y-4 border-t border-gray-200 dark:border-gray-800 pt-3">
+          <div><h5 class="text-[10px] font-extrabold uppercase tracking-wider text-[#A6192E] mb-2">Tasks</h5><div class="space-y-2">
+            <label class="flex items-center justify-between gap-3 text-xs cursor-pointer"><span class="text-gray-700 dark:text-gray-200 font-semibold">New tasks assigned to me</span><input type="checkbox" id="prefNotifyAssigned" onchange="saveNotificationPref('notifyAssigned', this.checked)" class="w-4 h-4 accent-[#A6192E] shrink-0"></label>
+            <label class="flex items-center justify-between gap-3 text-xs cursor-pointer"><span class="text-gray-700 dark:text-gray-200 font-semibold">Anyone completes a task <span class="block text-[10px] text-gray-500 font-normal">Includes the name of the person who completed it</span></span><input type="checkbox" id="prefNotifyCompleted" onchange="saveNotificationPref('notifyCompleted', this.checked)" class="w-4 h-4 accent-[#A6192E] shrink-0"></label>
+          </div></div>
+          <div><h5 class="text-[10px] font-extrabold uppercase tracking-wider text-[#A6192E] mb-2">Orders</h5><div class="space-y-2">
+            <label class="flex items-center justify-between gap-3 text-xs cursor-pointer"><span class="text-gray-700 dark:text-gray-200 font-semibold">A new order is created</span><input type="checkbox" id="prefNotifyNewOrders" onchange="saveNotificationPref('notifyNewOrders', this.checked)" class="w-4 h-4 accent-[#A6192E] shrink-0"></label>
+            <label class="flex items-center justify-between gap-3 text-xs cursor-pointer"><span class="text-gray-700 dark:text-gray-200 font-semibold">An order is fully received <span class="block text-[10px] text-gray-500 font-normal">Only when every item has arrived</span></span><input type="checkbox" id="prefNotifyOrderReceived" onchange="saveNotificationPref('notifyOrderReceived', this.checked)" class="w-4 h-4 accent-[#A6192E] shrink-0"></label>
+            <label class="flex items-center justify-between gap-3 text-xs cursor-pointer"><span class="text-gray-700 dark:text-gray-200 font-semibold">An order is fully added to stock <span class="block text-[10px] text-gray-500 font-normal">Only when every item is marked stocked</span></span><input type="checkbox" id="prefNotifyOrderStocked" onchange="saveNotificationPref('notifyOrderStocked', this.checked)" class="w-4 h-4 accent-[#A6192E] shrink-0"></label>
+            <label class="flex items-center justify-between gap-3 text-xs cursor-pointer"><span class="text-gray-700 dark:text-gray-200 font-semibold">Other order status changes</span><input type="checkbox" id="prefNotifyOrders" onchange="saveNotificationPref('notifyOrders', this.checked)" class="w-4 h-4 accent-[#A6192E] shrink-0"></label>
+          </div></div>
+          <div><h5 class="text-[10px] font-extrabold uppercase tracking-wider text-[#A6192E] mb-2">Workspace</h5><div class="space-y-2">
+            <label class="flex items-center justify-between gap-3 text-xs cursor-pointer"><span class="text-gray-700 dark:text-gray-200 font-semibold">Note updates</span><input type="checkbox" id="prefNotifyNotes" onchange="saveNotificationPref('notifyNotes', this.checked)" class="w-4 h-4 accent-[#A6192E] shrink-0"></label>
+          </div></div>
+          <p class="text-[10px] text-gray-500">These settings apply to your account on all your subscribed devices. Order arrival and stock alerts are grouped: you only get one alert when the whole order reaches that stage.</p>
         </div>
       </div>
       
@@ -357,7 +375,7 @@
     let oneSignalClient = null;
     let oneSignalInitError = "";
 
-    function defaultNotificationPrefs() { return { enabled: false, notifyAssigned: false, notifyCompleted: false, notifyOrders: false, notifyNotes: false }; }
+    function defaultNotificationPrefs() { return { enabled: false, notifyAssigned: false, notifyCompleted: false, notifyOrders: false, notifyNotes: false, notifyNewOrders: false, notifyOrderReceived: false, notifyOrderStocked: false }; }
     function getNotificationPrefs(username) { return { ...defaultNotificationPrefs(), ...(loadLocal(`amada_notify_${username}`, defaultNotificationPrefs()) || {}) }; }
 
     async function saveNotificationPreferencesToCloud(prefs = getNotificationPrefs(activeUser)) {
@@ -388,7 +406,7 @@
         if (data.preferences && typeof data.preferences === "object") {
           const merged = { ...defaultNotificationPrefs(), ...data.preferences };
           safeStorageSet(`amada_notify_${activeUser}`, JSON.stringify(merged));
-        } else if (localPrefs.enabled || localPrefs.notifyAssigned || localPrefs.notifyCompleted || localPrefs.notifyOrders || localPrefs.notifyNotes) {
+        } else if (Object.keys(localPrefs).some(key => key !== 'enabled' && localPrefs[key] === true) || localPrefs.enabled) {
           await saveNotificationPreferencesToCloud(localPrefs);
         }
         updatePushUI();
@@ -416,7 +434,7 @@
         const subscribed = oneSignalClient.User.PushSubscription.optedIn === true;
         if (!subscribed) throw new Error("The device has not subscribed to push notifications. Check your browser or phone notification settings.");
         const prefs = getNotificationPrefs(activeUser);
-        prefs.enabled = true; prefs.notifyAssigned = true; prefs.notifyCompleted = true; prefs.notifyOrders = true; prefs.notifyNotes = true;
+        prefs.enabled = true; if (!Object.keys(prefs).some(key => key.startsWith('notify') && prefs[key])) prefs.notifyAssigned = true;
         safeStorageSet(`amada_notify_${activeUser}`, JSON.stringify(prefs));
         await saveNotificationPreferencesToCloud(prefs);
         updatePushUI();
@@ -436,7 +454,7 @@
       const btn = document.getElementById("enablePushBtn");
       const testBtn = document.getElementById("testPushBtn");
       const diagnostic = document.getElementById("pushDiagnosticText");
-      ['prefNotifyAssigned', 'prefNotifyCompleted', 'prefNotifyOrders', 'prefNotifyNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = !!prefs[id.replace('prefN', 'n')]; });
+      ['notifyAssigned','notifyCompleted','notifyOrders','notifyNotes','notifyNewOrders','notifyOrderReceived','notifyOrderStocked'].forEach(key => { const el = document.getElementById('pref' + key.charAt(0).toUpperCase() + key.slice(1)); if (el) el.checked = !!prefs[key]; });
       if (badge) {
         badge.innerText = subscribed && prefs.enabled ? "SUBSCRIBED" : (prefs.enabled ? "CHECK DEVICE" : "OFF");
         badge.className = subscribed && prefs.enabled
@@ -724,11 +742,26 @@
       if (activeUser && cloudToken && users.some(u => u.name === activeUser)) {
         document.getElementById("authOverlay").classList.add("hidden");
         document.getElementById("userBadge").innerText = activeUser.charAt(0); document.getElementById("userBadge").title = activeUser;
+        updateSettingsAccountDisplay();
       } else {
         document.getElementById("authOverlay").classList.remove("hidden"); renderUserProfiles();
       }
     }
+    function updateSettingsAccountDisplay() {
+      const nameEl = document.getElementById("settingsAccountName");
+      const roleEl = document.getElementById("settingsAccountRole");
+      const avatarEl = document.getElementById("settingsAccountAvatar");
+      if (!nameEl || !roleEl || !avatarEl) return;
+      const signedInName = activeUser || "Not signed in";
+      const userRecord = (users || []).find(u => u && u.name === activeUser);
+      const role = userRecord && userRecord.role ? String(userRecord.role) : "Workspace account";
+      nameEl.textContent = signedInName;
+      roleEl.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+      avatarEl.textContent = activeUser ? activeUser.charAt(0).toUpperCase() : "?";
+    }
     function handleLogout() {
+      if (!activeUser) return;
+      if (!confirm(`Log out of Amada Workspace as ${activeUser}?`)) return;
       if (activeUser && presenceMap[activeUser]) delete presenceMap[activeUser];
       try { if (window.OneSignalDeferred) OneSignalDeferred.push(function(OneSignal) { OneSignal.logout(); }); } catch(e){}
       safeStorageSet("amada_active_user", ""); safeStorageSet("amada_cloud_token", ""); activeUser = ""; cloudToken = ""; location.reload();
@@ -1468,7 +1501,7 @@
       renderAll();
     }
     function toggleDarkMode() { document.documentElement.classList.toggle("dark"); }
-    function openSettingsModal() { document.getElementById("settingsModal").classList.remove("hidden"); updatePushUI(); }
+    function openSettingsModal() { document.getElementById("settingsModal").classList.remove("hidden"); updateSettingsAccountDisplay(); updatePushUI(); }
     function closeSettingsModal() { document.getElementById("settingsModal").classList.add("hidden"); }
   </script>
 </body>
