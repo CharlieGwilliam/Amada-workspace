@@ -312,7 +312,8 @@
       catch (error) { console.warn(`Amada Workspace: could not save ${key}.`, error); return false; }
     }
 
-    const ONESIGNAL_APP_ID = "40ee1473-8e3b-4e29-b08e-e424b0e35e39", JSONBIN_KEY = "$2a$10$2Gc.koP13tnHaC6EZsfQXODqaMeOGptcDQKEh3JNf4Aeja1Vfc0uS", JSONBIN_BIN_ID = "6ae0b445ffd5d160538fff26";
+    const ONESIGNAL_APP_ID = "40ee1473-8e3b-4e29-b08e-e424b0e35e39";
+    const AMADA_API_BASE = "https://amada-sync-api.gwilliamcharlie.workers.dev";
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) { if (ONESIGNAL_APP_ID && !ONESIGNAL_APP_ID.includes("PASTE_")) { await OneSignal.init({ appId: ONESIGNAL_APP_ID, notifyButton: { enable: false } }); updatePushUI(); } });
     
@@ -356,7 +357,9 @@
     }
 
     let users = ensureProfiles(loadArray("amada_users", []));
-    let activeUser = safeStorageGet("amada_active_user", ""), currentWorkspace = 'shared', currentMainTab = "tasks", currentNoteFolderId = null, activeFilterType = null, activeFilterId = null, selectedUserForAuth = "", presenceMap = {}, isCompletedOpen = false, isCompletedOrdersOpen = false, openAccordionsMap = {};
+    let activeUser = safeStorageGet("amada_active_user", ""), cloudToken = safeStorageGet("amada_cloud_token", ""), currentWorkspace = 'shared', currentMainTab = "tasks", currentNoteFolderId = null, activeFilterType = null, activeFilterId = null, selectedUserForAuth = "", presenceMap = {}, isCompletedOpen = false, isCompletedOrdersOpen = false, openAccordionsMap = {};
+    // Sessions from the old JSONBin-only version cannot authenticate with Cloudflare.
+    if (activeUser && !cloudToken) { activeUser = ""; safeStorageSet("amada_active_user", ""); }
     let sharedTags = loadArray("amada_shared_tags", [{ id: "t_urgent", title: "Urgent", color: "#ef4444" }, { id: "t_cnc", title: "Machining", color: "#3b82f6" }]);
     let sharedSections = loadArray("amada_shared_sections", [{ id: "s1", title: "High Priority" }, { id: "s2", title: "Medium Priority" }]);
     let noteFolders = loadArray("amada_note_folders", [{ id: "nf1", title: "General Guidelines", parentId: null }]);
@@ -366,7 +369,7 @@
     presenceMap = loadLocal("amada_presence", {});
     if (!presenceMap || typeof presenceMap !== 'object' || Array.isArray(presenceMap)) presenceMap = {};
     noteFolders = noteFolders.map((f, index) => ({ ...f, id: f.id || `nf_recovered_${index}`, title: String(f.title || 'Untitled folder'), parentId: f.parentId ?? null }));
-    sharedSections = sharedSections.map((section, index) => ({ ...section, id: section.id || `section_recovered_${index}`, title: String(section.title || 'Untitled section') }));
+    sharedSections = sharedSections.map((section, index) => ({ ...section, id: section.id || `section_recovered_${index}`, title: String(section.title || 'Untitled section'), showOnHome: section.showOnHome !== false }));
     sharedTags = sharedTags.map((tag, index) => ({ ...tag, id: tag.id || `tag_recovered_${index}`, title: String(tag.title || 'Untitled tag'), color: tag.color || '#A6192E' }));
     tasks = tasks.map((item, index) => ({ ...item, id: item.id || `task_recovered_${index}`, title: String(item.title || 'Untitled task'), assignees: Array.isArray(item.assignees) ? item.assignees : [], history: Array.isArray(item.history) ? item.history : [] }));
     notes = notes.map((item, index) => ({ ...item, id: item.id || `note_recovered_${index}`, title: String(item.title || 'Untitled note'), content: String(item.content || ''), assignees: Array.isArray(item.assignees) ? item.assignees : [], history: Array.isArray(item.history) ? item.history : [] }));
@@ -404,9 +407,15 @@
       try { renderAll(); } catch (error) { console.error('Workspace view initialisation failed; login remains available:', error); }
       try { initSortable(); } catch (error) { console.warn('Drag-and-drop will be unavailable in this session:', error); }
 
-      // Remote sync is optional and never blocks the initial login screen.
-      fetchFromRemoteBin().catch(error => console.warn('Initial remote sync failed:', error));
-      if (!remoteSyncTimer) remoteSyncTimer = window.setInterval(() => fetchFromRemoteBin().catch(error => console.warn('Remote sync failed:', error)), 3500);
+      // Load public profile names first. Private workspace data is fetched only after login.
+      loadProfilesFromCloud().catch(error => console.warn('Could not load cloud profiles:', error));
+      if (activeUser && cloudToken) {
+        fetchFromRemoteBin().catch(error => console.warn('Initial Cloudflare sync failed:', error));
+      }
+      // A longer interval reduces free-tier usage while keeping the shared board current.
+      if (!remoteSyncTimer) remoteSyncTimer = window.setInterval(() => {
+        if (activeUser && cloudToken) fetchFromRemoteBin().catch(error => console.warn('Cloudflare sync failed:', error));
+      }, 15000);
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootApp, { once: true });
     else window.setTimeout(bootApp, 0);
@@ -433,34 +442,85 @@
       container.innerHTML = activeList.map(item => `<div class="flex items-center justify-between py-1 border-b border-gray-100 dark:border-gray-800/50 last:border-none"><div class="flex items-center space-x-2"><div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div><span class="font-bold text-gray-200">${item.name}</span></div><span class="text-[10px] text-emerald-400 font-semibold">${item.isMe ? '(You)' : 'Active'}</span></div>`).join('');
     }
 
-    async function fetchFromRemoteBin() {
+    async function loadProfilesFromCloud() {
       try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, { method: "GET", headers: { "X-Master-Key": JSONBIN_KEY } });
-        if (res.ok) {
-          const content = (await res.json()).record || {};
-          if (content.recentActivity && content.recentActivity.id !== globalActivity.id) { if (content.recentActivity.user !== activeUser && activeUser !== "") triggerLocalNotification("Workspace Update", content.recentActivity.msg); globalActivity = content.recentActivity; localStorage.setItem("amada_recent_activity", JSON.stringify(globalActivity)); }
-          if (Array.isArray(content.users)) users = ensureProfiles(content.users);
-          if (Array.isArray(content.sharedTags)) sharedTags = content.sharedTags.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `tag_remote_${i}`, title: String(x.title || 'Untitled tag'), color: x.color || '#A6192E' }));
-          if (Array.isArray(content.sharedSections)) sharedSections = content.sharedSections.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `section_remote_${i}`, title: String(x.title || 'Untitled section') }));
-          if (Array.isArray(content.noteFolders)) noteFolders = content.noteFolders.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `folder_remote_${i}`, title: String(x.title || 'Untitled folder'), parentId: x.parentId ?? null }));
-          if (Array.isArray(content.tasks)) tasks = content.tasks.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `task_remote_${i}`, assignees: Array.isArray(x.assignees) ? x.assignees : [], history: Array.isArray(x.history) ? x.history : [] }));
-          if (Array.isArray(content.notes)) notes = content.notes.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `note_remote_${i}`, assignees: Array.isArray(x.assignees) ? x.assignees : [], history: Array.isArray(x.history) ? x.history : [] }));
-          if (Array.isArray(content.orders)) orders = content.orders.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `order_remote_${i}`, items: Array.isArray(x.items) ? x.items.filter(Boolean) : [] }));
-          if (content.presence && typeof content.presence === 'object' && !Array.isArray(content.presence)) presenceMap = content.presence;
-          if (activeUser) presenceMap[activeUser] = Date.now();
-          localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_note_folders", JSON.stringify(noteFolders)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders)); localStorage.setItem("amada_presence", JSON.stringify(presenceMap));
-          updateSyncUI("ok"); updatePresenceUI(); renderUserProfiles(); renderPermissionsUserList();
-          const el = document.activeElement; if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' && el.tagName !== 'SELECT')) renderAll();
-        } else updateSyncUI("error");
-      } catch (e) { updateSyncUI("error"); }
+        const res = await fetch(`${AMADA_API_BASE}/api/profiles`, { method: "GET", cache: "no-store" });
+        if (!res.ok) throw new Error(`Profile request failed (${res.status})`);
+        const payload = await res.json();
+        if (Array.isArray(payload.users)) {
+          users = ensureProfiles(payload.users.map(profile => {
+            const existing = users.find(user => user.name === profile.name);
+            return { ...(existing || {}), ...profile, password: existing?.password || "" };
+          }));
+          safeStorageSet("amada_users", JSON.stringify(users));
+          renderUserProfiles();
+          checkAuth();
+        }
+      } catch (error) {
+        // Keep locally cached profile names visible; login still reports a clear connection error.
+        console.warn("Cloud profiles unavailable:", error);
+      }
+    }
+
+    async function fetchFromRemoteBin() {
+      if (!activeUser || !cloudToken) return false;
+      try {
+        const res = await fetch(`${AMADA_API_BASE}/api/state`, {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${cloudToken}` },
+          cache: "no-store"
+        });
+        if (res.status === 401) {
+          cloudToken = ""; activeUser = "";
+          safeStorageSet("amada_cloud_token", ""); safeStorageSet("amada_active_user", "");
+          checkAuth(); updateSyncUI("error"); await loadProfilesFromCloud();
+          return false;
+        }
+        if (!res.ok) throw new Error(`Cloud sync request failed (${res.status})`);
+        const content = await res.json();
+        if (content.recentActivity && content.recentActivity.id !== globalActivity.id) {
+          if (content.recentActivity.user !== activeUser && activeUser !== "") triggerLocalNotification("Workspace Update", content.recentActivity.msg);
+          globalActivity = content.recentActivity; safeStorageSet("amada_recent_activity", JSON.stringify(globalActivity));
+        }
+        if (Array.isArray(content.users)) users = ensureProfiles(content.users);
+        if (Array.isArray(content.sharedTags)) sharedTags = content.sharedTags.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `tag_remote_${i}`, title: String(x.title || 'Untitled tag'), color: x.color || '#A6192E' }));
+        if (Array.isArray(content.sharedSections)) sharedSections = content.sharedSections.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `section_remote_${i}`, title: String(x.title || 'Untitled section'), showOnHome: x.showOnHome !== false }));
+        if (Array.isArray(content.noteFolders)) noteFolders = content.noteFolders.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `folder_remote_${i}`, title: String(x.title || 'Untitled folder'), parentId: x.parentId ?? null }));
+        if (Array.isArray(content.tasks)) tasks = content.tasks.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `task_remote_${i}`, assignees: Array.isArray(x.assignees) ? x.assignees : [], history: Array.isArray(x.history) ? x.history : [] }));
+        if (Array.isArray(content.notes)) notes = content.notes.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `note_remote_${i}`, assignees: Array.isArray(x.assignees) ? x.assignees : [], history: Array.isArray(x.history) ? x.history : [] }));
+        if (Array.isArray(content.orders)) orders = content.orders.filter(x => x && typeof x === 'object').map((x, i) => ({ ...x, id: x.id || `order_remote_${i}`, items: Array.isArray(x.items) ? x.items.filter(Boolean) : [] }));
+        if (content.presence && typeof content.presence === 'object' && !Array.isArray(content.presence)) presenceMap = content.presence;
+        if (activeUser) presenceMap[activeUser] = Date.now();
+        safeStorageSet("amada_users", JSON.stringify(users)); safeStorageSet("amada_shared_tags", JSON.stringify(sharedTags)); safeStorageSet("amada_shared_sections", JSON.stringify(sharedSections)); safeStorageSet("amada_note_folders", JSON.stringify(noteFolders)); safeStorageSet("amada_tasks", JSON.stringify(tasks)); safeStorageSet("amada_notes", JSON.stringify(notes)); safeStorageSet("amada_orders", JSON.stringify(orders)); safeStorageSet("amada_presence", JSON.stringify(presenceMap));
+        updateSyncUI("ok"); updatePresenceUI(); renderUserProfiles(); renderPermissionsUserList(); checkAuth();
+        const el = document.activeElement;
+        if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' && el.tagName !== 'SELECT')) renderAll();
+        return true;
+      } catch (error) {
+        console.warn("Cloudflare sync failed:", error); updateSyncUI("error"); return false;
+      }
     }
 
     async function saveData(actionMessage = "") {
       if (activeUser) presenceMap[activeUser] = Date.now();
-      if (actionMessage) { globalActivity = { id: Date.now().toString(), msg: actionMessage, user: activeUser }; localStorage.setItem("amada_recent_activity", JSON.stringify(globalActivity)); }
-      localStorage.setItem("amada_users", JSON.stringify(users)); localStorage.setItem("amada_shared_tags", JSON.stringify(sharedTags)); localStorage.setItem("amada_shared_sections", JSON.stringify(sharedSections)); localStorage.setItem("amada_note_folders", JSON.stringify(noteFolders)); localStorage.setItem("amada_tasks", JSON.stringify(tasks)); localStorage.setItem("amada_notes", JSON.stringify(notes)); localStorage.setItem("amada_orders", JSON.stringify(orders)); localStorage.setItem("amada_presence", JSON.stringify(presenceMap));
+      if (actionMessage) { globalActivity = { id: Date.now().toString(), msg: actionMessage, user: activeUser }; safeStorageSet("amada_recent_activity", JSON.stringify(globalActivity)); }
+      safeStorageSet("amada_users", JSON.stringify(users)); safeStorageSet("amada_shared_tags", JSON.stringify(sharedTags)); safeStorageSet("amada_shared_sections", JSON.stringify(sharedSections)); safeStorageSet("amada_note_folders", JSON.stringify(noteFolders)); safeStorageSet("amada_tasks", JSON.stringify(tasks)); safeStorageSet("amada_notes", JSON.stringify(notes)); safeStorageSet("amada_orders", JSON.stringify(orders)); safeStorageSet("amada_presence", JSON.stringify(presenceMap));
       renderAll(); updatePresenceUI(); renderPermissionsUserList();
-      try { await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, { method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY }, body: JSON.stringify({ users, sharedTags, sharedSections, noteFolders, tasks, notes, orders, presence: presenceMap, recentActivity: globalActivity }) }); updateSyncUI("ok"); } catch (e) { updateSyncUI("error"); }
+      if (!activeUser || !cloudToken) { updateSyncUI("error"); return; }
+      try {
+        const response = await fetch(`${AMADA_API_BASE}/api/state`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cloudToken}` },
+          body: JSON.stringify({ users, sharedTags, sharedSections, noteFolders, tasks, notes, orders, presence: presenceMap, recentActivity: globalActivity })
+        });
+        if (!response.ok) {
+          const problem = await response.json().catch(() => ({}));
+          throw new Error(problem.error || `Cloud save failed (${response.status})`);
+        }
+        updateSyncUI("ok");
+      } catch (error) {
+        console.error("Cloudflare save failed; local copy retained:", error); updateSyncUI("error");
+      }
     }
 
     function renderUserProfiles() {
@@ -475,17 +535,49 @@
 
     function selectUserForLogin(name) { selectedUserForAuth = name; document.getElementById("loginUserLabel").innerText = `Password for ${name}`; document.getElementById("userSelectionStep").classList.add("hidden"); document.getElementById("passwordStep").classList.remove("hidden"); document.getElementById("loginPassword").focus(); }
     function resetLoginStep() { document.getElementById("userSelectionStep").classList.remove("hidden"); document.getElementById("passwordStep").classList.add("hidden"); }
-    function verifyPassword(e) {
-      e.preventDefault(); const u = users.find(x => x.name === selectedUserForAuth); const targetPassword = (u && u.password) ? u.password : "AMADA";
-      if (document.getElementById("loginPassword").value === targetPassword) {
-        activeUser = selectedUserForAuth; presenceMap[activeUser] = Date.now(); localStorage.setItem("amada_active_user", activeUser);
-        document.getElementById("authOverlay").classList.add("hidden"); document.getElementById("loginPassword").value = "";
+    async function verifyPassword(e) {
+      e.preventDefault();
+      const passwordInput = document.getElementById("loginPassword");
+      const errorEl = document.getElementById("authError");
+      const submitButton = document.querySelector("#passwordStep button[type='submit']");
+      const password = passwordInput.value;
+      errorEl.classList.add("hidden");
+      if (submitButton) { submitButton.disabled = true; submitButton.innerText = "Signing in…"; }
+      try {
+        const response = await fetch(`${AMADA_API_BASE}/api/login`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: selectedUserForAuth, password })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || `Login failed (${response.status}).`);
+        activeUser = result.user.name; cloudToken = result.token; presenceMap[activeUser] = Date.now();
+        safeStorageSet("amada_active_user", activeUser); safeStorageSet("amada_cloud_token", cloudToken);
+        passwordInput.value = "";
+        document.getElementById("authOverlay").classList.add("hidden");
         try { if (window.OneSignalDeferred) OneSignalDeferred.push(function(OneSignal) { OneSignal.login(activeUser); }); } catch(err){}
-        switchWorkspace('shared'); checkAuth(); fetchFromRemoteBin(); 
-      } else document.getElementById("authError").classList.remove("hidden");
+        switchWorkspace('shared'); checkAuth();
+        const loaded = await fetchFromRemoteBin();
+        if (!loaded) { updateSyncUI("error"); }
+      } catch (error) {
+        errorEl.innerText = error.message || "Could not sign in. Check your connection and try again.";
+        errorEl.classList.remove("hidden");
+      } finally {
+        if (submitButton) { submitButton.disabled = false; submitButton.innerText = "Login"; }
+      }
     }
-    function checkAuth() { if (activeUser && users.some(u => u.name === activeUser)) { document.getElementById("authOverlay").classList.add("hidden"); document.getElementById("userBadge").innerText = activeUser.charAt(0); document.getElementById("userBadge").title = activeUser; } else { document.getElementById("authOverlay").classList.remove("hidden"); renderUserProfiles(); } }
-    function handleLogout() { if (activeUser && presenceMap[activeUser]) delete presenceMap[activeUser]; try{if (window.OneSignalDeferred) OneSignalDeferred.push(function(OneSignal) { OneSignal.logout(); });}catch(e){} localStorage.removeItem("amada_active_user"); activeUser = ""; location.reload(); }
+    function checkAuth() {
+      if (activeUser && cloudToken && users.some(u => u.name === activeUser)) {
+        document.getElementById("authOverlay").classList.add("hidden");
+        document.getElementById("userBadge").innerText = activeUser.charAt(0); document.getElementById("userBadge").title = activeUser;
+      } else {
+        document.getElementById("authOverlay").classList.remove("hidden"); renderUserProfiles();
+      }
+    }
+    function handleLogout() {
+      if (activeUser && presenceMap[activeUser]) delete presenceMap[activeUser];
+      try { if (window.OneSignalDeferred) OneSignalDeferred.push(function(OneSignal) { OneSignal.logout(); }); } catch(e){}
+      safeStorageSet("amada_active_user", ""); safeStorageSet("amada_cloud_token", ""); activeUser = ""; cloudToken = ""; location.reload();
+    }
 
     function makeDraggable(id) { const el = document.getElementById(id); if(el) el.setAttribute('draggable', 'true'); }
     function makeUndraggable(id) { const el = document.getElementById(id); if(el) el.setAttribute('draggable', 'false'); }
@@ -766,8 +858,24 @@
       const orderedSections = getPersonalOrderedSections();
       container.innerHTML = orderedSections.map(s => {
         const count = tasks.filter(t => t.sectionId === s.id && !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser)).length;
-        return `<div id="section_sidebar_${s.id}" class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all"><div class="flex items-center space-x-2 truncate flex-1 cursor-pointer" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);"><span class="truncate font-medium">${s.title}</span></div><span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span></div>`;
+        const showOnHome = s.showOnHome !== false;
+        return `<div id="section_sidebar_${s.id}" class="group flex items-center justify-between p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-all">
+          <div class="flex items-center space-x-2 truncate flex-1 min-w-0 cursor-pointer" onclick="filterBySection('${s.id}'); toggleMobileSidebar(false);"><span class="truncate font-medium">${s.title}</span></div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <label class="inline-flex items-center justify-center p-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-700 cursor-pointer" title="${showOnHome ? 'Shown' : 'Hidden'} on the home Tasks board">
+              <input type="checkbox" aria-label="Show ${s.title} on the home Tasks board" ${showOnHome ? 'checked' : ''} onchange="toggleSectionOnHome('${s.id}', this.checked)" onclick="event.stopPropagation();" class="w-4 h-4 accent-[#A6192E] cursor-pointer">
+            </label>
+            <span class="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">${count}</span>
+          </div>
+        </div>`;
       }).join('');
+    }
+
+    function toggleSectionOnHome(sectionId, isVisible) {
+      const section = sharedSections.find(item => String(item.id) === String(sectionId));
+      if (!section) return;
+      section.showOnHome = Boolean(isVisible);
+      saveData();
     }
     
     function renderNoteFoldersSidebar() {
@@ -799,14 +907,17 @@
     function filterByStarred() { activeFilterType = "starred"; activeFilterId = "starred"; renderAll(); }
     function clearActiveFilter() { activeFilterType = null; activeFilterId = null; renderAll(); }
 
-    function openNewSectionModal() { const title = prompt("Section Title:"); if (title) { sharedSections.push({ id: "s_" + Date.now(), title }); saveData(); } }
+    function openNewSectionModal() { const title = prompt("Section Title:"); if (title && title.trim()) { sharedSections.push({ id: "s_" + Date.now(), title: title.trim(), showOnHome: true }); saveData(); } }
     function openNewNoteFolderModal() { const title = prompt("New Folder Name:"); if (title) { noteFolders.push({ id: "nf_" + Date.now(), title, parentId: currentNoteFolderId || null }); saveData(`Created note folder: ${title}`); } }
     function deleteNoteFolder(id) { noteFolders = noteFolders.filter(f => f.id !== id); notes.forEach(n => { if(n.folderId === id) n.folderId = ""; }); if(currentNoteFolderId === id) currentNoteFolderId = null; saveData(); }
 
     function renderTasksBoard() {
       const view = document.getElementById("tasksView"); if (!view) return;
       let visibleSections = getPersonalOrderedSections();
+      // Hide categories unchecked in the sidebar on the normal Tasks home board.
+      // A category can still be opened directly from the sidebar while hidden.
       if (activeFilterType === "section") visibleSections = visibleSections.filter(s => s.id === activeFilterId);
+      else visibleSections = visibleSections.filter(s => s.showOnHome !== false);
 
       view.innerHTML = visibleSections.map(s => {
         let listTasks = tasks.filter(t => t.sectionId === s.id && !t.completed && (t.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || t.owner === activeUser));
