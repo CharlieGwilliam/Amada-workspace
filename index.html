@@ -234,13 +234,42 @@
           </div>
           <div class="relative w-full">
             <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-gray-400"></i>
-            <input type="text" id="orderSearchInput" oninput="renderOrders()" placeholder="Search PO#, item, supplier..." class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700/80 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-[#A6192E]">
+            <input type="text" id="orderSearchInput" oninput="renderOrders()" placeholder="Search PO#, item, type, notes..." class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700/80 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-[#A6192E]">
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400">SORT BY
+              <select id="orderSortInput" onchange="renderOrders()" class="mt-1 w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl px-2.5 py-2 text-xs text-gray-800 dark:text-gray-200 font-medium">
+                <option value="date-newest">Newest to oldest</option>
+                <option value="date-oldest">Oldest to newest</option>
+                <option value="po-az">PO number (A–Z)</option>
+                <option value="po-za">PO number (Z–A)</option>
+                <option value="type-az">Order type (A–Z)</option>
+                <option value="type-za">Order type (Z–A)</option>
+                <option value="items-most">Most items</option>
+                <option value="items-least">Fewest items</option>
+              </select>
+            </label>
+            <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400">FILTER BY PROGRESS
+              <select id="orderProgressFilterInput" onchange="renderOrders()" class="mt-1 w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl px-2.5 py-2 text-xs text-gray-800 dark:text-gray-200 font-medium">
+                <option value="all">All progress</option>
+                <option value="awaiting">Awaiting delivery</option>
+                <option value="partial">Partially received</option>
+                <option value="received">Fully received</option>
+                <option value="not-stocked">Not fully stocked</option>
+                <option value="stocked">Fully stocked</option>
+              </select>
+            </label>
+            <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400">ORDER TYPE
+              <select id="orderTypeFilterInput" onchange="renderOrders()" class="mt-1 w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl px-2.5 py-2 text-xs text-gray-800 dark:text-gray-200 font-medium">
+                <option value="all">All types</option>
+              </select>
+            </label>
           </div>
         </div>
         <div class="space-y-3">
           <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between px-1">
             <div class="flex items-center space-x-2"><span>Active Orders</span><span id="activeOrdersBadge" class="bg-gray-200 dark:bg-gray-800 text-gray-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span></div>
-            <span class="text-[10px] text-gray-500 font-medium">Sorted: Newest at top</span>
+            <span class="text-[10px] text-gray-500 font-medium">Use the controls above to sort and filter</span>
           </div>
           <div id="ordersListContainer" class="space-y-3"></div>
         </div>
@@ -284,6 +313,8 @@
         <p class="text-[11px] text-gray-500 mb-3">Push notifications disabled by default.</p>
         <button id="enablePushBtn" onclick="requestNotificationPermission()" class="w-full py-2 px-3 rounded-xl bg-[#A6192E] text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Enable Device Notifications</button>
         <button id="testPushBtn" onclick="sendTestPush()" class="w-full py-2 px-3 rounded-xl bg-emerald-700/80 text-white text-xs font-bold shadow hover:opacity-90 transition mb-3">Send Test Notification</button>
+        <button id="unsubscribePushBtn" onclick="unsubscribeFromNotifications()" class="w-full py-2 px-3 rounded-xl border border-red-400/60 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-950/30 transition mb-3">Unsubscribe from all notifications</button>
+        <p class="text-[10px] text-gray-500 mb-2">Unsubscribing turns off push alerts for your account across your subscribed devices. You can enable them again at any time.</p>
         <p id="pushDiagnosticText" class="text-[10px] text-gray-500 mb-2">Push status will appear here.</p>
         <div id="notificationPreferencesList" class="space-y-4 border-t border-gray-200 dark:border-gray-800 pt-3">
           <div><h5 class="text-[10px] font-extrabold uppercase tracking-wider text-[#A6192E] mb-2">Tasks</h5><div class="space-y-2">
@@ -333,7 +364,7 @@
 
   <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 id="orderModalHeading" class="text-base font-bold">New Order</h3><button type="button" onclick="closeOrderModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveOrder(event)" class="space-y-3"><input type="hidden" id="orderIdInput"><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">PO</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Date</label><input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Type</label><input type="text" id="orderTypeInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Ordered By</label><input type="text" id="orderPlacedByInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Items</label><textarea id="orderFreeformItemsInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Notes</label><textarea id="orderNotesInput" rows="2" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></textarea></div><div tabindex="0" onpaste="handleUniversalPaste(event, 'order')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="orderFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'order')" class="hidden"><div onclick="document.getElementById('orderFileInput').click()"><i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="orderFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="orderFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('order')" class="text-red-400">Remove</button></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
-  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="taskModalHeading" class="text-base font-bold">Edit Task</h3><button type="button" onclick="closeTaskModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveTask(event)" class="space-y-3"><input type="hidden" id="taskIdInput"><input type="text" id="taskTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div><textarea id="taskNotesInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'task')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'task')" class="hidden"><div onclick="document.getElementById('taskFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="taskFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="taskFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('task')" class="text-red-400">Remove</button></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border-gray-700 text-xs"></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
+  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="taskModalHeading" class="text-base font-bold">Edit Task</h3><button type="button" onclick="closeTaskModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveTask(event)" class="space-y-3"><input type="hidden" id="taskIdInput"><input type="text" id="taskTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div><div><label for="taskDueDateInput" class="block text-[10px] font-bold text-gray-400 mb-1">Due date (optional)</label><input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div><textarea id="taskNotesInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'task')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'task')" class="hidden"><div onclick="document.getElementById('taskFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="taskFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="taskFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('task')" class="text-red-400">Remove</button></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border-gray-700 text-xs"></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
   <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="noteModalTitle" class="text-base font-bold">Edit Note</h3><button type="button" onclick="closeNoteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveNote(event)" class="space-y-3"><input type="hidden" id="noteId"><input type="text" id="noteTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="noteFolderInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="noteTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select></div><textarea id="noteContentInput" rows="4" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'note')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="noteFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'note')" class="hidden"><div onclick="document.getElementById('noteFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="noteFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="noteFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('note')" class="text-red-400">Remove</button></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl text-xs"></div></div><div class="flex items-center space-x-2 pt-1"><input type="checkbox" id="noteStarInput" class="w-4 h-4"><label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label></div><div class="flex justify-end space-x-2 pt-2 border-t border-gray-800"><button type="button" onclick="closeNoteModal()" class="px-4 py-2 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
@@ -443,6 +474,38 @@
         console.error("OneSignal opt-in failed:", error);
         alert(`Could not enable notifications: ${error.message || error}`);
         updatePushUI();
+      }
+    }
+
+    async function unsubscribeFromNotifications() {
+      if (!activeUser) {
+        alert("Please sign in before changing notification settings.");
+        return;
+      }
+      if (!confirm("Unsubscribe from Amada Workspace push notifications on all devices linked to your account? You can enable notifications again later.")) return;
+
+      const prefs = getNotificationPrefs(activeUser);
+      prefs.enabled = false;
+      safeStorageSet(`amada_notify_${activeUser}`, JSON.stringify(prefs));
+
+      // The account-level setting stops notifications on every device linked to this username.
+      const cloudSaved = await saveNotificationPreferencesToCloud(prefs);
+
+      // Also opt this browser/device out of OneSignal push delivery.
+      try {
+        const pushSubscription = oneSignalClient && oneSignalClient.User && oneSignalClient.User.PushSubscription;
+        if (pushSubscription && pushSubscription.optedIn === true && typeof pushSubscription.optOut === "function") {
+          await pushSubscription.optOut();
+        }
+      } catch (error) {
+        console.warn("This device could not be opted out of OneSignal, but the account notification preference has been disabled:", error);
+      }
+
+      updatePushUI();
+      if (cloudSaved) {
+        alert("You have been unsubscribed. Amada Workspace notifications are now turned off for your account on all linked devices. You can subscribe again at any time.");
+      } else {
+        alert("Notifications have been turned off on this device, but the account-wide change could not be saved to the server. Please check your connection and try again so your other devices are also unsubscribed.");
       }
     }
 
@@ -1208,6 +1271,8 @@
 
     function renderTaskCardHtml(t) {
       const section = sharedSections.find(x => x.id === t.sectionId); const tag = sharedTags.find(x => x.id === t.tagId); const canEdit = canModifyItem(t);
+      const today = new Date(); const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const dueDateOverdue = !!t.dueDate && t.dueDate < todayKey && !t.completed;
       return `
         <div id="task_${t.id}" data-task-id="${t.id}" onclick="if (!event.target.closest('button,input,label,a,select,textarea,.drag-handle')) openTaskDetailModal('${t.id}')" class="task-card group bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700/60 rounded-2xl p-3 flex flex-col space-y-2 shadow-sm relative transition">
           <div class="absolute top-1.5 right-1.5 flex items-center space-x-0.5 z-10 bg-gray-50/80 dark:bg-[#252525]/80 rounded-lg p-0.5">
@@ -1224,6 +1289,7 @@
               ${section ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold">${section.title}</span>` : ''}
               ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
               ${t.priority ? `<span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${t.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-gray-200 dark:bg-gray-800 text-gray-400'}">${t.priority}</span>` : ''}
+              ${t.dueDate ? `<span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${dueDateOverdue ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">${dueDateOverdue ? 'Overdue • ' : 'Due ' }${formatOrderDate(t.dueDate)}</span>` : ''}
               ${t.assignees && currentWorkspace === 'shared' ? t.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded-full">${a}</span>`).join('') : ''}
             </div>
             ${canEdit ? `<div class="flex items-center space-x-1 shrink-0"><button onclick="event.stopPropagation(); openEditTaskModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button><button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>` : ''}
@@ -1353,14 +1419,14 @@
     function openNewTaskModal() {
       document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
       document.getElementById("taskAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
-      document.getElementById("taskIdInput").value = ""; document.getElementById("taskTitleInput").value = ""; document.getElementById("taskNotesInput").value = ""; document.getElementById("taskModalHeading").innerText = "Create New Task";
+      document.getElementById("taskIdInput").value = ""; document.getElementById("taskTitleInput").value = ""; document.getElementById("taskDueDateInput").value = ""; document.getElementById("taskNotesInput").value = ""; document.getElementById("taskModalHeading").innerText = "Create New Task";
       removeUniversalFile('task'); document.getElementById("taskModal").classList.remove("hidden");
     }
     function openEditTaskModal(id) {
       document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
       const t = tasks.find(x => x.id === id);
       if (t) {
-        document.getElementById("taskIdInput").value = t.id; document.getElementById("taskTitleInput").value = t.title; document.getElementById("taskSectionInput").value = t.sectionId; document.getElementById("taskPriorityInput").value = t.priority || "Medium"; document.getElementById("taskNotesInput").value = t.notes || "";
+        document.getElementById("taskIdInput").value = t.id; document.getElementById("taskTitleInput").value = t.title; document.getElementById("taskSectionInput").value = t.sectionId; document.getElementById("taskPriorityInput").value = t.priority || "Medium"; document.getElementById("taskDueDateInput").value = t.dueDate || ""; document.getElementById("taskNotesInput").value = t.notes || "";
         document.getElementById("taskAssigneesContainer").innerHTML = users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(t.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('');
         if (t.attachment) { tempFileState.task = t.attachment; document.getElementById("taskFileNameLabel").innerText = t.attachment.name; document.getElementById("taskFilePreviewContainer").classList.remove("hidden"); } else { removeUniversalFile('task'); }
       }
@@ -1368,11 +1434,11 @@
     }
     function saveTask(e) {
       e.preventDefault();
-      const id = document.getElementById("taskIdInput").value; const title = document.getElementById("taskTitleInput").value.trim(); const sectionId = document.getElementById("taskSectionInput").value; const priority = document.getElementById("taskPriorityInput").value; const notesText = document.getElementById("taskNotesInput").value.trim(); const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value); const attachment = tempFileState.task;
+      const id = document.getElementById("taskIdInput").value; const title = document.getElementById("taskTitleInput").value.trim(); const sectionId = document.getElementById("taskSectionInput").value; const priority = document.getElementById("taskPriorityInput").value; const dueDate = document.getElementById("taskDueDateInput").value || ""; const notesText = document.getElementById("taskNotesInput").value.trim(); const assignees = Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value); const attachment = tempFileState.task;
       if (id) {
         const t = tasks.find(x => x.id === id);
-        if (t) { t.title = title; t.sectionId = sectionId; t.priority = priority; t.notes = notesText; t.assignees = assignees; t.attachment = attachment; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited task: ${title}`); }
-      } else { tasks.push({ id: Date.now().toString(), title, sectionId, priority, notes: notesText, assignees: assignees.length ? assignees : [activeUser], attachment, completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Created new task: ${title}`); }
+        if (t) { t.title = title; t.sectionId = sectionId; t.priority = priority; t.dueDate = dueDate; t.notes = notesText; t.assignees = assignees; t.attachment = attachment; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited task: ${title}`); }
+      } else { tasks.push({ id: Date.now().toString(), title, sectionId, priority, dueDate, notes: notesText, assignees: assignees.length ? assignees : [activeUser], attachment, completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Created new task: ${title}`); }
       closeTaskModal();
     }
     function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); removeUniversalFile('task'); }
@@ -1380,7 +1446,7 @@
     function openTaskDetailModal(id) {
       const t = tasks.find(x => x.id === id); if (!t) return;
       document.getElementById("detailTitle").innerText = t.title; document.getElementById("detailNotes").innerText = t.notes || "No description provided."; document.getElementById("detailPriority").innerText = t.priority || "Medium";
-      const sec = sharedSections.find(s => s.id === t.sectionId); document.getElementById("detailSection").innerText = sec ? sec.title : "General"; document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone"; const dueEl = document.getElementById("detailDueDate"); const ownerEl = document.getElementById("detailOwner"); if (dueEl) dueEl.innerText = t.dueDate || "No Date"; if (ownerEl) ownerEl.innerText = t.owner || "System";
+      const sec = sharedSections.find(s => s.id === t.sectionId); document.getElementById("detailSection").innerText = sec ? sec.title : "General"; document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone"; const dueEl = document.getElementById("detailDueDate"); const ownerEl = document.getElementById("detailOwner"); if (dueEl) dueEl.innerText = t.dueDate ? formatOrderDate(t.dueDate) : "No Date"; if (ownerEl) ownerEl.innerText = t.owner || "System";
       const badge = document.getElementById("detailStatusBadge");
       if (t.completed) { badge.innerText = "Completed"; badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"; badge.classList.remove("hidden"); } else { badge.classList.add("hidden"); }
       const log = document.getElementById("detailHistoryLog");
@@ -1427,10 +1493,59 @@
     
     function renderOrders() {
       const activeContainer = document.getElementById("ordersListContainer"); const completedContainer = document.getElementById("completedOrdersList"); if (!activeContainer || !completedContainer) return;
-      const filtered = orders.filter(o => (o.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || o.owner === activeUser));
-      const activeOrders = filtered.filter(o => !o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime()); const completedOrders = filtered.filter(o => o.completed).sort((a,b) => new Date(b.dateOrdered).getTime() - new Date(a.dateOrdered).getTime());
+      const visibleOrders = orders.filter(o => (o.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || o.owner === activeUser));
+      const typeSelect = document.getElementById("orderTypeFilterInput");
+      const selectedType = typeSelect ? (typeSelect.value || 'all') : 'all';
+      if (typeSelect) {
+        const types = [...new Set(visibleOrders.map(o => String(o.orderType || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        const escapeOption = value => String(value).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+        typeSelect.innerHTML = `<option value="all">All types</option>` + types.map(type => `<option value="${escapeOption(type)}">${escapeOption(type)}</option>`).join('');
+        typeSelect.value = types.includes(selectedType) ? selectedType : 'all';
+      }
+      const searchTerm = (document.getElementById("orderSearchInput")?.value || '').trim().toLowerCase();
+      const sortMode = document.getElementById("orderSortInput")?.value || 'date-newest';
+      const progressMode = document.getElementById("orderProgressFilterInput")?.value || 'all';
+      let filtered = visibleOrders.filter(o => {
+        if (typeSelect && typeSelect.value !== 'all' && String(o.orderType || '').trim() !== typeSelect.value) return false;
+        if (searchTerm) {
+          const searchable = [o.poNumber, o.orderType, o.placedBy, o.notes, ...(Array.isArray(o.items) ? o.items.map(i => i.desc) : [])].join(' ').toLowerCase();
+          if (!searchable.includes(searchTerm)) return false;
+        }
+        const items = Array.isArray(o.items) ? o.items : [];
+        const hasItems = items.length > 0;
+        const allReceived = hasItems ? items.every(i => !!i.received) : !!o.received;
+        const anyReceived = hasItems ? items.some(i => !!i.received || !!i.receivedPartial) : !!o.received;
+        const allStocked = hasItems ? items.every(i => !!i.stocked) : !!o.stocked;
+        const progressMatches = progressMode === 'all'
+          || (progressMode === 'awaiting' && !anyReceived)
+          || (progressMode === 'partial' && anyReceived && !allReceived)
+          || (progressMode === 'received' && allReceived)
+          || (progressMode === 'not-stocked' && !allStocked)
+          || (progressMode === 'stocked' && allStocked);
+        return progressMatches;
+      });
+      const orderDateValue = o => { const value = String(o.dateOrdered || ''); const parsed = value.match(/^\d{4}-\d{2}-\d{2}$/) ? new Date(`${value}T00:00:00`).getTime() : new Date(value).getTime(); return Number.isFinite(parsed) ? parsed : 0; };
+      const compareText = (a,b) => String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+      const compareOrders = (a,b) => {
+        const dateNewest = orderDateValue(b) - orderDateValue(a);
+        switch (sortMode) {
+          case 'date-oldest': return -dateNewest;
+          case 'po-az': return compareText(a.poNumber, b.poNumber) || dateNewest;
+          case 'po-za': return compareText(b.poNumber, a.poNumber) || dateNewest;
+          case 'type-az': return compareText(a.orderType, b.orderType) || dateNewest;
+          case 'type-za': return compareText(b.orderType, a.orderType) || dateNewest;
+          case 'items-most': return ((b.items || []).length - (a.items || []).length) || dateNewest;
+          case 'items-least': return ((a.items || []).length - (b.items || []).length) || dateNewest;
+          case 'date-newest':
+          default: return dateNewest;
+        }
+      };
+      filtered.sort(compareOrders);
+      const activeOrders = filtered.filter(o => !o.completed); const completedOrders = filtered.filter(o => o.completed);
       document.getElementById("activeOrdersBadge").innerText = activeOrders.length; document.getElementById("completedOrdersBadge").innerText = completedOrders.length;
-      activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join(''); completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join(''); if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+      activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join('') || `<div class="text-center py-6 text-gray-500 text-xs">No active orders match these filters.</div>`;
+      completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join('') || `<div class="text-center py-6 text-gray-500 text-xs">No completed orders match these filters.</div>`;
+      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
 
     function renderOrderCardHtml(ord) {
