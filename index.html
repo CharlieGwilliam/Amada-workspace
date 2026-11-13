@@ -72,6 +72,46 @@
       #mainSidebar .sidebar-primary-action { min-height: 44px; }
       #mainSidebar .sidebar-section-heading button { min-width: 40px; min-height: 40px; }
     }
+  
+
+    /* Keep long task, note and order text readable instead of clipping it. */
+    .task-card, .note-card, .order-card,
+    #taskDetailModal, #noteDetailModal {
+      min-width: 0;
+    }
+    .task-card .flex-1,
+    .note-card .pr-12,
+    .order-card .min-w-0 {
+      min-width: 0;
+    }
+    .task-card [id^="task_title_"],
+    .task-card .line-clamp-2,
+    .note-card h4,
+    .note-card p,
+    .note-card .line-clamp-3,
+    .order-card .truncate,
+    #taskDetailModal .truncate,
+    #noteDetailModal .truncate {
+      white-space: normal !important;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      text-overflow: clip !important;
+    }
+    .task-card .line-clamp-2,
+    .note-card .line-clamp-3 {
+      display: block !important;
+      overflow: visible !important;
+      -webkit-box-orient: initial !important;
+      -webkit-line-clamp: unset !important;
+    }
+    .task-card [id^="task_title_"],
+    .task-card .line-clamp-2,
+    .note-card h4,
+    .note-card p,
+    .order-card .truncate {
+      max-width: 100%;
+    }
+
   </style>
 </head>
 <body class="h-full flex flex-col bg-white text-gray-900 dark:bg-[#121212] dark:text-gray-100 transition-colors duration-200 overflow-hidden select-none">
@@ -1452,7 +1492,7 @@
           ${t.dueDate ? `<div class="w-fit text-[10px] px-2.5 py-1 rounded-lg font-bold ${dueDateOverdue ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">${dueDateOverdue ? 'OVERDUE • ' : 'DUE • '}${formatOrderDate(t.dueDate)}</div>` : ''}
           <div class="flex items-start space-x-2.5 pr-14">
             <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); handleTaskCheckAnimation('${t.id}', this)" class="mt-0.5 w-5 h-5 rounded-lg accent-green-600 cursor-pointer shrink-0">
-            <div class="flex-1 min-w-0"><span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>${t.notes ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-tight">${t.notes}</div>` : ''}</div>
+            <div class="flex-1 min-w-0"><span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>${t.notes ? `<div class="task-card-description text-[10px] text-gray-500 dark:text-gray-400 mt-1 whitespace-pre-wrap break-words leading-tight">${t.notes}</div>` : ''}</div>
           </div>
           ${getAttachmentBadgeHTML('task', t)}
           <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-gray-200/50 dark:border-gray-700/50">
@@ -1532,8 +1572,8 @@
             <div class="note-drag-handle drag-handle p-1 text-gray-500 cursor-grab hover:text-white" title="Drag to move note"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
           </div>
           <div class="pr-12">
-            <h4 class="font-bold text-sm truncate mb-2">${n.title}</h4>
-            <p class="text-xs text-gray-400 whitespace-pre-wrap line-clamp-3 mb-2">${n.content}</p>
+            <h4 class="font-bold text-sm whitespace-normal break-words mb-2">${n.title}</h4>
+            <p class="text-xs text-gray-400 whitespace-pre-wrap break-words mb-2">${n.content}</p>
           </div>
           ${getAttachmentBadgeHTML('note', n)}
           <div class="flex flex-wrap items-center justify-between gap-1.5 pt-3 mt-auto border-t border-gray-100 dark:border-gray-800">
