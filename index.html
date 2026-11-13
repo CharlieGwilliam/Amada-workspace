@@ -197,6 +197,18 @@
 
       <!-- VIEW 1: TASKS -->
       <div id="tasksWrapper" class="flex flex-col flex-1 w-full overflow-hidden">
+        <div class="flex items-center justify-end gap-2 pb-2 shrink-0">
+          <label for="taskSortInput" class="text-[10px] font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap">SORT TASKS</label>
+          <select id="taskSortInput" onchange="renderTasksBoard()" class="max-w-[220px] bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl px-2.5 py-2 text-xs text-gray-800 dark:text-gray-200 font-medium">
+            <option value="due-asc" selected>Soonest due date first</option>
+            <option value="due-desc">Furthest due date first</option>
+            <option value="manual">Any order (drag and drop)</option>
+            <option value="created-newest">Newest tasks first</option>
+            <option value="created-oldest">Oldest tasks first</option>
+            <option value="title-az">Title (A–Z)</option>
+            <option value="title-za">Title (Z–A)</option>
+          </select>
+        </div>
         <div class="md:hidden flex items-center space-x-1.5 overflow-x-auto pb-2 shrink-0 no-scrollbar" id="mobileColumnTabs"></div>
         <div id="tasksView" class="flex flex-col md:flex-row md:space-x-4 items-stretch md:items-start flex-1 md:overflow-x-auto pb-4 gap-3 md:gap-0"></div>
         <div id="completedTasksSection" class="mt-2 border-t border-gray-200 dark:border-gray-800 pt-3 shrink-0">
@@ -234,7 +246,7 @@
           </div>
           <div class="relative w-full">
             <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-gray-400"></i>
-            <input type="text" id="orderSearchInput" oninput="renderOrders()" placeholder="Search PO#, item, type, notes..." class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700/80 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-[#A6192E]">
+            <input type="text" id="orderSearchInput" oninput="renderOrders()" placeholder="Search PO#, order name, item, category, notes..." class="w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700/80 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-[#A6192E]">
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400">SORT BY
@@ -247,6 +259,9 @@
                 <option value="type-za">Order type (Z–A)</option>
                 <option value="items-most">Most items</option>
                 <option value="items-least">Fewest items</option>
+                <option value="name-az">Order name (A–Z)</option>
+                <option value="name-za">Order name (Z–A)</option>
+                <option value="status">Status (action needed first)</option>
               </select>
             </label>
             <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400">FILTER BY PROGRESS
@@ -259,9 +274,12 @@
                 <option value="stocked">Fully stocked</option>
               </select>
             </label>
-            <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400">ORDER TYPE
+            <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400">ORDER CATEGORY
               <select id="orderTypeFilterInput" onchange="renderOrders()" class="mt-1 w-full bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl px-2.5 py-2 text-xs text-gray-800 dark:text-gray-200 font-medium">
-                <option value="all">All types</option>
+                <option value="all">All categories</option>
+                <option value="tool">Tool orders</option>
+                <option value="uniform">Uniform / PPE</option>
+                <option value="other">Other orders</option>
               </select>
             </label>
           </div>
@@ -269,7 +287,10 @@
         <div class="space-y-3">
           <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between px-1">
             <div class="flex items-center space-x-2"><span>Active Orders</span><span id="activeOrdersBadge" class="bg-gray-200 dark:bg-gray-800 text-gray-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span></div>
-            <span class="text-[10px] text-gray-500 font-medium">Use the controls above to sort and filter</span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="expandAllOrders()" class="text-[10px] font-bold text-gray-400 hover:text-white border border-gray-700 rounded-lg px-2.5 py-1.5">Expand all</button>
+              <button type="button" onclick="minimiseAllOrders()" class="text-[10px] font-bold text-gray-400 hover:text-white border border-gray-700 rounded-lg px-2.5 py-1.5">Minimise all</button>
+            </div>
           </div>
           <div id="ordersListContainer" class="space-y-3"></div>
         </div>
@@ -360,15 +381,15 @@
 
   <div id="tagModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl"><h3 id="tagModalTitle" class="text-base font-bold mb-3">Create Tag</h3><input type="hidden" id="tagIdInput"><input type="text" id="tagTitleInput" placeholder="Tag Name" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm mb-3 focus:outline-none"><label class="block text-xs text-gray-400 mb-1">Color</label><input type="color" id="tagColorInput" value="#A6192E" class="w-full h-9 rounded-xl border-none cursor-pointer mb-4"><div class="flex justify-end space-x-2"><button onclick="closeTagModal()" class="px-3 py-1.5 text-xs text-gray-400">Cancel</button><button onclick="saveCustomTag()" class="px-4 py-1.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></div></div>
 
-  <div id="orderCompleteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 class="text-base font-bold text-emerald-500">Verify Completion</h3><button onclick="closeOrderCompleteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="space-y-4 text-xs"><p class="text-gray-300">Confirm milestones for <strong id="verifyModalPo" class="text-white">PO</strong>:</p><div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-2xl"><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]"><span class="font-bold">1. Placed</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600"><span class="font-bold">2. VBOP</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageReceived" onchange="toggleVerifyReceivedMissing(this.checked)" class="w-4 h-4 accent-emerald-600"><span class="font-bold">3. Received</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600"><span class="font-bold">4. Emailed</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500"><span class="font-bold">5. Stocked</span></label></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderCompleteModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="button" onclick="confirmOrderCompletion()" class="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow">Confirm</button></div></div></div></div>
+  <div id="orderCompleteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 class="text-base font-bold text-emerald-500">Verify Completion</h3><button onclick="closeOrderCompleteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="space-y-4 text-xs"><p class="text-gray-300">Confirm milestones for <strong id="verifyModalPo" class="text-white">PO</strong>:</p><div class="space-y-2 bg-gray-50 dark:bg-[#141414] p-3.5 rounded-2xl"><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStagePlaced" class="w-4 h-4 accent-[#A6192E]"><span class="font-bold">1. Placed</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageVbop" class="w-4 h-4 accent-purple-600"><span class="font-bold">2. VBOP</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageReceived" class="w-4 h-4 accent-emerald-600"><span class="font-bold">3. Received</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageEmailed" class="w-4 h-4 accent-blue-600"><span class="font-bold">4. Emailed</span></label><label class="flex items-center space-x-3 cursor-pointer py-1"><input type="checkbox" id="verifyStageStocked" class="w-4 h-4 accent-amber-500"><span class="font-bold">5. Stocked</span></label></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderCompleteModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="button" onclick="confirmOrderCompletion()" class="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow">Confirm</button></div></div></div></div>
 
-  <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 id="orderModalHeading" class="text-base font-bold">New Order</h3><button type="button" onclick="closeOrderModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveOrder(event)" class="space-y-3"><input type="hidden" id="orderIdInput"><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">PO</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Date</label><input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Type</label><input type="text" id="orderTypeInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Ordered By</label><input type="text" id="orderPlacedByInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Items</label><textarea id="orderFreeformItemsInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Notes</label><textarea id="orderNotesInput" rows="2" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></textarea></div><div tabindex="0" onpaste="handleUniversalPaste(event, 'order')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="orderFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'order')" class="hidden"><div onclick="document.getElementById('orderFileInput').click()"><i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="orderFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="orderFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('order')" class="text-red-400">Remove</button></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
+  <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 id="orderModalHeading" class="text-base font-bold">New Order</h3><button type="button" onclick="closeOrderModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveOrder(event)" class="space-y-3"><input type="hidden" id="orderIdInput"><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">PO</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Date</label><input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Order name / title (optional)</label><input type="text" id="orderTitleInput" placeholder="e.g. Workshop drill bits or winter PPE" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Order category</label><select id="orderTypeInput" onchange="handleOrderCategoryChange()" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"><option value="tool">Tool order</option><option value="uniform">Uniform / PPE order</option><option value="other">Other</option></select></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Ordered By</label><input type="text" id="orderPlacedByInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div id="orderVeltuffWrap" class="hidden bg-purple-500/10 border border-purple-500/20 rounded-xl p-3"><label class="flex items-center gap-2 text-xs font-semibold text-purple-300 cursor-pointer"><input type="checkbox" id="orderVeltuffInput" class="w-4 h-4 accent-purple-600"><span>Veltuff order (needs adding to VBOP)</span></label></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Items</label><textarea id="orderFreeformItemsInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Notes</label><textarea id="orderNotesInput" rows="2" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></textarea></div><div tabindex="0" onpaste="handleUniversalPaste(event, 'order')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="orderFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'order')" class="hidden"><div onclick="document.getElementById('orderFileInput').click()"><i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="orderFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="orderFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('order')" class="text-red-400">Remove</button></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
-  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="taskModalHeading" class="text-base font-bold">Edit Task</h3><button type="button" onclick="closeTaskModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveTask(event)" class="space-y-3"><input type="hidden" id="taskIdInput"><input type="text" id="taskTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="taskPriorityInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div><div><label for="taskDueDateInput" class="block text-[10px] font-bold text-gray-400 mb-1">Due date (optional)</label><input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div><textarea id="taskNotesInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'task')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'task')" class="hidden"><div onclick="document.getElementById('taskFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="taskFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="taskFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('task')" class="text-red-400">Remove</button></div></div><div id="taskAssigneesSection"><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border-gray-700 text-xs"></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
+  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="taskModalHeading" class="text-base font-bold">Edit Task</h3><button type="button" onclick="closeTaskModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveTask(event)" class="space-y-3"><input type="hidden" id="taskIdInput"><input type="text" id="taskTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div><label for="taskSectionInput" class="block text-[10px] font-bold text-gray-400 mb-1">Task box / category</label><select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></select></div><div><label for="taskDueDateInput" class="block text-[10px] font-bold text-gray-400 mb-1">Due date (optional)</label><input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div><textarea id="taskNotesInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'task')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'task')" class="hidden"><div onclick="document.getElementById('taskFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="taskFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="taskFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('task')" class="text-red-400">Remove</button></div></div><div id="taskAssigneesSection"><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border-gray-700 text-xs"></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
   <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="noteModalTitle" class="text-base font-bold">Edit Note</h3><button type="button" onclick="closeNoteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveNote(event)" class="space-y-3"><input type="hidden" id="noteId"><input type="text" id="noteTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="noteFolderInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="noteTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select></div><textarea id="noteContentInput" rows="4" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'note')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="noteFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'note')" class="hidden"><div onclick="document.getElementById('noteFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="noteFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="noteFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('note')" class="text-red-400">Remove</button></div></div><div id="noteAssigneesSection"><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl text-xs"></div></div><div class="flex items-center space-x-2 pt-1"><input type="checkbox" id="noteStarInput" class="w-4 h-4"><label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label></div><div class="flex justify-end space-x-2 pt-2 border-t border-gray-800"><button type="button" onclick="closeNoteModal()" class="px-4 py-2 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
-  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK</span><span id="detailPriority" class="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-800"></span><span id="detailStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded hidden"></span></div><h3 id="detailTitle" class="text-lg font-bold mb-2 break-words"></h3><div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="detailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border-gray-800"><div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div id="detailAssigneesSection"><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div><span class="font-bold text-gray-400">Due date:</span> <div id="detailDueDate" class="text-gray-800 dark:text-gray-200 font-semibold truncate">No Date</div></div><div><span class="font-bold text-gray-400">Owner:</span> <div id="detailOwner" class="text-gray-800 dark:text-gray-200 font-semibold truncate">System</div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Task</button></div></div></div>
+  <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK</span><span id="detailPriority" class="hidden"></span><span id="detailStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded hidden"></span></div><h3 id="detailTitle" class="text-lg font-bold mb-2 break-words"></h3><div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="detailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border-gray-800"><div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div id="detailAssigneesSection"><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div><span class="font-bold text-gray-400">Due date:</span> <div id="detailDueDate" class="text-gray-800 dark:text-gray-200 font-semibold truncate">No Date</div></div><div><span class="font-bold text-gray-400">Owner:</span> <div id="detailOwner" class="text-gray-800 dark:text-gray-200 font-semibold truncate">System</div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Task</button></div></div></div>
 
   <div id="noteDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeNoteDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">NOTE</span><span id="noteDetailFolder" class="text-[10px] font-bold text-gray-400"></span></div><h3 id="noteDetailTitle" class="text-lg font-bold mb-2"></h3><div id="noteDetailContent" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="noteDetailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl"><div id="noteDetailAssigneesSection" class="col-span-2"><span class="font-bold text-gray-400">Assignees:</span> <div id="noteDetailAssignees" class="text-gray-200 font-semibold truncate"></div></div><div class="col-span-2"><span class="font-bold text-gray-400">Owner:</span> <div id="noteDetailOwner" class="text-gray-200 font-semibold truncate">System</div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="noteDetailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="noteDetailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Note</button></div></div></div>
 
@@ -564,7 +585,7 @@
     }
 
     let users = ensureProfiles(loadArray("amada_users", []));
-    let activeUser = safeStorageGet("amada_active_user", ""), cloudToken = safeStorageGet("amada_cloud_token", ""), currentWorkspace = 'shared', currentMainTab = "tasks", currentNoteFolderId = null, activeFilterType = null, activeFilterId = null, selectedUserForAuth = "", presenceMap = {}, isCompletedOpen = false, isCompletedOrdersOpen = false, openAccordionsMap = {};
+    let activeUser = safeStorageGet("amada_active_user", ""), cloudToken = safeStorageGet("amada_cloud_token", ""), currentWorkspace = 'shared', currentMainTab = "tasks", currentNoteFolderId = null, activeFilterType = null, activeFilterId = null, selectedUserForAuth = "", presenceMap = {}, isCompletedOpen = false, isCompletedOrdersOpen = false, openAccordionsMap = {}, orderExpandedMap = {}, orderExpansionStorageKey = "", orderCompletionTargetId = "";
     // Sessions from the old JSONBin-only version cannot authenticate with Cloudflare.
     if (activeUser && !cloudToken) { activeUser = ""; safeStorageSet("amada_active_user", ""); }
     let sharedTags = loadArray("amada_shared_tags", [{ id: "t_urgent", title: "Urgent", color: "#ef4444" }, { id: "t_cnc", title: "Machining", color: "#3b82f6" }]);
@@ -1247,7 +1268,26 @@
         if (activeFilterType === "assignee") listTasks = listTasks.filter(t => t.assignees && t.assignees.includes(activeFilterId));
         else if (activeFilterType === "tag") listTasks = listTasks.filter(t => t.tagId === activeFilterId);
         else if (activeFilterType === "starred") listTasks = listTasks.filter(t => t.starred);
-        listTasks = listTasks.slice().sort((a, b) => (Number.isFinite(a.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER) - (Number.isFinite(b.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER));
+        const taskSortMode = document.getElementById('taskSortInput')?.value || 'due-asc';
+        const taskManualCompare = (a, b) => (Number.isFinite(a.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER) - (Number.isFinite(b.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER);
+        const taskCreatedValue = task => { const parsed = Number.parseInt(String(task.createdAt || task.id || ''), 10); return Number.isFinite(parsed) ? parsed : 0; };
+        listTasks = listTasks.slice().sort((a, b) => {
+          const manual = taskManualCompare(a, b);
+          if (taskSortMode === 'manual') return manual;
+          if (taskSortMode === 'title-az') return String(a.title || '').localeCompare(String(b.title || ''), undefined, { numeric: true, sensitivity: 'base' }) || manual;
+          if (taskSortMode === 'title-za') return String(b.title || '').localeCompare(String(a.title || ''), undefined, { numeric: true, sensitivity: 'base' }) || manual;
+          if (taskSortMode === 'created-newest') return taskCreatedValue(b) - taskCreatedValue(a) || manual;
+          if (taskSortMode === 'created-oldest') return taskCreatedValue(a) - taskCreatedValue(b) || manual;
+          const aDue = a.dueDate || '9999-12-31';
+          const bDue = b.dueDate || '9999-12-31';
+          const dueCompare = aDue.localeCompare(bDue);
+          if (taskSortMode === 'due-desc') {
+            if (!a.dueDate && b.dueDate) return 1;
+            if (a.dueDate && !b.dueDate) return -1;
+            return (bDue.localeCompare(aDue)) || manual;
+          }
+          return dueCompare || manual;
+        });
         const isMobileActive = String(s.id) === String(activeMobileSectionId);
         const safeSectionTitle = String(s.title || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 
@@ -1287,6 +1327,7 @@
             <button onclick="event.stopPropagation(); toggleStarTask('${t.id}')" class="text-xs p-1 text-gray-400 hover:text-amber-400 shrink-0">${t.starred ? '⭐' : '☆'}</button>
             <div class="task-drag-handle drag-handle p-1 text-gray-500 cursor-grab hover:text-white" title="Drag to move task"><i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i></div>
           </div>
+          ${t.dueDate ? `<div class="w-fit text-[10px] px-2.5 py-1 rounded-lg font-bold ${dueDateOverdue ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">${dueDateOverdue ? 'OVERDUE • ' : 'DUE • '}${formatOrderDate(t.dueDate)}</div>` : ''}
           <div class="flex items-start space-x-2.5 pr-14">
             <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="event.stopPropagation(); handleTaskCheckAnimation('${t.id}', this)" class="mt-0.5 w-5 h-5 rounded-lg accent-green-600 cursor-pointer shrink-0">
             <div class="flex-1 min-w-0"><span id="task_title_${t.id}" class="text-xs font-semibold strikethrough-anim ${t.completed ? 'strikethrough-active' : ''}">${t.title}</span>${t.notes ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-tight">${t.notes}</div>` : ''}</div>
@@ -1296,8 +1337,7 @@
             <div class="flex flex-wrap items-center gap-1">
               ${section ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400 font-semibold">${section.title}</span>` : ''}
               ${tag ? `<span class="text-[9px] px-2 py-0.5 rounded-full text-white font-bold" style="background-color: ${tag.color}">${tag.title}</span>` : ''}
-              ${t.priority ? `<span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${t.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-gray-200 dark:bg-gray-800 text-gray-400'}">${t.priority}</span>` : ''}
-              ${t.dueDate ? `<span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${dueDateOverdue ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">${dueDateOverdue ? 'Overdue • ' : 'Due ' }${formatOrderDate(t.dueDate)}</span>` : ''}
+
               ${t.assignees && currentWorkspace === 'shared' ? t.assignees.map(a => `<span class="text-[9px] bg-gray-200 dark:bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded-full">${a}</span>`).join('') : ''}
             </div>
             ${canEdit ? `<div class="flex items-center space-x-1 shrink-0"><button onclick="event.stopPropagation(); openEditTaskModal('${t.id}')" class="p-1 text-gray-400 hover:text-white"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button><button onclick="event.stopPropagation(); deleteTask('${t.id}')" class="p-1 text-gray-400 hover:text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>` : ''}
@@ -1326,7 +1366,7 @@
       if (e.key === 'Enter' && e.target.value.trim()) {
         const title = e.target.value.trim(); const sec = sharedSections.find(s => s.id === sectionId); let derivedPriority = "Medium";
         if (sec && sec.title.toLowerCase().includes("high")) derivedPriority = "High"; else if (sec && sec.title.toLowerCase().includes("low")) derivedPriority = "Low";
-        tasks.push({ id: Date.now().toString(), title, sectionId, priority: derivedPriority, assignees: currentWorkspace === 'shared' ? [activeUser] : [], completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] });
+        tasks.push({ id: Date.now().toString(), createdAt: Date.now(), title, sectionId, assignees: currentWorkspace === 'shared' ? [activeUser] : [], completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] });
         e.target.value = ""; saveData(`New task added: ${title}`);
       }
     }
@@ -1448,7 +1488,7 @@
       const assigneeSection = document.getElementById("taskAssigneesSection");
       if (assigneeSection) assigneeSection.classList.toggle("hidden", !isSharedTask);
       if (t) {
-        document.getElementById("taskIdInput").value = t.id; document.getElementById("taskTitleInput").value = t.title; document.getElementById("taskSectionInput").value = t.sectionId; document.getElementById("taskPriorityInput").value = t.priority || "Medium"; document.getElementById("taskDueDateInput").value = t.dueDate || ""; document.getElementById("taskNotesInput").value = t.notes || "";
+        document.getElementById("taskIdInput").value = t.id; document.getElementById("taskTitleInput").value = t.title; document.getElementById("taskSectionInput").value = t.sectionId; document.getElementById("taskDueDateInput").value = t.dueDate || ""; document.getElementById("taskNotesInput").value = t.notes || "";
         document.getElementById("taskAssigneesContainer").innerHTML = isSharedTask ? users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(t.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('') : "";
         if (t.attachment) { tempFileState.task = t.attachment; document.getElementById("taskFileNameLabel").innerText = t.attachment.name; document.getElementById("taskFilePreviewContainer").classList.remove("hidden"); } else { removeUniversalFile('task'); }
       }
@@ -1456,18 +1496,18 @@
     }
     function saveTask(e) {
       e.preventDefault();
-      const id = document.getElementById("taskIdInput").value; const title = document.getElementById("taskTitleInput").value.trim(); const sectionId = document.getElementById("taskSectionInput").value; const priority = document.getElementById("taskPriorityInput").value; const dueDate = document.getElementById("taskDueDateInput").value || ""; const notesText = document.getElementById("taskNotesInput").value.trim(); const assignees = currentWorkspace === 'shared' ? Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value) : []; const attachment = tempFileState.task;
+      const id = document.getElementById("taskIdInput").value; const title = document.getElementById("taskTitleInput").value.trim(); const sectionId = document.getElementById("taskSectionInput").value; const dueDate = document.getElementById("taskDueDateInput").value || ""; const notesText = document.getElementById("taskNotesInput").value.trim(); const assignees = currentWorkspace === 'shared' ? Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value) : []; const attachment = tempFileState.task;
       if (id) {
         const t = tasks.find(x => x.id === id);
-        if (t) { t.title = title; t.sectionId = sectionId; t.priority = priority; t.dueDate = dueDate; t.notes = notesText; t.assignees = assignees; t.attachment = attachment; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited task: ${title}`); }
-      } else { tasks.push({ id: Date.now().toString(), title, sectionId, priority, dueDate, notes: notesText, assignees: currentWorkspace === 'shared' ? (assignees.length ? assignees : [activeUser]) : [], attachment, completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Created new task: ${title}`); }
+        if (t) { t.title = title; t.sectionId = sectionId; delete t.priority; t.dueDate = dueDate; t.notes = notesText; t.assignees = assignees; t.attachment = attachment; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited task: ${title}`); }
+      } else { tasks.push({ id: Date.now().toString(), createdAt: Date.now(), title, sectionId, dueDate, notes: notesText, assignees: currentWorkspace === 'shared' ? (assignees.length ? assignees : [activeUser]) : [], attachment, completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Created new task: ${title}`); }
       closeTaskModal();
     }
     function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); removeUniversalFile('task'); }
     function closeTaskDetailModal() { document.getElementById("taskDetailModal").classList.add("hidden"); }
     function openTaskDetailModal(id) {
       const t = tasks.find(x => x.id === id); if (!t) return;
-      document.getElementById("detailTitle").innerText = t.title; document.getElementById("detailNotes").innerText = t.notes || "No description provided."; document.getElementById("detailPriority").innerText = t.priority || "Medium";
+      document.getElementById("detailTitle").innerText = t.title; document.getElementById("detailNotes").innerText = t.notes || "No description provided."; document.getElementById("detailPriority").innerText = "";
       const sec = sharedSections.find(s => s.id === t.sectionId); document.getElementById("detailSection").innerText = sec ? sec.title : "General"; const detailAssigneesSection = document.getElementById("detailAssigneesSection"); if (detailAssigneesSection) detailAssigneesSection.classList.toggle("hidden", (t.workspace || 'shared') !== 'shared'); document.getElementById("detailAssignees").innerText = (t.assignees && t.assignees.length) ? t.assignees.join(', ') : "Anyone"; const dueEl = document.getElementById("detailDueDate"); const ownerEl = document.getElementById("detailOwner"); if (dueEl) dueEl.innerText = t.dueDate ? formatOrderDate(t.dueDate) : "No Date"; if (ownerEl) ownerEl.innerText = t.owner || "System";
       const badge = document.getElementById("detailStatusBadge");
       if (t.completed) { badge.innerText = "Completed"; badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"; badge.classList.remove("hidden"); } else { badge.classList.add("hidden"); }
@@ -1485,28 +1525,135 @@
       if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
       return dateValue;
     }
+    function getOrderCategory(order) {
+      const raw = String(order?.orderCategory || order?.orderType || '').toLowerCase();
+      if (raw.includes('tool')) return 'tool';
+      if (raw.includes('uniform') || raw.includes('ppe') || raw.includes('veltuff')) return 'uniform';
+      if (raw === 'other' || raw === 'tool' || raw === 'uniform') return raw;
+      return 'other';
+    }
+    function getOrderCategoryLabel(category) {
+      return category === 'tool' ? 'Tool order' : category === 'uniform' ? 'Uniform / PPE' : 'Other';
+    }
+    function isVeltuffOrder(order) {
+      return getOrderCategory(order) === 'uniform' && (order?.isVeltuff === true || order?.veltuffOrder === true || order?.vbop === true);
+    }
+    function handleOrderCategoryChange() {
+      const category = document.getElementById('orderTypeInput')?.value || 'other';
+      const wrap = document.getElementById('orderVeltuffWrap');
+      const check = document.getElementById('orderVeltuffInput');
+      if (wrap) wrap.classList.toggle('hidden', category !== 'uniform');
+      if (category !== 'uniform' && check) check.checked = false;
+    }
+    function getOrderStatus(order) {
+      if (order.completed) return { label: 'Complete', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' };
+      if (!order.placed) return { label: 'Needs placing', className: 'bg-red-500/15 text-red-400 border-red-500/30' };
+      if (isVeltuffOrder(order) && !order.vbop) return { label: 'Needs adding to VBOP', className: 'bg-purple-500/15 text-purple-300 border-purple-500/30' };
+      const items = Array.isArray(order.items) ? order.items : [];
+      const allReceived = items.length ? items.every(item => !!item.received) : !!order.received;
+      const anyReceived = items.length ? items.some(item => !!item.received || !!item.receivedPartial) : !!order.received;
+      if (!allReceived) return anyReceived
+        ? { label: 'Partially received', className: 'bg-amber-500/15 text-amber-300 border-amber-500/30' }
+        : { label: 'Waiting for delivery', className: 'bg-blue-500/15 text-blue-300 border-blue-500/30' };
+      if (!order.emailed) return { label: 'Needs email: order complete', className: 'bg-blue-500/15 text-blue-300 border-blue-500/30' };
+      const allStocked = items.length ? items.every(item => !!item.stocked) : !!order.stocked;
+      if (!allStocked) return { label: 'Needs adding to stock', className: 'bg-amber-500/15 text-amber-300 border-amber-500/30' };
+      return { label: 'Complete', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' };
+    }
+    function ensureOrderExpansionState() {
+      const key = `amada_order_expanded_${activeUser || 'guest'}_${currentWorkspace || 'shared'}`;
+      if (key === orderExpansionStorageKey) return;
+      orderExpansionStorageKey = key;
+      try {
+        const parsed = JSON.parse(safeStorageGet(key, '{}'));
+        orderExpandedMap = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      } catch (error) { orderExpandedMap = {}; }
+    }
+    function persistOrderExpansionState() {
+      if (!orderExpansionStorageKey) ensureOrderExpansionState();
+      safeStorageSet(orderExpansionStorageKey, JSON.stringify(orderExpandedMap));
+    }
+    function toggleOrderExpanded(orderId) {
+      ensureOrderExpansionState();
+      orderExpandedMap[orderId] = !orderExpandedMap[orderId];
+      persistOrderExpansionState();
+      renderOrders();
+    }
+    function expandAllOrders() {
+      ensureOrderExpansionState();
+      orders.filter(order => (order.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || order.owner === activeUser)).forEach(order => { orderExpandedMap[order.id] = true; });
+      persistOrderExpansionState();
+      renderOrders();
+    }
+    function minimiseAllOrders() {
+      ensureOrderExpansionState();
+      orders.filter(order => (order.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || order.owner === activeUser)).forEach(order => { orderExpandedMap[order.id] = false; });
+      persistOrderExpansionState();
+      renderOrders();
+    }
+
     function openNewOrderModal() {
-      document.getElementById("orderIdInput").value = ""; document.getElementById("orderPoInput").value = ""; document.getElementById("orderDateInput").value = new Date().toISOString().split('T')[0]; document.getElementById("orderTypeInput").value = ""; document.getElementById("orderPlacedByInput").value = activeUser || ""; document.getElementById("orderFreeformItemsInput").value = ""; document.getElementById("orderNotesInput").value = "";
-      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i><span>Create New Order</span>`; removeUniversalFile('order'); document.getElementById("orderModal").classList.remove("hidden"); if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+      document.getElementById("orderIdInput").value = "";
+      document.getElementById("orderPoInput").value = "";
+      document.getElementById("orderDateInput").value = new Date().toISOString().split('T')[0];
+      document.getElementById("orderTypeInput").value = "tool";
+      document.getElementById("orderTitleInput").value = "";
+      document.getElementById("orderPlacedByInput").value = activeUser || "";
+      document.getElementById("orderVeltuffInput").checked = false;
+      handleOrderCategoryChange();
+      document.getElementById("orderFreeformItemsInput").value = "";
+      document.getElementById("orderNotesInput").value = "";
+      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i><span>Create New Order</span>`;
+      removeUniversalFile('order'); document.getElementById("orderModal").classList.remove("hidden");
+      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
     function openEditOrderModal(orderId) {
       const ord = orders.find(x => x.id === orderId); if (!ord) return;
-      document.getElementById("orderIdInput").value = ord.id; document.getElementById("orderPoInput").value = ord.poNumber || ""; document.getElementById("orderDateInput").value = ord.dateOrdered || ""; document.getElementById("orderTypeInput").value = ord.orderType || ""; document.getElementById("orderPlacedByInput").value = ord.placedBy || ""; document.getElementById("orderNotesInput").value = ord.notes || ""; document.getElementById("orderFreeformItemsInput").value = ord.items && ord.items.length > 0 ? ord.items.map(i => i.desc).join("\n") : "";
+      document.getElementById("orderIdInput").value = ord.id;
+      document.getElementById("orderPoInput").value = ord.poNumber || "";
+      document.getElementById("orderDateInput").value = ord.dateOrdered || "";
+      document.getElementById("orderTypeInput").value = getOrderCategory(ord);
+      document.getElementById("orderTitleInput").value = ord.orderTitle || ord.title || "";
+      document.getElementById("orderPlacedByInput").value = ord.placedBy || "";
+      document.getElementById("orderVeltuffInput").checked = isVeltuffOrder(ord);
+      handleOrderCategoryChange();
+      document.getElementById("orderNotesInput").value = ord.notes || "";
+      document.getElementById("orderFreeformItemsInput").value = ord.items && ord.items.length > 0 ? ord.items.map(i => i.desc).join("\n") : "";
       if (ord.attachment) { tempFileState.order = ord.attachment; document.getElementById("orderFileNameLabel").innerText = ord.attachment.name; document.getElementById("orderFilePreviewContainer").classList.remove("hidden"); } else { removeUniversalFile('order'); }
-      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Purchase Order</span>`; document.getElementById("orderModal").classList.remove("hidden"); if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+      document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="pencil" class="w-5 h-5 text-[#A6192E]"></i><span>Edit Purchase Order</span>`;
+      document.getElementById("orderModal").classList.remove("hidden");
+      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
     function closeOrderModal() { document.getElementById("orderModal").classList.add("hidden"); removeUniversalFile('order'); }
     function saveOrder(e) {
       e.preventDefault();
-      const id = document.getElementById("orderIdInput").value; const poNumber = document.getElementById("orderPoInput").value.trim(); const dateOrdered = document.getElementById("orderDateInput").value; const orderType = document.getElementById("orderTypeInput").value.trim(); const placedBy = document.getElementById("orderPlacedByInput").value.trim(); const rawLines = document.getElementById("orderFreeformItemsInput").value.split(/\r?\n|,/); const notesInput = document.getElementById("orderNotesInput").value.trim(); const attachment = tempFileState.order;
+      const id = document.getElementById("orderIdInput").value;
+      const poNumber = document.getElementById("orderPoInput").value.trim();
+      const dateOrdered = document.getElementById("orderDateInput").value;
+      const orderCategory = document.getElementById("orderTypeInput").value || 'other';
+      const orderType = getOrderCategoryLabel(orderCategory);
+      const orderTitle = document.getElementById("orderTitleInput").value.trim();
+      const placedBy = document.getElementById("orderPlacedByInput").value.trim();
+      const isVeltuff = orderCategory === 'uniform' && document.getElementById("orderVeltuffInput").checked;
+      const rawLines = document.getElementById("orderFreeformItemsInput").value.split(/\r?\n|,/);
+      const notesInput = document.getElementById("orderNotesInput").value.trim();
+      const attachment = tempFileState.order;
       const items = rawLines.map(line => line.trim()).filter(Boolean).map(desc => ({ id: "it_" + Math.random().toString(36).substr(2, 9), desc: formatItemDescription(desc), received: false, receivedPartial: false, partialQty: "", stocked: false }));
       if (id) {
         const ord = orders.find(x => x.id === id);
-        if (ord) { ord.poNumber = poNumber; ord.dateOrdered = dateOrdered; ord.orderType = orderType; ord.placedBy = placedBy; ord.notes = notesInput; ord.attachment = attachment; if (items.length > 0) ord.items = items; saveData(`Edited PO# ${poNumber}`); } 
+        if (ord) {
+          const wasVeltuff = isVeltuffOrder(ord);
+          ord.poNumber = poNumber; ord.dateOrdered = dateOrdered; ord.orderCategory = orderCategory; ord.orderType = orderType;
+          ord.orderTitle = orderTitle; ord.placedBy = placedBy; ord.isVeltuff = isVeltuff; ord.notes = notesInput; ord.attachment = attachment;
+          if (!isVeltuff) { ord.vbop = false; ord.vbopMeta = null; }
+          if (items.length > 0) ord.items = items;
+          saveData(`Edited PO# ${poNumber}`);
+        }
       } else {
         const orderPlacedBy = placedBy || activeUser || 'User';
         const orderPlacedDate = formatOrderDate(dateOrdered);
-        orders.push({ id: "ord_" + Date.now(), poNumber, dateOrdered, orderType, placedBy: orderPlacedBy, items, notes: notesInput, attachment, placed: true, placedMeta: `Placed by ${orderPlacedBy} on ${orderPlacedDate}`, placedDate: orderPlacedDate, placedAt: new Date().toISOString(), vbop: false, received: false, emailed: false, stocked: false, completed: false, workspace: currentWorkspace, owner: activeUser }); saveData(`Added PO# ${poNumber}`);
+        orders.push({ id: "ord_" + Date.now(), poNumber, dateOrdered, orderCategory, orderType, orderTitle, placedBy: orderPlacedBy, items, notes: notesInput, attachment, isVeltuff, placed: true, placedMeta: `Placed by ${orderPlacedBy} on ${orderPlacedDate}`, placedDate: orderPlacedDate, placedAt: new Date().toISOString(), vbop: false, received: false, emailed: false, stocked: false, completed: false, workspace: currentWorkspace, owner: activeUser });
+        saveData(`Added PO# ${poNumber}`);
       }
       closeOrderModal();
     }
@@ -1514,23 +1661,20 @@
     function updateItemPartialQty(orderId, itemId, qty) { const ord = orders.find(x => x.id === orderId); if (!ord || !ord.items) return; const it = ord.items.find(x => x.id === itemId); if (it) { it.partialQty = qty; if (qty && !it.receivedPartial) { it.receivedPartial = true; it.received = false; } else if (!qty) { it.receivedPartial = false; } ord.received = ord.items.every(i => i.received); saveData(`Updated item quantity on PO# ${ord.poNumber}`); } }
     
     function renderOrders() {
-      const activeContainer = document.getElementById("ordersListContainer"); const completedContainer = document.getElementById("completedOrdersList"); if (!activeContainer || !completedContainer) return;
+      const activeContainer = document.getElementById("ordersListContainer");
+      const completedContainer = document.getElementById("completedOrdersList");
+      if (!activeContainer || !completedContainer) return;
+      ensureOrderExpansionState();
       const visibleOrders = orders.filter(o => (o.workspace || 'shared') === currentWorkspace && (currentWorkspace === 'shared' || o.owner === activeUser));
       const typeSelect = document.getElementById("orderTypeFilterInput");
       const selectedType = typeSelect ? (typeSelect.value || 'all') : 'all';
-      if (typeSelect) {
-        const types = [...new Set(visibleOrders.map(o => String(o.orderType || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-        const escapeOption = value => String(value).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
-        typeSelect.innerHTML = `<option value="all">All types</option>` + types.map(type => `<option value="${escapeOption(type)}">${escapeOption(type)}</option>`).join('');
-        typeSelect.value = types.includes(selectedType) ? selectedType : 'all';
-      }
       const searchTerm = (document.getElementById("orderSearchInput")?.value || '').trim().toLowerCase();
       const sortMode = document.getElementById("orderSortInput")?.value || 'date-newest';
       const progressMode = document.getElementById("orderProgressFilterInput")?.value || 'all';
       let filtered = visibleOrders.filter(o => {
-        if (typeSelect && typeSelect.value !== 'all' && String(o.orderType || '').trim() !== typeSelect.value) return false;
+        if (selectedType !== 'all' && getOrderCategory(o) !== selectedType) return false;
         if (searchTerm) {
-          const searchable = [o.poNumber, o.orderType, o.placedBy, o.notes, ...(Array.isArray(o.items) ? o.items.map(i => i.desc) : [])].join(' ').toLowerCase();
+          const searchable = [o.poNumber, o.orderType, getOrderCategoryLabel(getOrderCategory(o)), o.orderTitle, o.title, o.placedBy, o.notes, ...(Array.isArray(o.items) ? o.items.map(i => i.desc) : [])].join(' ').toLowerCase();
           if (!searchable.includes(searchTerm)) return false;
         }
         const items = Array.isArray(o.items) ? o.items : [];
@@ -1548,61 +1692,152 @@
       });
       const orderDateValue = o => { const value = String(o.dateOrdered || ''); const parsed = value.match(/^\d{4}-\d{2}-\d{2}$/) ? new Date(`${value}T00:00:00`).getTime() : new Date(value).getTime(); return Number.isFinite(parsed) ? parsed : 0; };
       const compareText = (a,b) => String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+      const statusRank = o => { const label = getOrderStatus(o).label; return label === 'Needs placing' ? 0 : label === 'Needs adding to VBOP' ? 1 : label === 'Waiting for delivery' ? 2 : label === 'Partially received' ? 3 : label === 'Needs email: order complete' ? 4 : label === 'Needs adding to stock' ? 5 : 6; };
       const compareOrders = (a,b) => {
         const dateNewest = orderDateValue(b) - orderDateValue(a);
         switch (sortMode) {
           case 'date-oldest': return -dateNewest;
           case 'po-az': return compareText(a.poNumber, b.poNumber) || dateNewest;
           case 'po-za': return compareText(b.poNumber, a.poNumber) || dateNewest;
-          case 'type-az': return compareText(a.orderType, b.orderType) || dateNewest;
-          case 'type-za': return compareText(b.orderType, a.orderType) || dateNewest;
+          case 'type-az': return compareText(getOrderCategoryLabel(getOrderCategory(a)), getOrderCategoryLabel(getOrderCategory(b))) || dateNewest;
+          case 'type-za': return compareText(getOrderCategoryLabel(getOrderCategory(b)), getOrderCategoryLabel(getOrderCategory(a))) || dateNewest;
           case 'items-most': return ((b.items || []).length - (a.items || []).length) || dateNewest;
           case 'items-least': return ((a.items || []).length - (b.items || []).length) || dateNewest;
+          case 'name-az': return compareText(a.orderTitle || a.title, b.orderTitle || b.title) || dateNewest;
+          case 'name-za': return compareText(b.orderTitle || b.title, a.orderTitle || a.title) || dateNewest;
+          case 'status': return statusRank(a) - statusRank(b) || dateNewest;
           case 'date-newest':
           default: return dateNewest;
         }
       };
       filtered.sort(compareOrders);
-      const activeOrders = filtered.filter(o => !o.completed); const completedOrders = filtered.filter(o => o.completed);
-      document.getElementById("activeOrdersBadge").innerText = activeOrders.length; document.getElementById("completedOrdersBadge").innerText = completedOrders.length;
+      const activeOrders = filtered.filter(o => !o.completed);
+      const completedOrders = filtered.filter(o => o.completed);
+      document.getElementById("activeOrdersBadge").innerText = activeOrders.length;
+      document.getElementById("completedOrdersBadge").innerText = completedOrders.length;
       activeContainer.innerHTML = activeOrders.map(ord => renderOrderCardHtml(ord)).join('') || `<div class="text-center py-6 text-gray-500 text-xs">No active orders match these filters.</div>`;
       completedContainer.innerHTML = completedOrders.map(ord => renderOrderCardHtml(ord)).join('') || `<div class="text-center py-6 text-gray-500 text-xs">No completed orders match these filters.</div>`;
       if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
     }
 
     function renderOrderCardHtml(ord) {
-      const hasItems = ord.items && ord.items.length > 0; const allReceived = hasItems ? ord.items.every(i => i.received) : !!ord.received; const partialReceived = hasItems ? (ord.items.some(i => i.received || i.receivedPartial) && !allReceived) : false; const receivedCount = hasItems ? ord.items.filter(i => i.received).length : 0; const stockedCount = hasItems ? ord.items.filter(i => i.stocked).length : 0; const isAccordionOpen = !!openAccordionsMap[ord.id];
-      const poList = (ord.poNumber || "").split(/[,/&;]|\band\b/i).map(p => p.trim()).filter(Boolean); if (poList.length === 0) poList.push(ord.poNumber || "N/A");
+      const items = Array.isArray(ord.items) ? ord.items : [];
+      const hasItems = items.length > 0;
+      const allReceived = hasItems ? items.every(i => !!i.received) : !!ord.received;
+      const partialReceived = hasItems ? (items.some(i => i.received || i.receivedPartial) && !allReceived) : false;
+      const receivedCount = hasItems ? items.filter(i => i.received).length : 0;
+      const stockedCount = hasItems ? items.filter(i => i.stocked).length : 0;
+      const isAccordionOpen = !!openAccordionsMap[ord.id];
+      const isExpanded = !!orderExpandedMap[ord.id];
+      const category = getOrderCategory(ord);
+      const categoryLabel = getOrderCategoryLabel(category);
+      const veltuffEligible = isVeltuffOrder(ord);
+      const status = getOrderStatus(ord);
+      const orderTitle = ord.orderTitle || ord.title || 'Untitled order';
+      const poList = (ord.poNumber || '').split(/[,/&;]|\band\b/i).map(p => p.trim()).filter(Boolean);
+      if (poList.length === 0) poList.push(ord.poNumber || 'N/A');
+      const safe = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+      const gmailLink = po => `https://mail.google.com/mail/u/0/#search/${encodeURIComponent('in:anywhere "' + po + '"')}`;
       return `
-        <div onclick="if (!event.target.closest('button,input,label,a,select,textarea')) openEditOrderModal('${ord.id}')" class="order-card bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-3xl p-3.5 md:p-5 shadow-sm space-y-3.5 cursor-pointer">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 border-b border-gray-200 dark:border-gray-800 gap-2">
-            <div class="flex items-center flex-wrap gap-2"><span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-md bg-[#A6192E] text-white">PO#</span><div class="flex flex-wrap items-center gap-1.5">${poList.map(po => `<div class="flex items-center space-x-1.5 bg-gray-100 dark:bg-[#1E1E1E] pl-2 pr-1.5 py-0.5 rounded-md border border-gray-300 dark:border-gray-700"><span class="text-lg md:text-xl font-black tracking-wider">${po}</span><a href="https://mail.google.com/mail/u/0/#search/${encodeURIComponent(po)}" target="_blank" class="p-1 hover:text-[#A6192E] text-gray-400 transition"><i data-lucide="mail" class="w-4 h-4"></i></a></div>`).join('')}</div><span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-400">${ord.orderType}</span></div>
-            <div class="flex items-center justify-between sm:justify-end space-x-2 text-xs text-gray-400">
-              <span class="bg-gray-200 dark:bg-[#252525] px-2.5 py-1 rounded-lg text-gray-300 font-bold border border-gray-300 dark:border-gray-700/60">Ordered: <strong class="text-white">${ord.dateOrdered}</strong></span><span class="text-emerald-400 font-semibold">${ord.placedBy}</span>
-              ${canModifyItem(ord) ? `<button onclick="openEditOrderModal('${ord.id}')" class="p-1 hover:text-white transition"><i data-lucide="pencil" class="w-4 h-4"></i></button>${ord.completed ? `<button onclick="reopenOrder('${ord.id}')" class="text-xs text-amber-400 hover:underline font-bold ml-1">Re-open</button>` : `<button onclick="openOrderCompleteVerification('${ord.id}')" class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold active:scale-95 transition flex items-center space-x-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>Complete</span></button>`}<button onclick="deleteOrder('${ord.id}')" class="p-1 hover:text-red-400 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+        <div class="order-card bg-white dark:bg-[#181818] border-2 ${ord.completed ? 'border-emerald-600/40 bg-emerald-950/5' : 'border-gray-200 dark:border-gray-800'} rounded-2xl shadow-sm overflow-hidden">
+          <div class="flex flex-col gap-2 p-3.5 md:p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1d1d1d] transition" role="button" tabindex="0" onclick="if (!event.target.closest('a,button')) toggleOrderExpanded('${ord.id}')" onkeydown="if ((event.key==='Enter'||event.key===' ') && !event.target.closest('a,button')) { event.preventDefault(); toggleOrderExpanded('${ord.id}'); }">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-[9px] uppercase font-extrabold px-2 py-1 rounded-md bg-[#A6192E] text-white">PO#</span>
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1">${poList.map(po => `<span class="text-base md:text-lg font-black tracking-wide">${safe(po)}</span><a href="${gmailLink(po)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Search Gmail for ${safe(po)}" class="inline-flex items-center justify-center p-1 rounded-md hover:text-[#A6192E] text-gray-400 transition"><i data-lucide="mail" class="w-4 h-4"></i></a>`).join('')}</div>
+              <span class="text-[9px] font-bold px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-300">${categoryLabel}</span>
+              <span class="ml-auto text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}"></i></span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+              <div class="font-bold text-sm text-gray-900 dark:text-gray-100 min-w-0 flex-1 truncate">${safe(orderTitle)}</div>
+              <span class="inline-flex w-fit text-[10px] font-bold px-2.5 py-1 rounded-full border ${status.className}">${status.label}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-gray-500 dark:text-gray-400">
+              <span>Ordered by <strong class="text-gray-800 dark:text-gray-200">${safe(ord.placedBy || 'Unknown')}</strong></span>
+              <span>Date ordered <strong class="text-gray-800 dark:text-gray-200">${safe(formatOrderDate(ord.dateOrdered) || 'Date unavailable')}</strong></span>
+              ${veltuffEligible ? '<span class="text-purple-300 font-semibold">Veltuff / VBOP</span>' : ''}
             </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]"><div><div class="font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div><div class="text-[9px] text-gray-500">${ord.placed ? `Placed by ${ord.placedBy || 'User'} on ${formatOrderDate(ord.dateOrdered || ord.placedDate)}` : ''}</div></div></label>
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="mt-0.5 w-4 h-4 accent-purple-600"><div><div class="font-bold ${ord.vbop ? 'text-purple-400' : 'text-gray-400'}">2. Added on VBOP</div><div class="text-[9px] text-gray-500">${ord.vbopMeta || ''}</div></div></label>
-            <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 space-y-1.5"><div class="font-bold text-gray-200">3. Order Received</div><div class="flex flex-col space-y-1"><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${partialReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 accent-amber-500"><span class="text-[10px] ${partialReceived ? 'text-amber-400 font-semibold' : 'text-gray-400'}">Received (Partial)</span></label><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${allReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="w-3.5 h-3.5 accent-emerald-500"><span class="text-[10px] ${allReceived ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Received (Full)</span></label></div><div class="text-[9px] text-gray-500 truncate">${ord.receivedMeta || (allReceived ? 'All items received' : (partialReceived ? 'Partially arrived' : 'Awaiting delivery'))}</div></div>
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.emailed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'emailed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600"><div><div class="font-bold ${ord.emailed ? 'text-blue-400' : 'text-gray-400'}">4. Emailed & Complete</div><div class="text-[9px] text-gray-500">${ord.emailedMeta || ''}</div></div></label>
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="mt-0.5 w-4 h-4 accent-amber-500"><div><div class="font-bold ${ord.stocked ? 'text-amber-400' : 'text-gray-400'}">5. Added to Stock</div><div class="text-[9px] text-gray-500">${ord.stockedMeta || ''}</div></div></label>
-          </div>
-          ${ord.notes ? `<div class="bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-gray-800/80 rounded-xl p-2.5 text-xs text-gray-300"><strong class="text-gray-400 font-semibold uppercase text-[10px] block mb-0.5">Order Notes:</strong>${ord.notes}</div>` : ''}
-          ${getAttachmentBadgeHTML('order', ord)}
-          <div class="bg-gray-50 dark:bg-[#151515] rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <button onclick="toggleOrderItemsAccordion('${ord.id}')" class="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-[#1B1B1B]"><span class="text-xs font-bold flex items-center space-x-1.5"><i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180' : ''}"></i><span>Order Items (${hasItems ? ord.items.length : 0})</span></span><div class="flex items-center space-x-2 text-[10px]"><span class="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-semibold border border-emerald-500/20">Arrived: ${receivedCount}/${hasItems ? ord.items.length : 0}</span><span class="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-semibold border border-amber-500/20">Stocked: ${stockedCount}/${hasItems ? ord.items.length : 0}</span></div></button>
-            <div class="${isAccordionOpen ? '' : 'hidden'} p-3 pt-0 border-t border-gray-200 dark:border-gray-800 space-y-2 mt-2">
-              ${hasItems ? ord.items.map(item => `<div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2"><span class="text-xs font-medium w-full sm:w-1/3 truncate" title="${item.desc}">${item.desc}</span><div class="flex items-center justify-center space-x-2 w-full sm:w-1/3"><label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" ${item.receivedPartial ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 rounded accent-amber-500"><span class="${item.receivedPartial ? 'text-amber-400 font-semibold' : 'text-gray-500'} text-[10px] uppercase tracking-wide">Partial</span></label><input type="text" placeholder="Qty (3/7)" value="${item.partialQty || ''}" onchange="updateItemPartialQty('${ord.id}', '${item.id}', this.value)" class="${item.receivedPartial ? 'opacity-100 w-20' : 'opacity-0 w-0 pointer-events-none'} transition-all duration-200 px-1.5 py-0.5 text-[10px] bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded focus:outline-none focus:border-amber-500 text-center"></div><div class="flex items-center justify-end space-x-3 w-full sm:w-1/3"><label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'received', this.checked)" class="w-4 h-4 rounded accent-emerald-500"><span class="${item.received ? 'text-emerald-400 font-bold' : 'text-gray-400'} text-[11px]">Arrived</span></label><label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-4 h-4 rounded accent-blue-500"><span class="${item.stocked ? 'text-blue-400 font-bold' : 'text-gray-400'} text-[11px]">Stocked</span></label></div></div>`).join('') : '<div class="text-xs text-gray-500 italic py-1">No items listed.</div>'}
+          <div class="${isExpanded ? '' : 'hidden'} border-t border-gray-200 dark:border-gray-800 p-3.5 md:p-4 space-y-3.5">
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              ${canModifyItem(ord) ? `<button onclick="openEditOrderModal('${ord.id}')" class="px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-[#252525] text-gray-500 dark:text-gray-300 text-[10px] font-bold"><i data-lucide="pencil" class="w-3 h-3 inline mr-1"></i>Edit</button>${ord.completed ? `<button onclick="reopenOrder('${ord.id}')" class="text-[10px] text-amber-400 hover:underline font-bold">Re-open</button>` : `<button onclick="openOrderCompleteVerification('${ord.id}')" class="px-2.5 py-1.5 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-[10px] font-bold"><i data-lucide="check-circle" class="w-3 h-3 inline mr-1"></i>Complete</button>`}<button onclick="deleteOrder('${ord.id}')" class="p-1.5 text-gray-400 hover:text-red-400" title="Delete order"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 ${veltuffEligible ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-2 text-xs">
+              <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]"><div><div class="font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div><div class="text-[9px] text-gray-500">${ord.placed ? `Placed by ${safe(ord.placedBy || 'User')} on ${safe(formatOrderDate(ord.dateOrdered || ord.placedDate))}` : ''}</div></div></label>
+              ${veltuffEligible ? `<label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="mt-0.5 w-4 h-4 accent-purple-600"><div><div class="font-bold ${ord.vbop ? 'text-purple-400' : 'text-gray-400'}">2. Added on VBOP</div><div class="text-[9px] text-gray-500">${safe(ord.vbopMeta || '')}</div></div></label>` : ''}
+              <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 space-y-1.5"><div class="font-bold text-gray-200">${veltuffEligible ? '3.' : '2.'} Order Received</div><div class="flex flex-col space-y-1"><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${partialReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 accent-amber-500"><span class="text-[10px] ${partialReceived ? 'text-amber-400 font-semibold' : 'text-gray-400'}">Received (Partial)</span></label><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${allReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="w-3.5 h-3.5 accent-emerald-500"><span class="text-[10px] ${allReceived ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Received (Full)</span></label></div><div class="text-[9px] text-gray-500 truncate">${safe(ord.receivedMeta || (allReceived ? 'All items received' : (partialReceived ? 'Partially arrived' : 'Awaiting delivery')))}</div></div>
+              <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.emailed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'emailed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600"><div><div class="font-bold ${ord.emailed ? 'text-blue-400' : 'text-gray-400'}">${veltuffEligible ? '4.' : '3.'} Emailed & Complete</div><div class="text-[9px] text-gray-500">${safe(ord.emailedMeta || '')}</div></div></label>
+              <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.stocked ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'stocked', this.checked)" class="mt-0.5 w-4 h-4 accent-amber-500"><div><div class="font-bold ${ord.stocked ? 'text-amber-400' : 'text-gray-400'}">${veltuffEligible ? '5.' : '4.'} Added to Stock</div><div class="text-[9px] text-gray-500">${safe(ord.stockedMeta || '')}</div></div></label>
+            </div>
+            ${ord.notes ? `<div class="bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-gray-800/80 rounded-xl p-2.5 text-xs text-gray-300"><strong class="text-gray-400 font-semibold uppercase text-[10px] block mb-0.5">Order Notes:</strong>${safe(ord.notes)}</div>` : ''}
+            ${getAttachmentBadgeHTML('order', ord)}
+            <div class="bg-gray-50 dark:bg-[#151515] rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+              <button onclick="toggleOrderItemsAccordion('${ord.id}')" class="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-[#1B1B1B]"><span class="text-xs font-bold flex items-center space-x-1.5"><i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180' : ''}"></i><span>Order Items (${hasItems ? items.length : 0})</span></span><div class="flex items-center space-x-2 text-[10px]"><span class="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-semibold border border-emerald-500/20">Arrived: ${receivedCount}/${items.length}</span><span class="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-semibold border border-amber-500/20">Stocked: ${stockedCount}/${items.length}</span></div></button>
+              <div class="${isAccordionOpen ? '' : 'hidden'} p-3 pt-0 border-t border-gray-200 dark:border-gray-800 space-y-2 mt-2">
+                ${hasItems ? items.map(item => `<div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 gap-2"><span class="text-xs font-medium w-full sm:w-1/3 truncate" title="${safe(item.desc)}">${safe(item.desc)}</span><div class="flex items-center justify-center space-x-2 w-full sm:w-1/3"><label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" ${item.receivedPartial ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 rounded accent-amber-500"><span class="${item.receivedPartial ? 'text-amber-400 font-semibold' : 'text-gray-500'} text-[10px] uppercase tracking-wide">Partial</span></label><input type="text" placeholder="Qty (3/7)" value="${safe(item.partialQty || '')}" onchange="updateItemPartialQty('${ord.id}', '${item.id}', this.value)" class="${item.receivedPartial ? 'opacity-100 w-20' : 'opacity-0 w-0 pointer-events-none'} transition-all duration-200 px-1.5 py-0.5 text-[10px] bg-gray-50 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded focus:outline-none focus:border-amber-500 text-center"></div><div class="flex items-center justify-end space-x-3 w-full sm:w-1/3"><label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" ${item.received ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'received', this.checked)" class="w-4 h-4 rounded accent-emerald-500"><span class="${item.received ? 'text-emerald-400 font-bold' : 'text-gray-400'} text-[11px]">Arrived</span></label><label class="flex items-center space-x-1.5 cursor-pointer"><input type="checkbox" ${item.stocked ? 'checked' : ''} onchange="toggleItemCheck('${ord.id}', '${item.id}', 'stocked', this.checked)" class="w-4 h-4 rounded accent-blue-500"><span class="${item.stocked ? 'text-blue-400 font-bold' : 'text-gray-400'} text-[11px]">Stocked</span></label></div></div>`).join('') : '<div class="text-xs text-gray-500 italic py-1">No items listed.</div>'}
+              </div>
             </div>
           </div>
         </div>
       `;
     }
 
+    function openOrderCompleteVerification(orderId) {
+      const ord = orders.find(order => order.id === orderId);
+      if (!ord) return;
+      orderCompletionTargetId = orderId;
+      const items = Array.isArray(ord.items) ? ord.items : [];
+      const setChecked = (id, value) => { const el = document.getElementById(id); if (el) el.checked = !!value; };
+      const vbopEligible = isVeltuffOrder(ord);
+      const vbopInput = document.getElementById('verifyStageVbop');
+      if (vbopInput) {
+        const vbopLabel = vbopInput.closest('label');
+        if (vbopLabel) vbopLabel.classList.toggle('hidden', !vbopEligible);
+      }
+      document.getElementById('verifyModalPo').innerText = ord.poNumber || 'PO';
+      setChecked('verifyStagePlaced', ord.placed);
+      setChecked('verifyStageVbop', vbopEligible && ord.vbop);
+      setChecked('verifyStageReceived', items.length ? items.every(item => !!item.received) : ord.received);
+      setChecked('verifyStageEmailed', ord.emailed);
+      setChecked('verifyStageStocked', items.length ? items.every(item => !!item.stocked) : ord.stocked);
+      document.getElementById('orderCompleteModal').classList.remove('hidden');
+    }
+    function closeOrderCompleteModal() {
+      orderCompletionTargetId = '';
+      const modal = document.getElementById('orderCompleteModal');
+      if (modal) modal.classList.add('hidden');
+    }
+    function confirmOrderCompletion() {
+      const ord = orders.find(order => order.id === orderCompletionTargetId);
+      if (!ord) { closeOrderCompleteModal(); return; }
+      const checked = id => !!document.getElementById(id)?.checked;
+      const vbopEligible = isVeltuffOrder(ord);
+      const requirements = [checked('verifyStagePlaced'), checked('verifyStageReceived'), checked('verifyStageEmailed'), checked('verifyStageStocked')];
+      if (vbopEligible) requirements.push(checked('verifyStageVbop'));
+      if (!requirements.every(Boolean)) {
+        alert('This order is not ready to be marked complete. Confirm all applicable stages first.');
+        return;
+      }
+      ord.placed = true;
+      if (vbopEligible) { ord.vbop = true; ord.vbopMeta = ord.vbopMeta || `Confirmed by ${activeUser || 'User'} on ${new Date().toLocaleString()}`; }
+      else { ord.vbop = false; ord.vbopMeta = null; }
+      ord.received = true; ord.emailed = true; ord.stocked = true;
+      if (Array.isArray(ord.items)) ord.items.forEach(item => { item.received = true; item.receivedPartial = false; item.stocked = true; });
+      ord.completed = true;
+      ord.completedAt = new Date().toISOString();
+      saveData(`Completed PO# ${ord.poNumber}`);
+      closeOrderCompleteModal();
+    }
+    function reopenOrder(orderId) {
+      const ord = orders.find(order => order.id === orderId);
+      if (!ord) return;
+      ord.completed = false;
+      ord.completedAt = null;
+      saveData(`Re-opened PO# ${ord.poNumber}`);
+    }
+
     function toggleOrderStage(orderId, stage, checked) {
       const ord = orders.find(x => x.id === orderId); if (!ord) return;
+      if (stage === 'vbop' && !isVeltuffOrder(ord)) { alert('Only uniform / PPE orders marked as Veltuff can be added to VBOP.'); return; }
       const meta = `${checked ? 'Confirmed' : 'Unchecked'} by ${activeUser || 'User'} on ${new Date().toLocaleString()}`;
       if (stage === 'received') { ord.received = checked; if (ord.items) ord.items.forEach(i => { i.received = checked; if (checked) i.receivedPartial = false; }); } 
       else if (stage === 'placed') {
