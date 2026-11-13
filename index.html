@@ -199,14 +199,14 @@
       <div id="tasksWrapper" class="flex flex-col flex-1 w-full overflow-hidden">
         <div class="flex items-center justify-end gap-2 pb-2 shrink-0">
           <label for="taskSortInput" class="text-[10px] font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap">SORT TASKS</label>
-          <select id="taskSortInput" onchange="renderTasksBoard()" class="max-w-[220px] bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl px-2.5 py-2 text-xs text-gray-800 dark:text-gray-200 font-medium">
+          <select id="taskSortInput" onchange="renderTasksBoard(); initSortable()" class="max-w-[240px] bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 rounded-xl px-2.5 py-2 text-xs text-gray-800 dark:text-gray-200 font-medium">
             <option value="due-asc" selected>Soonest due date first</option>
             <option value="due-desc">Furthest due date first</option>
-            <option value="manual">Any order (drag and drop)</option>
+            <option value="manual">Manual order (drag to arrange)</option>
             <option value="created-newest">Newest tasks first</option>
             <option value="created-oldest">Oldest tasks first</option>
-            <option value="title-az">Title (A–Z)</option>
-            <option value="title-za">Title (Z–A)</option>
+            <option value="title-az">Task title (A–Z)</option>
+            <option value="title-za">Task title (Z–A)</option>
           </select>
         </div>
         <div class="md:hidden flex items-center space-x-1.5 overflow-x-auto pb-2 shrink-0 no-scrollbar" id="mobileColumnTabs"></div>
@@ -385,9 +385,9 @@
 
   <div id="orderModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2"><h3 id="orderModalHeading" class="text-base font-bold">New Order</h3><button type="button" onclick="closeOrderModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveOrder(event)" class="space-y-3"><input type="hidden" id="orderIdInput"><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">PO</label><input type="text" id="orderPoInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Date</label><input type="date" id="orderDateInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Order name / title (optional)</label><input type="text" id="orderTitleInput" placeholder="e.g. Workshop drill bits or winter PPE" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Order category</label><select id="orderTypeInput" onchange="handleOrderCategoryChange()" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"><option value="tool">Tool order</option><option value="uniform">Uniform / PPE order</option><option value="other">Other</option></select></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Ordered By</label><input type="text" id="orderPlacedByInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></div></div><div id="orderVeltuffWrap" class="hidden bg-purple-500/10 border border-purple-500/20 rounded-xl p-3"><label class="flex items-center gap-2 text-xs font-semibold text-purple-300 cursor-pointer"><input type="checkbox" id="orderVeltuffInput" class="w-4 h-4 accent-purple-600"><span>Veltuff order (needs adding to VBOP)</span></label></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Items</label><textarea id="orderFreeformItemsInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea></div><div><label class="block text-[10px] font-bold text-gray-400 mb-1">Notes</label><textarea id="orderNotesInput" rows="2" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></textarea></div><div tabindex="0" onpaste="handleUniversalPaste(event, 'order')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="orderFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'order')" class="hidden"><div onclick="document.getElementById('orderFileInput').click()"><i data-lucide="clipboard-paste" class="w-6 h-6 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="orderFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="orderFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('order')" class="text-red-400">Remove</button></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeOrderModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
-  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="taskModalHeading" class="text-base font-bold">Edit Task</h3><button type="button" onclick="closeTaskModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveTask(event)" class="space-y-3"><input type="hidden" id="taskIdInput"><input type="text" id="taskTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div><label for="taskSectionInput" class="block text-[10px] font-bold text-gray-400 mb-1">Task box / category</label><select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></select></div><div><label for="taskDueDateInput" class="block text-[10px] font-bold text-gray-400 mb-1">Due date (optional)</label><input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div><textarea id="taskNotesInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'task')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'task')" class="hidden"><div onclick="document.getElementById('taskFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="taskFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="taskFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('task')" class="text-red-400">Remove</button></div></div><div id="taskAssigneesSection"><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border-gray-700 text-xs"></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
+  <div id="taskModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="taskModalHeading" class="text-base font-bold">Edit Task</h3><button type="button" onclick="closeTaskModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveTask(event)" class="space-y-3"><input type="hidden" id="taskIdInput"><input type="text" id="taskTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div><label for="taskSectionInput" class="block text-[10px] font-bold text-gray-400 mb-1">Task box / category</label><select id="taskSectionInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></select></div><div><label for="taskTagInput" class="block text-[10px] font-bold text-gray-400 mb-1">Tag (optional)</label><div class="flex gap-2"><select id="taskTagInput" class="flex-1 min-w-0 bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"><option value="">No Tag</option></select><button type="button" onclick="openNewTagModal('task')" title="Create a new tag" class="px-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-400 hover:text-white hover:border-[#A6192E]"><i data-lucide="plus" class="w-4 h-4"></i></button></div></div><div><label for="taskDueDateInput" class="block text-[10px] font-bold text-gray-400 mb-1">Due date (optional)</label><input type="date" id="taskDueDateInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#A6192E]"></div><textarea id="taskNotesInput" rows="3" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-xs"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'task')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'task')" class="hidden"><div onclick="document.getElementById('taskFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="taskFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="taskFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('task')" class="text-red-400">Remove</button></div></div><div id="taskAssigneesSection"><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="taskAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl border-gray-700 text-xs"></div></div><div class="flex justify-end space-x-2 pt-3 border-t border-gray-800"><button type="button" onclick="closeTaskModal()" class="px-4 py-2.5 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2.5 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
-  <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="noteModalTitle" class="text-base font-bold">Edit Note</h3><button type="button" onclick="closeNoteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveNote(event)" class="space-y-3"><input type="hidden" id="noteId"><input type="text" id="noteTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="noteFolderInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><select id="noteTagInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select></div><textarea id="noteContentInput" rows="4" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'note')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="noteFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'note')" class="hidden"><div onclick="document.getElementById('noteFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="noteFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="noteFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('note')" class="text-red-400">Remove</button></div></div><div id="noteAssigneesSection"><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl text-xs"></div></div><div class="flex items-center space-x-2 pt-1"><input type="checkbox" id="noteStarInput" class="w-4 h-4"><label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label></div><div class="flex justify-end space-x-2 pt-2 border-t border-gray-800"><button type="button" onclick="closeNoteModal()" class="px-4 py-2 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
+  <div id="noteModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl my-auto"><div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800"><h3 id="noteModalTitle" class="text-base font-bold">Edit Note</h3><button type="button" onclick="closeNoteModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveNote(event)" class="space-y-3"><input type="hidden" id="noteId"><input type="text" id="noteTitleInput" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"><div class="grid grid-cols-2 gap-2"><select id="noteFolderInput" class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><div class="flex gap-1 min-w-0"><select id="noteTagInput" class="flex-1 min-w-0 bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2 text-xs"></select><button type="button" onclick="openNewTagModal('note')" title="Create a new tag" class="px-2 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-400 hover:text-white hover:border-[#A6192E]"><i data-lucide="plus" class="w-4 h-4"></i></button></div></div><textarea id="noteContentInput" rows="4" required class="w-full bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-gray-700 rounded-xl p-2.5 text-sm"></textarea><div tabindex="0" onpaste="handleUniversalPaste(event, 'note')" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 dark:bg-[#141414]"><input type="file" id="noteFileInput" accept="image/*,.pdf,.doc,.docx" onchange="handleUniversalFileSelect(event, 'note')" class="hidden"><div onclick="document.getElementById('noteFileInput').click()"><i data-lucide="paperclip" class="w-5 h-5 mx-auto mb-1 text-gray-400"></i><div class="text-xs font-semibold text-gray-200">Click/Paste file</div></div><div id="noteFilePreviewContainer" class="hidden mt-2 pt-2 border-t border-gray-800 flex justify-between text-xs"><span id="noteFileNameLabel" class="text-emerald-400 truncate"></span><button type="button" onclick="removeUniversalFile('note')" class="text-red-400">Remove</button></div></div><div id="noteAssigneesSection"><label class="block text-[10px] font-bold text-gray-400 mb-1">Assignees</label><div id="noteAssigneesContainer" class="flex flex-wrap gap-2 p-2.5 bg-gray-100 dark:bg-[#121212] rounded-xl text-xs"></div></div><div class="flex items-center space-x-2 pt-1"><input type="checkbox" id="noteStarInput" class="w-4 h-4"><label for="noteStarInput" class="text-xs font-semibold">Star Note ⭐</label></div><div class="flex justify-end space-x-2 pt-2 border-t border-gray-800"><button type="button" onclick="closeNoteModal()" class="px-4 py-2 text-xs text-gray-400">Cancel</button><button type="submit" class="px-5 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Save</button></div></form></div></div>
 
   <div id="taskDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"><div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-3xl max-w-lg w-full p-5 md:p-6 relative shadow-2xl my-auto"><button onclick="closeTaskDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button><div class="flex items-center space-x-2 mb-2"><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#A6192E] text-white">TASK</span><span id="detailPriority" class="hidden"></span><span id="detailStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded hidden"></span></div><h3 id="detailTitle" class="text-lg font-bold mb-2 break-words"></h3><div id="detailNotes" class="text-xs text-gray-300 mb-3 whitespace-pre-wrap bg-gray-100 dark:bg-[#121212] p-3 rounded-xl"></div><div id="detailAttachmentContainer" class="hidden mb-3"></div><div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4 bg-gray-50 dark:bg-[#161616] p-3 rounded-2xl border-gray-800"><div><span class="font-bold text-gray-400">Section:</span> <div id="detailSection" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div id="detailAssigneesSection"><span class="font-bold text-gray-400">Assignees:</span> <div id="detailAssignees" class="text-gray-800 dark:text-gray-200 font-semibold truncate"></div></div><div><span class="font-bold text-gray-400">Due date:</span> <div id="detailDueDate" class="text-gray-800 dark:text-gray-200 font-semibold truncate">No Date</div></div><div><span class="font-bold text-gray-400">Owner:</span> <div id="detailOwner" class="text-gray-800 dark:text-gray-200 font-semibold truncate">System</div></div></div><div class="border-t border-gray-800 pt-3 mb-4"><div class="text-xs font-bold text-gray-400 uppercase mb-2">Edit History</div><div id="detailHistoryLog" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] bg-[#121212] p-2.5 rounded-xl border border-gray-800"></div></div><div class="flex justify-end pt-2 border-t border-gray-800"><button id="detailEditBtn" class="px-4 py-2 bg-[#A6192E] text-white text-xs font-semibold rounded-xl">Edit Task</button></div></div></div>
 
@@ -1050,16 +1050,41 @@
           animation: 180, easing: 'cubic-bezier(0.2, 0, 0, 1)',
           draggable: '.task-card', handle: '.task-drag-handle',
           ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen', dragClass: 'sortable-drag',
-          fallbackTolerance: 4, touchStartThreshold: 4, filter: 'button,input,a,textarea,select', preventOnFilter: false,
+          fallbackTolerance: 4, touchStartThreshold: 4, forceFallback: true, fallbackOnBody: true,
+          delay: 120, delayOnTouchOnly: true, filter: 'button,input,a,textarea,select', preventOnFilter: false,
+          onStart: function() {
+            // Dragging switches from the active automatic filter to a saved manual order.
+            const sortControl = document.getElementById('taskSortInput');
+            if (sortControl) sortControl.value = 'manual';
+          },
           onEnd: function(evt) {
             const movedTask = tasks.find(task => String(task.id) === String(evt.item.dataset.taskId));
             const targetSectionId = evt.to && evt.to.dataset.sectionId;
             if (movedTask && targetSectionId) movedTask.sectionId = targetSectionId;
+
+            // Save both columns after a move. Items hidden by a sidebar filter are
+            // retained after the visible items instead of losing their saved order.
             [evt.from, evt.to].filter((el, index, arr) => el && arr.indexOf(el) === index).forEach(container => {
-              Array.from(container.children).filter(el => el.matches('.task-card')).forEach((el, index) => {
-                const task = tasks.find(item => String(item.id) === String(el.dataset.taskId));
-                if (task) { task.sectionId = container.dataset.sectionId || task.sectionId; task.sortOrder = index; }
+              const sectionId = container.dataset.sectionId;
+              const visibleIds = Array.from(container.children)
+                .filter(el => el.matches('.task-card'))
+                .map(el => String(el.dataset.taskId));
+              const visibleSet = new Set(visibleIds);
+              visibleIds.forEach((id, index) => {
+                const task = tasks.find(item => String(item.id) === id);
+                if (task) { task.sectionId = sectionId || task.sectionId; task.sortOrder = (index + 1) * 1000; }
               });
+              const remaining = tasks.filter(task => !task.completed
+                && String(task.sectionId) === String(sectionId)
+                && (task.workspace || 'shared') === currentWorkspace
+                && (currentWorkspace === 'shared' || task.owner === activeUser)
+                && !visibleSet.has(String(task.id)))
+                .sort((a, b) => {
+                  const aOrder = a.sortOrder !== null && a.sortOrder !== undefined && Number.isFinite(Number(a.sortOrder)) ? Number(a.sortOrder) : Number.MAX_SAFE_INTEGER;
+                  const bOrder = b.sortOrder !== null && b.sortOrder !== undefined && Number.isFinite(Number(b.sortOrder)) ? Number(b.sortOrder) : Number.MAX_SAFE_INTEGER;
+                  return aOrder - bOrder || String(a.id).localeCompare(String(b.id));
+                });
+              remaining.forEach((task, index) => { task.sortOrder = (visibleIds.length + index + 1) * 1000; });
             });
             saveData(movedTask ? `Moved task: ${movedTask.title}` : 'Reordered tasks');
           }
@@ -1188,6 +1213,69 @@
 
     function filterBySection(id) { activeFilterType = "section"; activeFilterId = id; activeMobileSectionId = String(id); switchMainTab('tasks'); }
     function filterByAssignee(id) { activeFilterType = "assignee"; activeFilterId = id; renderAll(); }
+    function populateTagSelect(selectId, selectedId = "") {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      select.innerHTML = `<option value="">No Tag</option>` + sharedTags.map(tag => `<option value="${tag.id}">${tag.title}</option>`).join('');
+      select.value = selectedId || "";
+    }
+
+    function openNewTagModal(returnContext = "") {
+      const taskModalOpen = !document.getElementById("taskModal")?.classList.contains("hidden");
+      const noteModalOpen = !document.getElementById("noteModal")?.classList.contains("hidden");
+      window.__amadaTagReturnContext = returnContext || (taskModalOpen ? "task" : (noteModalOpen ? "note" : ""));
+      document.getElementById("tagIdInput").value = "";
+      document.getElementById("tagTitleInput").value = "";
+      document.getElementById("tagColorInput").value = "#A6192E";
+      document.getElementById("tagModalTitle").innerText = "Create Tag";
+      document.getElementById("tagModal").classList.remove("hidden");
+      if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+    }
+
+    function closeTagModal() {
+      const modal = document.getElementById("tagModal");
+      if (modal) modal.classList.add("hidden");
+      window.__amadaTagReturnContext = "";
+    }
+
+    function saveCustomTag() {
+      const id = document.getElementById("tagIdInput").value;
+      const title = document.getElementById("tagTitleInput").value.trim();
+      const color = document.getElementById("tagColorInput").value || "#A6192E";
+      if (!title) { alert("Please enter a tag name."); document.getElementById("tagTitleInput").focus(); return; }
+      const duplicate = sharedTags.find(tag => tag.title.trim().toLowerCase() === title.toLowerCase() && tag.id !== id);
+      if (duplicate) { alert("A tag with that name already exists."); return; }
+      let savedTag;
+      if (id) {
+        savedTag = sharedTags.find(tag => String(tag.id) === String(id));
+        if (!savedTag) return;
+        savedTag.title = title;
+        savedTag.color = color;
+      } else {
+        savedTag = { id: "tag_" + Date.now(), title, color };
+        sharedTags.push(savedTag);
+      }
+      const returnContext = window.__amadaTagReturnContext || "";
+      closeTagModal();
+      if (returnContext === "task") populateTagSelect("taskTagInput", savedTag.id);
+      if (returnContext === "note") populateTagSelect("noteTagInput", savedTag.id);
+      saveData(`${id ? "Updated" : "Created"} tag: ${title}`);
+      // saveData re-renders the board; reselect on the still-open editor afterwards.
+      if (returnContext === "task") populateTagSelect("taskTagInput", savedTag.id);
+      if (returnContext === "note") populateTagSelect("noteTagInput", savedTag.id);
+    }
+
+    function deleteTag(id) {
+      const tag = sharedTags.find(item => String(item.id) === String(id));
+      if (!tag) return;
+      if (!confirm(`Delete the tag "${tag.title}"? It will be removed from any tasks and notes using it.`)) return;
+      sharedTags = sharedTags.filter(item => String(item.id) !== String(id));
+      tasks.forEach(task => { if (String(task.tagId || "") === String(id)) task.tagId = ""; });
+      notes.forEach(note => { if (String(note.tagId || "") === String(id)) note.tagId = ""; });
+      if (activeFilterType === "tag" && String(activeFilterId) === String(id)) { activeFilterType = null; activeFilterId = null; }
+      saveData(`Deleted tag: ${tag.title}`);
+    }
+
     function filterByTag(id) { activeFilterType = "tag"; activeFilterId = id; renderAll(); }
     function filterByStarred() { activeFilterType = "starred"; activeFilterId = "starred"; renderAll(); }
     function clearActiveFilter() { activeFilterType = null; activeFilterId = null; renderAll(); }
@@ -1237,6 +1325,38 @@
     function openNewNoteFolderModal() { const title = prompt("New Folder Name:"); if (title) { noteFolders.push({ id: "nf_" + Date.now(), title, parentId: currentNoteFolderId || null }); saveData(`Created note folder: ${title}`); } }
     function deleteNoteFolder(id) { noteFolders = noteFolders.filter(f => f.id !== id); notes.forEach(n => { if(n.folderId === id) n.folderId = ""; }); if(currentNoteFolderId === id) currentNoteFolderId = null; saveData(); }
 
+    function getTaskCreatedTimestamp(task) {
+      const raw = task && (task.createdAt ?? task.createdDate ?? task.dateCreated);
+      if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+      if (raw) {
+        const parsed = Date.parse(String(raw));
+        if (Number.isFinite(parsed)) return parsed;
+      }
+      const history = Array.isArray(task && task.history) ? task.history : [];
+      const createdEntry = history.slice().reverse().find(entry => /created task|created/i.test(String(entry && entry.action || '')));
+      if (createdEntry && createdEntry.date) {
+        const historyDate = Date.parse(String(createdEntry.date));
+        if (Number.isFinite(historyDate)) return historyDate;
+      }
+      const idMatch = String(task && task.id || '').match(/(\d{10,})$/);
+      if (idMatch) return Number(idMatch[1]);
+      return 0;
+    }
+
+    function getTaskDueTimestamp(task) {
+      const value = String(task && task.dueDate || '').trim();
+      if (!value) return null;
+      const iso = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (iso) return Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+      const parsed = Date.parse(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function getTaskManualSortValue(task) {
+      if (task && task.sortOrder !== null && task.sortOrder !== undefined && task.sortOrder !== '' && Number.isFinite(Number(task.sortOrder))) return Number(task.sortOrder);
+      return Number.MAX_SAFE_INTEGER;
+    }
+
     function renderTasksBoard() {
       const view = document.getElementById("tasksView"); if (!view) return;
       let visibleSections = getPersonalOrderedSections();
@@ -1250,6 +1370,7 @@
         activeMobileSectionId = "";
         if (mobileTabs) mobileTabs.innerHTML = '';
         view.innerHTML = `<div class="text-center text-gray-500 text-sm py-10 px-4">No categories are currently shown on the home board. Tick a category in the sidebar to show it here.</div>`;
+        destroySortableInstances();
         return;
       }
       if (!visibleSections.some(section => String(section.id) === String(activeMobileSectionId))) activeMobileSectionId = visibleSections[0].id;
@@ -1269,23 +1390,24 @@
         else if (activeFilterType === "tag") listTasks = listTasks.filter(t => t.tagId === activeFilterId);
         else if (activeFilterType === "starred") listTasks = listTasks.filter(t => t.starred);
         const taskSortMode = document.getElementById('taskSortInput')?.value || 'due-asc';
-        const taskManualCompare = (a, b) => (Number.isFinite(a.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER) - (Number.isFinite(b.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER);
-        const taskCreatedValue = task => { const parsed = Number.parseInt(String(task.createdAt || task.id || ''), 10); return Number.isFinite(parsed) ? parsed : 0; };
+        const taskManualCompare = (a, b) => getTaskManualSortValue(a) - getTaskManualSortValue(b)
+          || getTaskCreatedTimestamp(a) - getTaskCreatedTimestamp(b)
+          || String(a.id || '').localeCompare(String(b.id || ''));
         listTasks = listTasks.slice().sort((a, b) => {
           const manual = taskManualCompare(a, b);
           if (taskSortMode === 'manual') return manual;
           if (taskSortMode === 'title-az') return String(a.title || '').localeCompare(String(b.title || ''), undefined, { numeric: true, sensitivity: 'base' }) || manual;
           if (taskSortMode === 'title-za') return String(b.title || '').localeCompare(String(a.title || ''), undefined, { numeric: true, sensitivity: 'base' }) || manual;
-          if (taskSortMode === 'created-newest') return taskCreatedValue(b) - taskCreatedValue(a) || manual;
-          if (taskSortMode === 'created-oldest') return taskCreatedValue(a) - taskCreatedValue(b) || manual;
-          const aDue = a.dueDate || '9999-12-31';
-          const bDue = b.dueDate || '9999-12-31';
-          const dueCompare = aDue.localeCompare(bDue);
-          if (taskSortMode === 'due-desc') {
-            if (!a.dueDate && b.dueDate) return 1;
-            if (a.dueDate && !b.dueDate) return -1;
-            return (bDue.localeCompare(aDue)) || manual;
-          }
+          if (taskSortMode === 'created-newest') return getTaskCreatedTimestamp(b) - getTaskCreatedTimestamp(a) || manual;
+          if (taskSortMode === 'created-oldest') return getTaskCreatedTimestamp(a) - getTaskCreatedTimestamp(b) || manual;
+
+          // Due-date modes put dated tasks first and always leave undated tasks at the bottom.
+          const aDue = getTaskDueTimestamp(a);
+          const bDue = getTaskDueTimestamp(b);
+          if (aDue === null && bDue !== null) return 1;
+          if (aDue !== null && bDue === null) return -1;
+          if (aDue === null && bDue === null) return manual;
+          const dueCompare = taskSortMode === 'due-desc' ? bDue - aDue : aDue - bDue;
           return dueCompare || manual;
         });
         const isMobileActive = String(s.id) === String(activeMobileSectionId);
@@ -1427,7 +1549,7 @@
 
     function openNoteModal() {
       document.getElementById("noteFolderInput").innerHTML = getFolderOptionsHtml(); document.getElementById("noteFolderInput").value = currentNoteFolderId || "";
-      document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      populateTagSelect("noteTagInput", "");
       const assigneeSection = document.getElementById("noteAssigneesSection");
       if (assigneeSection) assigneeSection.classList.toggle("hidden", currentWorkspace !== 'shared');
       document.getElementById("noteAssigneesContainer").innerHTML = currentWorkspace === 'shared' ? users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('') : '';
@@ -1439,7 +1561,7 @@
       const n = notes.find(x => x.id === id); if (!n) return;
       const isSharedNote = (n.workspace || 'shared') === 'shared';
       if (!isSharedNote) n.assignees = [];
-      document.getElementById("noteFolderInput").innerHTML = getFolderOptionsHtml(); document.getElementById("noteTagInput").innerHTML = `<option value="">No Tag</option>` + sharedTags.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+      document.getElementById("noteFolderInput").innerHTML = getFolderOptionsHtml(); populateTagSelect("noteTagInput", n.tagId || "");
       const assigneeSection = document.getElementById("noteAssigneesSection");
       if (assigneeSection) assigneeSection.classList.toggle("hidden", !isSharedNote);
       document.getElementById("noteAssigneesContainer").innerHTML = isSharedNote ? users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" ${(n.assignees || []).includes(u.name) ? 'checked' : ''} class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('') : '';
@@ -1475,6 +1597,7 @@
 
     function openNewTaskModal() {
       document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+      populateTagSelect("taskTagInput", "");
       const assigneeSection = document.getElementById("taskAssigneesSection");
       if (assigneeSection) assigneeSection.classList.toggle("hidden", currentWorkspace !== 'shared');
       document.getElementById("taskAssigneesContainer").innerHTML = currentWorkspace === 'shared' ? users.map(u => `<label class="flex items-center space-x-1.5"><input type="checkbox" value="${u.name}" class="assigneeCheck accent-[#A6192E]"><span>${u.name}</span></label>`).join('') : "";
@@ -1484,6 +1607,7 @@
     function openEditTaskModal(id) {
       document.getElementById("taskSectionInput").innerHTML = sharedSections.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
       const t = tasks.find(x => x.id === id);
+      populateTagSelect("taskTagInput", t?.tagId || "");
       const isSharedTask = !!t && (t.workspace || 'shared') === 'shared';
       const assigneeSection = document.getElementById("taskAssigneesSection");
       if (assigneeSection) assigneeSection.classList.toggle("hidden", !isSharedTask);
@@ -1496,11 +1620,11 @@
     }
     function saveTask(e) {
       e.preventDefault();
-      const id = document.getElementById("taskIdInput").value; const title = document.getElementById("taskTitleInput").value.trim(); const sectionId = document.getElementById("taskSectionInput").value; const dueDate = document.getElementById("taskDueDateInput").value || ""; const notesText = document.getElementById("taskNotesInput").value.trim(); const assignees = currentWorkspace === 'shared' ? Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value) : []; const attachment = tempFileState.task;
+      const id = document.getElementById("taskIdInput").value; const title = document.getElementById("taskTitleInput").value.trim(); const sectionId = document.getElementById("taskSectionInput").value; const dueDate = document.getElementById("taskDueDateInput").value || ""; const tagId = document.getElementById("taskTagInput").value || ""; const notesText = document.getElementById("taskNotesInput").value.trim(); const assignees = currentWorkspace === 'shared' ? Array.from(document.querySelectorAll("#taskAssigneesContainer .assigneeCheck:checked")).map(cb => cb.value) : []; const attachment = tempFileState.task;
       if (id) {
         const t = tasks.find(x => x.id === id);
-        if (t) { t.title = title; t.sectionId = sectionId; delete t.priority; t.dueDate = dueDate; t.notes = notesText; t.assignees = assignees; t.attachment = attachment; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited task: ${title}`); }
-      } else { tasks.push({ id: Date.now().toString(), createdAt: Date.now(), title, sectionId, dueDate, notes: notesText, assignees: currentWorkspace === 'shared' ? (assignees.length ? assignees : [activeUser]) : [], attachment, completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Created new task: ${title}`); }
+        if (t) { t.title = title; t.sectionId = sectionId; delete t.priority; t.dueDate = dueDate; t.tagId = tagId; t.notes = notesText; t.assignees = assignees; t.attachment = attachment; if (!Array.isArray(t.history)) t.history = []; t.history.unshift({ action: `Edited details`, user: activeUser || "User", date: new Date().toLocaleString() }); saveData(`Edited task: ${title}`); }
+      } else { tasks.push({ id: Date.now().toString(), createdAt: Date.now(), title, sectionId, dueDate, tagId, notes: notesText, assignees: currentWorkspace === 'shared' ? (assignees.length ? assignees : [activeUser]) : [], attachment, completed: false, owner: activeUser, workspace: currentWorkspace, history: [{ action: "Created task", user: activeUser || "User", date: new Date().toLocaleString() }] }); saveData(`Created new task: ${title}`); }
       closeTaskModal();
     }
     function closeTaskModal() { document.getElementById("taskModal").classList.add("hidden"); removeUniversalFile('task'); }
