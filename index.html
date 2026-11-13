@@ -1391,6 +1391,12 @@
     }
 
     function formatItemDescription(rawText) { const trimmed = rawText.trim(); if (!trimmed || trimmed.includes("(")) return trimmed; let text = trimmed.toLowerCase(); let qty = ""; const qtyMatch = text.match(/(?:x\s*(\d+)|(\d+)\s*x|\bqty:?\s*(\d+)\b)/i); if (qtyMatch) qty = "x" + (qtyMatch[1] || qtyMatch[2] || qtyMatch[3]); return `${trimmed} ${qty ? `(${qty})` : ''}`.trim(); }
+    function formatOrderDate(dateValue) {
+      if (!dateValue) return 'Date unavailable';
+      const parts = String(dateValue).split('-');
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dateValue;
+    }
     function openNewOrderModal() {
       document.getElementById("orderIdInput").value = ""; document.getElementById("orderPoInput").value = ""; document.getElementById("orderDateInput").value = new Date().toISOString().split('T')[0]; document.getElementById("orderTypeInput").value = ""; document.getElementById("orderPlacedByInput").value = activeUser || ""; document.getElementById("orderFreeformItemsInput").value = ""; document.getElementById("orderNotesInput").value = "";
       document.getElementById("orderModalHeading").innerHTML = `<i data-lucide="package-plus" class="w-5 h-5 text-[#A6192E]"></i><span>Create New Order</span>`; removeUniversalFile('order'); document.getElementById("orderModal").classList.remove("hidden"); if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
@@ -1410,7 +1416,9 @@
         const ord = orders.find(x => x.id === id);
         if (ord) { ord.poNumber = poNumber; ord.dateOrdered = dateOrdered; ord.orderType = orderType; ord.placedBy = placedBy; ord.notes = notesInput; ord.attachment = attachment; if (items.length > 0) ord.items = items; saveData(`Edited PO# ${poNumber}`); } 
       } else {
-        orders.push({ id: "ord_" + Date.now(), poNumber, dateOrdered, orderType, placedBy, items, notes: notesInput, attachment, placed: true, placedMeta: `Placed by ${activeUser || placedBy} on ${new Date().toLocaleDateString()}`, placedBy: activeUser || placedBy, placedDate: new Date().toLocaleDateString(), placedAt: new Date().toISOString(), vbop: false, received: false, emailed: false, stocked: false, completed: false, workspace: currentWorkspace, owner: activeUser }); saveData(`Added PO# ${poNumber}`);
+        const orderPlacedBy = placedBy || activeUser || 'User';
+        const orderPlacedDate = formatOrderDate(dateOrdered);
+        orders.push({ id: "ord_" + Date.now(), poNumber, dateOrdered, orderType, placedBy: orderPlacedBy, items, notes: notesInput, attachment, placed: true, placedMeta: `Placed by ${orderPlacedBy} on ${orderPlacedDate}`, placedDate: orderPlacedDate, placedAt: new Date().toISOString(), vbop: false, received: false, emailed: false, stocked: false, completed: false, workspace: currentWorkspace, owner: activeUser }); saveData(`Added PO# ${poNumber}`);
       }
       closeOrderModal();
     }
@@ -1438,7 +1446,7 @@
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
-            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]"><div><div class="font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div><div class="text-[9px] text-gray-500">${ord.placed ? `Placed by ${ord.placedBy || 'User'} on ${ord.placedDate || ord.dateOrdered || 'Date unavailable'}` : ''}</div></div></label>
+            <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.placed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'placed', this.checked)" class="mt-0.5 w-4 h-4 accent-[#A6192E]"><div><div class="font-bold ${ord.placed ? 'text-gray-200' : 'text-gray-400'}">1. Order Placed</div><div class="text-[9px] text-gray-500">${ord.placed ? `Placed by ${ord.placedBy || 'User'} on ${formatOrderDate(ord.dateOrdered || ord.placedDate)}` : ''}</div></div></label>
             <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.vbop ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'vbop', this.checked)" class="mt-0.5 w-4 h-4 accent-purple-600"><div><div class="font-bold ${ord.vbop ? 'text-purple-400' : 'text-gray-400'}">2. Added on VBOP</div><div class="text-[9px] text-gray-500">${ord.vbopMeta || ''}</div></div></label>
             <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 space-y-1.5"><div class="font-bold text-gray-200">3. Order Received</div><div class="flex flex-col space-y-1"><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${partialReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'receivedPartial', this.checked)" class="w-3.5 h-3.5 accent-amber-500"><span class="text-[10px] ${partialReceived ? 'text-amber-400 font-semibold' : 'text-gray-400'}">Received (Partial)</span></label><label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" ${allReceived ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'received', this.checked)" class="w-3.5 h-3.5 accent-emerald-500"><span class="text-[10px] ${allReceived ? 'text-emerald-400 font-bold' : 'text-gray-400'}">Received (Full)</span></label></div><div class="text-[9px] text-gray-500 truncate">${ord.receivedMeta || (allReceived ? 'All items received' : (partialReceived ? 'Partially arrived' : 'Awaiting delivery'))}</div></div>
             <label class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-[#131313] border border-gray-200 dark:border-gray-800 cursor-pointer"><input type="checkbox" ${ord.emailed ? 'checked' : ''} onchange="toggleOrderStage('${ord.id}', 'emailed', this.checked)" class="mt-0.5 w-4 h-4 accent-blue-600"><div><div class="font-bold ${ord.emailed ? 'text-blue-400' : 'text-gray-400'}">4. Emailed & Complete</div><div class="text-[9px] text-gray-500">${ord.emailedMeta || ''}</div></div></label>
@@ -1463,8 +1471,8 @@
       else if (stage === 'placed') {
         ord.placed = checked;
         if (checked) {
-          ord.placedBy = activeUser || ord.placedBy || 'User';
-          ord.placedDate = new Date().toLocaleDateString();
+          ord.placedBy = ord.placedBy || activeUser || 'User';
+          ord.placedDate = formatOrderDate(ord.dateOrdered);
           ord.placedAt = new Date().toISOString();
           ord.placedMeta = `Placed by ${ord.placedBy} on ${ord.placedDate}`;
         }
